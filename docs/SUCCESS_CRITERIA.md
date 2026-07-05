@@ -11,11 +11,13 @@ Every criterion is **measurable and testable**. A phase gate passes only when al
 **Current evidence snapshot (2026-07-05):** G0, G1, and the repository-local Phase 3.1
 failure-injection suite are locally green. Phase 2 console behavior is covered by local
 snapshot/SSE/control tests, but the Tailscale network proof still requires the Oracle paper
-host. Phase 3.2 and Phase 3.3 now have local evidence evaluators, but the real gates still
-require operator-supplied host and calendar-time proof. Full G3 go-live remains blocked by
+host. Phase 3.2, Phase 3.3, and Phase 3.4 now have local evidence evaluators, but the real
+gates still require operator-supplied host, calendar-time, and live-activation proof. Full
+G3 go-live remains blocked by
 external/operator gates: Oracle-host proof, four-week paper burn-in, live-host migration,
 Dhan static-IP registration, backup/restore drills, one-week live-host paper validation,
-live kill-switch proof, funded account setup, and staged capital ramp.
+live kill-switch proof, funded account setup, operator-approved 10% activation, and staged
+capital ramp.
 
 ### G0 — Foundation
 - [ ] `pytest` full suite green (existing 4 + new).
@@ -69,6 +71,15 @@ deviation ratio, token refresh success, clean reconciliation, no safety incident
 unresolved outliers, and live-order toggles remaining disabled. Passing this local check is
 necessary evidence hygiene, not a substitute for operating the paid live host for the
 required calendar week.
+
+Phase 3.4 evidence support is covered locally by `tests/unit/test_phase34_go_live.py`:
+the go-live checklist is checked for all prior phase gates, live-host identity, config
+checksum, static-IP startup verification, at least five token-refresh sessions,
+backup/restore drill, broker-side kill switch proof, real-phone alerts, dedicated funded
+account, explicit operator approval, initial capital at no more than 10%, the 2 OPS
+governor cap, and off-market activation timing. Passing this local check is necessary
+evidence hygiene, not a substitute for external proof or the operator's live enablement
+decision.
 
 ### G4 — Learning Layer
 - [ ] Produces structured post-trade insights + parameter proposals.

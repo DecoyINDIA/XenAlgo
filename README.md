@@ -31,11 +31,11 @@ The design bias is simple:
 
 ## Current Status
 
-The repository-local build is complete through Phase 3.1 failure-injection coverage, with Phase 3.2 and Phase 3.3 evidence tooling now added. Phase 1 paper execution, Phase 2 operator console surfaces, the deterministic Phase 3.1 chaos suite, Phase 3.2 burn-in/live-host readiness checks, and Phase 3.3 post-migration paper-validation checks are implemented and tested locally.
+The repository-local build is complete through Phase 3.1 failure-injection coverage, with Phase 3.2, Phase 3.3, and Phase 3.4 evidence tooling now added. Phase 1 paper execution, Phase 2 operator console surfaces, the deterministic Phase 3.1 chaos suite, Phase 3.2 burn-in/live-host readiness checks, Phase 3.3 post-migration paper-validation checks, and Phase 3.4 go-live checklist checks are implemented and tested locally.
 
-The remaining go-live work is intentionally outside this checkout: Oracle/Tailscale host proof, actual four-week paper burn-in on live market data, paid live-host provisioning, Dhan static-IP registration, backup and restore drills, at least one week of paper validation on the paid live host, and staged capital ramp. Live Dhan order placement remains disabled and must not be added or enabled without a separate explicit operator approval.
+The remaining go-live work is intentionally outside this checkout: Oracle/Tailscale host proof, actual four-week paper burn-in on live market data, paid live-host provisioning, Dhan static-IP registration, backup and restore drills, at least one week of paper validation on the paid live host, operator-approved 10% live activation, and staged capital ramp. Live Dhan order placement remains disabled in the committed config and must not be added or enabled without a separate explicit operator approval.
 
-The root `xenalgo/` package currently includes broker abstractions, risk, execution, governor, paper broker, token, data, scheduler, strategy, ops, alerting, reconciliation, paper-day orchestration, console state, FastAPI/SSE dashboard endpoints, postback HMAC validation, Telegram command routing, and Phase 3.2/3.3 evidence evaluation.
+The root `xenalgo/` package currently includes broker abstractions, risk, execution, governor, paper broker, token, data, scheduler, strategy, ops, alerting, reconciliation, paper-day orchestration, console state, FastAPI/SSE dashboard endpoints, postback HMAC validation, Telegram command routing, and Phase 3.2/3.3/3.4 evidence evaluation.
 
 The original research and backtest snapshot is kept locally under `_source/` in the operator checkout. It is not required for GitHub Actions because the promoted `Brain/` and `Strategies/` folders preserve the validated research surface in this repository. Strategy logic should not be changed casually.
 

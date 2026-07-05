@@ -1,7 +1,7 @@
 # XenAlgo Handoff
 
 **Last updated:** 2026-07-05  
-**Current phase:** Phase 3.3 repository-local evidence tooling implemented; actual Oracle-host proof, four-week paper burn-in, live-host migration, one-week live-host paper validation, and staged capital ramp are still pending operator/external gates.
+**Current phase:** Phase 3.4 repository-local evidence tooling implemented; actual Oracle-host proof, four-week paper burn-in, live-host migration, one-week live-host paper validation, operator-approved 10% live activation, and staged capital ramp are still pending operator/external gates.
 **Working directory:** `D:\XOLVER\XenAlgo`
 
 ## Safety Posture
@@ -32,6 +32,10 @@ Phase 3.3 repository-local work adds post-migration evidence evaluators and an o
 runbook only. It does not operate the paid live host for the required week, verify Dhan
 static IPs through a real startup, call the live Dhan order API, or enable live order
 placement.
+
+Phase 3.4 repository-local work adds go-live checklist evidence evaluators and an operations
+runbook only. It does not call Dhan, mutate config, fund the dedicated account, verify phone
+alerts, or enable live order placement from this checkout.
 
 ## Completed In Phase 0
 
@@ -175,10 +179,30 @@ placement.
 - Updated README, build plan, success criteria, test plan, and docs index to point at the
   Phase 3.3 evidence workflow.
 
+## Completed In Phase 3.4 Repo-Local Readiness
+
+- Added `xenalgo.phase34` for evaluating operator-supplied Phase 3.4 evidence:
+  - `GoLiveChecklistReview` checks that G0, G1, G2, Phase 3.1, Phase 3.2 burn-in,
+    Phase 3.2 live-host readiness, and Phase 3.3 post-migration evidence have passed.
+  - It checks live-host id, config checksum, static-IP startup verification, at least five
+    token-refresh sessions, live-host restore drill, broker-side kill switch proof,
+    real-phone alert confirmation, dedicated funded account evidence, explicit operator
+    approval, initial capital no greater than 10%, governor cap at or below 2 OPS, and
+    off-market activation timing.
+  - It supports a pre-activation review mode that requires live-order flags to remain off,
+    plus an activation review mode for the separately approved 10% live stage.
+- Added `tests/unit/test_phase34_go_live.py` to prove clean evidence passes and incomplete,
+  over-sized, in-market, or accidentally enabled evidence fails closed.
+- Added `docs/PHASE3_4_OPERATIONS.md` with the go-live checklist CSV schema and review
+  commands.
+- Updated README, build plan, success criteria, test plan, and docs index to point at the
+  Phase 3.4 evidence workflow.
+
 ## Phase 3 Status Boundary
 
-Phase 3.1, Phase 3.2 evidence tooling, and Phase 3.3 evidence tooling are the only Phase 3
-items that are fully repo-local. They are locally verified through deterministic tests only.
+Phase 3.1, Phase 3.2 evidence tooling, Phase 3.3 evidence tooling, and Phase 3.4 evidence
+tooling are the only Phase 3 items that are fully repo-local. They are locally verified
+through deterministic tests only.
 No live Dhan order API path was called, enabled, or tested.
 
 The rest of Phase 3 cannot be truthfully completed from this checkout alone:
@@ -192,13 +216,16 @@ The rest of Phase 3 cannot be truthfully completed from this checkout alone:
   `evaluate_live_host_readiness()`.
 - Phase 3.3 requires at least one week of paper validation on the new live host after
   migration, then evaluation of the collected evidence with `PostMigrationValidationReview`.
-- Phase 3.4 requires the go-live checklist gate before enabling live trading at 10% capital.
+- Phase 3.4 requires external/operator evidence for the go-live checklist before enabling
+  live trading at 10% capital; `GoLiveChecklistReview` can evaluate that evidence, but the
+  committed config still keeps live order placement disabled.
 - Phase 3.5 requires the staged 10% -> 25% -> 50% -> 100% capital ramp with at least two
   clean weeks at each stage.
 
 Until those external gates are evidenced, the repo status is: Phase 3.1 complete, Phase 3.2
-evidence tooling complete, and Phase 3.3 evidence tooling complete; actual Phase 3.2/3.3
-external proof and full G3 go-live are not complete.
+evidence tooling complete, Phase 3.3 evidence tooling complete, and Phase 3.4 evidence
+tooling complete; actual Phase 3.2/3.3/3.4 external proof and full G3 go-live are not
+complete.
 
 ## Verification Evidence
 
@@ -211,13 +238,12 @@ Run from repo root:
 Last observed result:
 
 ```text
-98 passed, 2 warnings in 9.58s
+103 passed, 1 warning in 8.79s
 ```
 
-Note: an earlier full-suite attempt without repo-local `TMP`/`TEMP` failed during pytest
-fixture setup with `PermissionError: [WinError 5] Access is denied:
-C:\Users\subha\AppData\Local\Temp\pytest-of-subha`. Rerunning with `TMP` and `TEMP` set to
-`D:\XOLVER\XenAlgo\.tmp` passed.
+Note: full-suite attempts can fail during pytest fixture setup if Windows points pytest at
+an inaccessible temp directory. A rerun with `TMP` and `TEMP` set to a fresh repo-local
+subdirectory, `D:\XOLVER\XenAlgo\.tmp\pytest-full-phase34-run`, passed.
 
 Run from `_source`:
 
@@ -228,7 +254,7 @@ Run from `_source`:
 Last observed result:
 
 ```text
-4 passed, 1 warning in 2.21s
+4 passed in 1.73s
 ```
 
 CI checkout fix:
@@ -275,6 +301,18 @@ Last observed result:
 
 ```text
 4 passed, 1 warning in 0.46s
+```
+
+Targeted Phase 3.4 evidence verification:
+
+```powershell
+./_source/.venv/Scripts/python.exe -m pytest tests/unit/test_phase34_go_live.py -q
+```
+
+Last observed result:
+
+```text
+5 passed in 0.35s
 ```
 
 Targeted Phase 2 verification:
@@ -339,12 +377,13 @@ environment-side proof on the Oracle/Tailscale host:
 - Keep the postback endpoint disabled until the HMAC secret and isolated public ingress are
   reviewed.
 
-Phase 3.1's repository failure-injection suite and Phase 3.2/3.3 evidence evaluators are
-implemented and locally green. The `docs/BUILD_PLAN.md` wording also says the chaos suite
-runs on the Oracle dev host, Phase 3.2 burn-in runs on live market data, and Phase 3.3 paper
-validation runs on the paid live host; that environment-side execution is still pending until
-the Oracle/Tailscale paper host and paid live host are provisioned and operated through the
-required calendar periods.
+Phase 3.1's repository failure-injection suite and Phase 3.2/3.3/3.4 evidence evaluators
+are implemented locally. The `docs/BUILD_PLAN.md` wording also says the chaos suite runs on
+the Oracle dev host, Phase 3.2 burn-in runs on live market data, Phase 3.3 paper validation
+runs on the paid live host, and Phase 3.4 requires the go-live checklist evidence before the
+10% live stage; that environment-side execution is still pending until the Oracle/Tailscale
+paper host and paid live host are provisioned and operated through the required calendar
+periods.
 
 ## Git / Workspace Notes
 
@@ -367,5 +406,7 @@ evidence. Then run the now-complete Phase 3.1 chaos suite on that host and attac
 evidence before starting the 4-week paper burn-in. During burn-in, collect the CSV evidence
 described in `docs/PHASE3_2_OPERATIONS.md` and evaluate it with `BurnInReview`. After paid
 live-host migration, collect the post-migration CSV evidence described in
-`docs/PHASE3_3_OPERATIONS.md` and evaluate it with `PostMigrationValidationReview`. Do not
-introduce a live Dhan order path without a separate, explicit operator request.
+`docs/PHASE3_3_OPERATIONS.md` and evaluate it with `PostMigrationValidationReview`. Then
+collect the Phase 3.4 go-live checklist evidence described in
+`docs/PHASE3_4_OPERATIONS.md` and evaluate it with `GoLiveChecklistReview`. Do not introduce
+a live Dhan order path without a separate, explicit operator request.
