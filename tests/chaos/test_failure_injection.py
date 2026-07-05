@@ -10,10 +10,16 @@ run them nightly / pre-gate separately from the fast unit suite.
 from __future__ import annotations
 
 import pytest
+import datetime as dt
+import pandas as pd
 
 pytestmark = pytest.mark.chaos
 
 execu = pytest.importorskip("xenalgo.execution")
+data = pytest.importorskip("xenalgo.data")
+reconcile = pytest.importorskip("xenalgo.execution.reconcile")
+scheduler = pytest.importorskip("xenalgo.scheduler")
+token_mod = pytest.importorskip("xenalgo.broker.token")
 
 
 def test_crash_mid_order_no_duplicate_on_restart(mock_broker, tmp_journal):
@@ -54,13 +60,16 @@ def test_duplicate_fill_from_redundant_channels_is_noop(mock_broker, tmp_journal
 
 
 def test_token_expiry_mid_session_halts_not_crashes(mock_broker, tmp_journal):
-    eng = execu.ExecutionEngine(broker=mock_broker, journal=execu.Journal(tmp_journal))
-    mock_broker.reject_next = True   # broker rejects (simulating auth failure)
-    result = eng.submit(correlation_id="xa-tok-1", sleeve="std30",
-                        symbol="INFY", security_id="1594", side="BUY",
-                        qty=1, limit_price=1500.0)
-    # Rejection is recorded, no position created, engine still alive.
-    assert result.state == "REJECTED"
+    """FR-1/SI-6: an expired token blocks the run before order submission."""
+    expired = dt.datetime.now(dt.UTC) - dt.timedelta(minutes=1)
+    token_manager = token_mod.TokenManager(
+        tmp_journal,
+        token_provider=lambda: token_mod.Token("expired", expired),
+    )
+
+    with pytest.raises(token_mod.TradingBlocked):
+        token_manager.ensure_valid()
+    assert mock_broker._orders == {}
 
 
 def test_rejection_storm_trips_consecutive_failure_breaker(mock_broker, tmp_journal):
@@ -72,3 +81,56 @@ def test_rejection_storm_trips_consecutive_failure_breaker(mock_broker, tmp_jour
                    symbol="INFY", security_id="1594", side="BUY",
                    qty=1, limit_price=1500.0)
     assert eng.is_halted() is True
+
+
+def test_corrupt_candle_blocks_trading_before_order(mock_broker):
+    """SI-6: NaN/insane candles are rejected before they can drive sizing."""
+    panel = {
+        "close": pd.DataFrame(
+            {"RELIANCE": [1000.0, float("nan")]},
+            index=pd.to_datetime(["2026-06-30", "2026-07-01"]),
+        )
+    }
+
+    with pytest.raises(data.CorruptDataError):
+        data.assert_latest_prices_sane(panel, collar_pct=0.03)
+    assert mock_broker._orders == {}
+
+
+def test_reconciliation_drift_halts_trading(mock_broker):
+    """SI-8: broker truth wins; any local drift is a halt condition."""
+    mock_broker.holdings = {"RELIANCE": 10}
+    result = reconcile.Reconciler(mock_broker).reconcile({"RELIANCE": 9})
+    assert result.clean is False
+    assert result.should_halt is True
+    assert result.drift == {"RELIANCE": (9, 10)}
+
+
+def test_network_partition_records_rejection_not_crash(mock_broker, tmp_journal):
+    """NFR-1/SI-9: broker transport failure is journaled and contained."""
+    def fail(_req):
+        raise ConnectionError("network partition")
+
+    mock_broker.on_place = fail
+    eng = execu.ExecutionEngine(broker=mock_broker, journal=execu.Journal(tmp_journal))
+    result = eng.submit(correlation_id="xa-net-1", sleeve="std30",
+                        symbol="INFY", security_id="1594", side="BUY",
+                        qty=1, limit_price=1500.0)
+
+    assert result.state == "REJECTED"
+    assert "network partition" in result.reason
+    states = [event["state"] for event in execu.Journal(tmp_journal).events()]
+    assert states == ["INTENT", "REJECTED"]
+
+
+def test_clock_skew_blocks_scheduler_gate():
+    """SI-6/NFR-1: a skewed host clock blocks time-sensitive trading gates."""
+    reference = dt.datetime(2026, 7, 1, 15, 5, tzinfo=dt.UTC)
+    skewed = reference + dt.timedelta(minutes=7)
+
+    with pytest.raises(scheduler.ClockSkewError):
+        scheduler.assert_clock_in_sync(
+            now=skewed,
+            reference=reference,
+            max_skew=dt.timedelta(seconds=30),
+        )

@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, time
+from datetime import date, datetime, timedelta, time
+
+
+class ClockSkewError(RuntimeError):
+    pass
 
 
 class MarketCalendar:
@@ -37,6 +41,14 @@ class RebalancePlan:
         if self.freq.lower() == "daily":
             return True
         raise ValueError(f"unsupported rebalance frequency: {self.freq}")
+
+
+def assert_clock_in_sync(now: datetime, reference: datetime, max_skew: timedelta) -> None:
+    if now.tzinfo is None or reference.tzinfo is None:
+        raise ClockSkewError("clock check requires timezone-aware timestamps")
+    skew = abs(now - reference)
+    if skew > max_skew:
+        raise ClockSkewError(f"clock skew {skew} exceeds {max_skew}")
 
 
 def _parse_hhmm(value: str) -> time:

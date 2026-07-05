@@ -8,6 +8,10 @@ class StaleDataError(RuntimeError):
     pass
 
 
+class CorruptDataError(RuntimeError):
+    pass
+
+
 class DataService:
     pass
 
@@ -26,6 +30,18 @@ def assert_panel_fresh(panel: dict, expected_trading_date: str | date) -> None:
     expected = _as_date(expected_trading_date)
     if latest != expected:
         raise StaleDataError(f"stale panel: latest={latest}, expected={expected}")
+
+
+def assert_latest_prices_sane(panel: dict, collar_pct: float) -> None:
+    close = panel.get("close")
+    if close is None or close.empty:
+        raise CorruptDataError("panel has no close data")
+
+    latest = close.iloc[-1]
+    previous = close.iloc[-2] if len(close.index) >= 2 else latest
+    for symbol, price in latest.items():
+        if not price_is_sane(price, previous[symbol], collar_pct):
+            raise CorruptDataError(f"corrupt close for {symbol}")
 
 
 def price_is_sane(value: float, prev_close: float, collar_pct: float) -> bool:

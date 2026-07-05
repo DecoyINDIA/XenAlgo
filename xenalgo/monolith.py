@@ -57,6 +57,7 @@ class PaperDayRunner:
     ) -> PaperDayResult:
         self.token_manager.ensure_valid()
         data.assert_panel_fresh(panel, expected_trading_date)
+        data.assert_latest_prices_sane(panel, self.risk_engine.config.get("price_collar_pct", 0.03))
 
         close = panel["close"]
         prev_close = {symbol: float(close[symbol].iloc[-1]) for symbol in close.columns}

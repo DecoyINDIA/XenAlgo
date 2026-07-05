@@ -1,7 +1,7 @@
 # XenAlgo Handoff
 
 **Last updated:** 2026-07-05  
-**Current phase:** Phase 2 operator console implemented locally; Phase 3 hardening not started.
+**Current phase:** Phase 3.1 failure-injection suite implemented and locally green; Oracle-host proof still pending.
 **Working directory:** `D:\XOLVER\XenAlgo`
 
 ## Safety Posture
@@ -19,6 +19,10 @@ Phase 2 adds operator visibility and control surfaces only. The dashboard reads 
 state from SQLite, derives positions by replaying confirmed `TRADED` journal events, and
 limits writes to authenticated operator controls in `risk_state` plus append-only
 `audit_log` entries. It does not add a Dhan order-placement path.
+
+Phase 3.1 adds only local deterministic failure-injection coverage and paper-mode safety
+guards. It does not enable live trading, does not call the live Dhan order API, and does not
+change `live_trading.enabled=false` or `broker.order_api_enabled=false`.
 
 ## Completed In Phase 0
 
@@ -92,6 +96,27 @@ limits writes to authenticated operator controls in `risk_state` plus append-onl
     `POSTBACK_HMAC_SECRET` is present.
 - Added Phase 2 integration tests at `tests/integration/test_phase2_console.py`.
 
+## Completed In Phase 3.1
+
+- Expanded the chaos suite at `tests/chaos/test_failure_injection.py` to cover the full
+  Phase 3.1 failure list from `docs/BUILD_PLAN.md`:
+  - crash/restart mid-order without duplicate submission,
+  - dropped WebSocket fill channel with REST fallback recovery,
+  - duplicate fill events from redundant channels as a no-op,
+  - token expiry blocking order submission before broker access,
+  - corrupt candle rejection before sizing/order flow,
+  - rejection storm tripping the consecutive-failure breaker,
+  - reconciliation drift signaling a halt,
+  - broker/network partition journaled as a rejected submission instead of crashing,
+  - clock skew blocking time-sensitive scheduler gates.
+- Added `xenalgo.data.CorruptDataError` and `assert_latest_prices_sane()`; the paper-day
+  runner now applies this price sanity gate after freshness validation.
+- Added `xenalgo.scheduler.ClockSkewError` and `assert_clock_in_sync()` for host-clock
+  drift detection.
+- Hardened `ExecutionEngine.submit()` so broker submission exceptions are converted into
+  append-only `REJECTED` journal events, increment the failure counter, and can trip the
+  existing failure breaker.
+
 ## Verification Evidence
 
 Run from repo root:
@@ -103,7 +128,7 @@ Run from repo root:
 Last observed result:
 
 ```text
-81 passed, 1 warning
+85 passed, 1 warning
 ```
 
 Run from `_source`:
@@ -116,6 +141,18 @@ Last observed result:
 
 ```text
 4 passed
+```
+
+Targeted Phase 3.1 verification:
+
+```powershell
+./_source/.venv/Scripts/python.exe -m pytest tests/chaos -q
+```
+
+Last observed result:
+
+```text
+9 passed
 ```
 
 Targeted Phase 2 verification:
@@ -176,8 +213,10 @@ environment-side proof on the Oracle/Tailscale host:
 - Keep the postback endpoint disabled until the HMAC secret and isolated public ingress are
   reviewed.
 
-Next engineering phase is Phase 3.1 failure-injection hardening after the paper console is
-deployed on the Oracle/Tailscale host.
+Phase 3.1's repository failure-injection suite is implemented and locally green. The
+`docs/BUILD_PLAN.md` wording also says the suite runs on the Oracle dev host; that
+environment-side execution is still pending until the Oracle/Tailscale paper host is
+provisioned.
 
 ## Git / Workspace Notes
 
@@ -202,5 +241,6 @@ folders. They are ignored by `.gitignore`; remove them after verification if the
 
 Provision the Oracle/Tailscale paper host from `docs/PHASE0_OPERATIONS.md`, run the Phase 2
 console there with `XENALGO_CONSOLE_TOKEN` and `TAILSCALE_BIND_HOST`, and capture G2 network
-evidence before starting Phase 3.1 failure injection. Do not introduce a live Dhan order path
+evidence. Then run the now-complete Phase 3.1 chaos suite on that host and attach the host
+evidence before starting the 4-week paper burn-in. Do not introduce a live Dhan order path
 without a separate, explicit operator request.

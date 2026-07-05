@@ -346,7 +346,15 @@ class ExecutionEngine:
         if not self.journal.has_correlation(cid):
             self.journal.append(state="INTENT", **_journal_fields(kwargs))
 
-        ack = self.broker.place_order(_Request(**kwargs))
+        try:
+            ack = self.broker.place_order(_Request(**kwargs))
+        except Exception as exc:
+            reason = f"broker submission failed: {exc}"
+            self.journal.append(state="REJECTED", reason=reason, **_journal_fields(kwargs))
+            self._failures += 1
+            if self._failures >= self.consecutive_failure_halt:
+                self._halted = True
+            return SubmissionResult("REJECTED", None, cid, reason)
         state = "REJECTED" if ack.status == "REJECTED" else "PENDING"
         self.journal.append(
             state=state,
