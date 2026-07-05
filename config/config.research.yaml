@@ -1,0 +1,49 @@
+profile: research
+
+dhan:
+  client_id_env: DHAN_CLIENT_ID
+  access_token_env: DHAN_ACCESS_TOKEN
+  scrip_master_url: https://images.dhan.co/api-data/api-scrip-master.csv
+  nifty200_url: https://archives.nseindia.com/content/indices/ind_nifty200list.csv
+  nifty500_url: https://archives.nseindia.com/content/indices/ind_nifty500list.csv
+
+database:
+  db_path: _source/Supply/database/market_data.duckdb
+  data_dir: _source/Supply/cache
+
+universe:
+  benchmark: NIFTY 200
+  min_price: 10.0
+  min_volume: 10000
+
+backtest:
+  start_date: "2021-01-01"
+  end_date: "2026-07-04"
+  initial_capital: 10000000.0
+
+portfolio:
+  type: LongOnly
+  rebalance_freq: Weekly
+  rebalance_day: 0
+  max_positions: 20
+  sizing: EqualWeight
+  warmup_period: 30
+  min_liquidity_days: 20
+  rebalance_threshold_pct: 10.0
+  min_holding_bars: 5
+  min_trade_value: 0
+
+costs:
+  brokerage_pct: 0.0
+  stt_buy_pct: 0.0010
+  stt_sell_pct: 0.0010
+  exchange_charges_pct: 0.000030699
+  gst_pct: 0.18
+  stamp_duty_pct: 0.00015
+  sebi_charges_pct: 0.000001
+  slippage_pct: 0.0005
+
+logging:
+  level: INFO
+  format: json
+  file_path: Diary/logs/research.log

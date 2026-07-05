@@ -1,0 +1,90 @@
+profile: live
+
+live_trading:
+  enabled: false
+  mode: paper
+  interval_seconds: 300
+  square_off_time: "15:15"
+  results_dir: Diary/live
+
+sleeves:
+  std30:
+    capital_fraction: 0.34
+    enabled: true
+  alpha_027:
+    capital_fraction: 0.33
+    enabled: true
+  alpha_062:
+    capital_fraction: 0.33
+    enabled: true
+
+risk:
+  max_order_notional_inr: 200000
+  max_pct_of_adv: 0.05
+  price_collar_pct: 0.03
+  max_position_pct: 0.10
+  max_positions_global: 40
+  daily_loss_halt_pct: 0.02
+  drawdown_halt_pct: 0.10
+  consecutive_failure_halt: 3
+
+execution:
+  order_type: MARKETABLE_LIMIT
+  buy_collar_pct: 0.005
+  window_start: "15:00"
+  window_end: "15:20"
+  order_timeout_min: 10
+  sell_before_buy: true
+  min_holding_bars: 5
+
+governor:
+  max_orders_per_sec: 2
+  max_orders_per_day: 500
+  max_quotes_per_sec: 1
+
+broker:
+  provider: dhan
+  dhan_sdk_version: "2.0.2"
+  client_id_env: DHAN_CLIENT_ID
+  pin_env: DHAN_PIN
+  totp_secret_env: DHAN_TOTP_SECRET
+  access_token_env: DHAN_ACCESS_TOKEN
+  static_ip_primary_env: DHAN_STATIC_IP_PRIMARY
+  static_ip_secondary_env: DHAN_STATIC_IP_SECONDARY
+  order_api_enabled: false
+
+storage:
+  market_data_duckdb: Supply/database/market_data.duckdb
+  journal_sqlite: Diary/state/order_journal.sqlite
+  duckdb_live_mode: read_only
+  sqlite_journal_mode: WAL
+  sqlite_synchronous: FULL
+
+scheduler:
+  timezone: Asia/Kolkata
+  calendar: XNSE
+  overrides_file: config/nse_overrides.yaml
+  token_refresh: "08:15"
+  data_sync: "08:30"
+  startup_gate: "09:00"
+  execution_window_start: "15:00"
+  execution_window_end: "15:20"
+  eod_sync: "15:45"
+  backups: "02:00"
+
+alerts:
+  telegram_token_env: TELEGRAM_BOT_TOKEN
+  telegram_chat_id_env: TELEGRAM_CHAT_ID
+  pushover_token_env: PUSHOVER_TOKEN
+  pushover_user_key_env: PUSHOVER_USER_KEY
+
+web:
+  bind_host_env: TAILSCALE_BIND_HOST
+  bind_port: 8080
+  public_postback_enabled: false
+  postback_hmac_secret_env: POSTBACK_HMAC_SECRET
+
+logging:
+  level: INFO
+  format: json
+  file_path: Diary/logs/xenalgo.log

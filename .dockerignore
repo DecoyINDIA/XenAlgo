@@ -1,0 +1,16 @@
+.env
+.env.*
+.git
+.pytest_cache
+__pycache__
+*.pyc
+.venv
+venv
+_source/.venv
+Diary
+Supply
+_source/Diary
+_source/Supply
+*.duckdb
+*.sqlite
+*.log

@@ -1,0 +1,4 @@
+# Manual XNSE calendar overrides for muhurat/ad-hoc exchange sessions.
+# Empty in Phase 0. Phase 1 scheduler must treat this file as operator-maintained.
+holidays: []
+special_sessions: []
