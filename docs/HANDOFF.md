@@ -266,6 +266,9 @@ CI checkout fix:
   GitHub submodule. CI installs `requirements.lock` and runs the committed repo suite.
 - `tests/test_phase0_scaffold.py` still verifies byte identity against `_source` when the
   local snapshot is present, and skips that one check when it is absent.
+- A fresh no-submodule clone at `.tmp\ci-sim2` passed the repo suite with
+  `102 passed, 1 skipped, 1 warning in 8.12s`; the skipped test was the optional `_source`
+  byte-identity check.
 
 Targeted Phase 3.1 verification:
 
