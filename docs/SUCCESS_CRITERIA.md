@@ -11,9 +11,11 @@ Every criterion is **measurable and testable**. A phase gate passes only when al
 **Current evidence snapshot (2026-07-05):** G0, G1, and the repository-local Phase 3.1
 failure-injection suite are locally green. Phase 2 console behavior is covered by local
 snapshot/SSE/control tests, but the Tailscale network proof still requires the Oracle paper
-host. Full G3 go-live remains blocked by external/operator gates: Oracle-host proof,
-four-week paper burn-in, live-host migration, Dhan static-IP registration, backup/restore
-drills, live kill-switch proof, funded account setup, and staged capital ramp.
+host. Phase 3.2 and Phase 3.3 now have local evidence evaluators, but the real gates still
+require operator-supplied host and calendar-time proof. Full G3 go-live remains blocked by
+external/operator gates: Oracle-host proof, four-week paper burn-in, live-host migration,
+Dhan static-IP registration, backup/restore drills, one-week live-host paper validation,
+live kill-switch proof, funded account setup, and staged capital ramp.
 
 ### G0 — Foundation
 - [ ] `pytest` full suite green (existing 4 + new).
@@ -59,6 +61,14 @@ token refresh success, safety incidents, and unresolved outliers; live-host evid
 checked for India-region host selection, static-IP lead time, Docker/systemd/backups/restore,
 heartbeat, Oracle warm-staging retention, and live-order toggles remaining disabled. Passing
 these local checks is necessary evidence hygiene, not a substitute for the external gate.
+
+Phase 3.3 evidence support is covered locally by `tests/unit/test_phase33_readiness.py`:
+post-migration records are checked for one-week span, minimum reviewed sessions, complete
+sleeve reviews, host-id consistency, static-IP startup verification before validation,
+deviation ratio, token refresh success, clean reconciliation, no safety incidents, no
+unresolved outliers, and live-order toggles remaining disabled. Passing this local check is
+necessary evidence hygiene, not a substitute for operating the paid live host for the
+required calendar week.
 
 ### G4 — Learning Layer
 - [ ] Produces structured post-trade insights + parameter proposals.

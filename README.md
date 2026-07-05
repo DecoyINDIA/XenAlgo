@@ -31,11 +31,11 @@ The design bias is simple:
 
 ## Current Status
 
-The repository-local build is complete through Phase 3.1 failure-injection coverage, with Phase 3.2 evidence tooling now added. Phase 1 paper execution, Phase 2 operator console surfaces, the deterministic Phase 3.1 chaos suite, and Phase 3.2 burn-in/live-host readiness checks are implemented and tested locally.
+The repository-local build is complete through Phase 3.1 failure-injection coverage, with Phase 3.2 and Phase 3.3 evidence tooling now added. Phase 1 paper execution, Phase 2 operator console surfaces, the deterministic Phase 3.1 chaos suite, Phase 3.2 burn-in/live-host readiness checks, and Phase 3.3 post-migration paper-validation checks are implemented and tested locally.
 
-The remaining go-live work is intentionally outside this checkout: Oracle/Tailscale host proof, actual four-week paper burn-in on live market data, paid live-host provisioning, Dhan static-IP registration, backup and restore drills, and staged capital ramp. Live Dhan order placement remains disabled and must not be added or enabled without a separate explicit operator approval.
+The remaining go-live work is intentionally outside this checkout: Oracle/Tailscale host proof, actual four-week paper burn-in on live market data, paid live-host provisioning, Dhan static-IP registration, backup and restore drills, at least one week of paper validation on the paid live host, and staged capital ramp. Live Dhan order placement remains disabled and must not be added or enabled without a separate explicit operator approval.
 
-The root `xenalgo/` package currently includes broker abstractions, risk, execution, governor, paper broker, token, data, scheduler, strategy, ops, alerting, reconciliation, paper-day orchestration, console state, FastAPI/SSE dashboard endpoints, postback HMAC validation, Telegram command routing, and Phase 3.2 evidence evaluation.
+The root `xenalgo/` package currently includes broker abstractions, risk, execution, governor, paper broker, token, data, scheduler, strategy, ops, alerting, reconciliation, paper-day orchestration, console state, FastAPI/SSE dashboard endpoints, postback HMAC validation, Telegram command routing, and Phase 3.2/3.3 evidence evaluation.
 
 The original research and backtest snapshot is kept under `_source/`. The promoted `Brain/` and `Strategies/` folders preserve the validated research surface. Strategy logic should not be changed casually.
 
@@ -110,7 +110,8 @@ XenAlgo is not ready because it starts. It is ready only when the safety gates p
 - Journal replay matches derived state after crash recovery.
 - Governor never exceeds 2 orders per second.
 - Reconciler halts on injected broker/local drift.
-- At least four weeks of clean paper burn-in before live capital.
+- At least four weeks of clean paper burn-in before live-host migration.
+- At least one week of clean paper validation on the paid live host before live capital.
 
 The complete acceptance matrix is in [docs/SUCCESS_CRITERIA.md](docs/SUCCESS_CRITERIA.md).
 

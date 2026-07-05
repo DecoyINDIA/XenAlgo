@@ -81,6 +81,11 @@ Repository-local Phase 3.2 support now lives in `xenalgo.phase32` and
 does not replace the required calendar-time burn-in, host provisioning, Dhan static-IP
 registration, restore drill, or heartbeat proof.
 
+Repository-local Phase 3.3 support now lives in `xenalgo.phase33` and
+`docs/PHASE3_3_OPERATIONS.md`. It evaluates supplied post-migration paper-validation
+evidence from the paid live host, but does not replace the required calendar-time week,
+new-host operation, static-IP startup proof, or operator review.
+
 **Go-Live Checklist (all mandatory):** G0–G2 passed · full failure-injection suite green · ≥4wk paper burn-in (Oracle) within deviation tolerance · ≥1wk post-migration paper validation on the live host green · static IP registered & verified on the live host · token auto-refresh proven over ≥5 sessions · backups + restore drill done on the live host · kill switch verified live · dedicated funded account · alerts confirmed on real phone.
 
 **Exit Gate G3:** Live at 100% capital, ≥2 clean weeks per stage, zero safety incidents, live-vs-backtest deviation within tolerance.

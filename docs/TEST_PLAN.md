@@ -8,7 +8,7 @@ Safety-critical code is written **test-first**. The unit tests in `tests/unit/` 
 ## 2. Test Layers
 | Layer | Scope | Tools | Where |
 |---|---|---|---|
-| Unit | Pure logic per component (risk checks, state machine, governor, sizing, freshness, Phase 3.2 evidence gates). | pytest, hypothesis | `tests/unit/` |
+| Unit | Pure logic per component (risk checks, state machine, governor, sizing, freshness, Phase 3.2/3.3 evidence gates). | pytest, hypothesis | `tests/unit/` |
 | Contract | `BrokerInterface` implementations obey the same contract. PaperBroker is active now; any future DhanGateway coverage must use HTTP mocks only. | pytest, respx (HTTP mock) | `tests/contract/` |
 | Integration | Monolith wiring: startup gate, a full paper day, reconciliation loop. | pytest-asyncio | `tests/integration/` |
 | Failure-injection | Adversarial: crash mid-order, WS drop, token expiry, bad candle, rejection storm. | pytest + fault harness | `tests/chaos/` |
@@ -29,6 +29,8 @@ Safety-critical code is written **test-first**. The unit tests in `tests/unit/` 
   DhanGateway implementation; live-order-capable code is outside the current safe boundary.
 - Phase 3.2 tests validate operator-supplied evidence only. They do not provision hosts,
   register static IPs, call Dhan, or enable live trading.
+- Phase 3.3 tests validate operator-supplied post-migration paper evidence only. They do not
+  run the calendar-time validation week, call Dhan, or enable live trading.
 
 ## 5. CI Policy
 - Full unit+contract+integration suite on every change; chaos suite nightly and pre-gate.
