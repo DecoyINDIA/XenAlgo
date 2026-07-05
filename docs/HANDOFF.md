@@ -1,7 +1,7 @@
 # XenAlgo Handoff
 
 **Last updated:** 2026-07-05  
-**Current phase:** Phase 3.1 failure-injection suite implemented and locally green; Oracle-host proof still pending.
+**Current phase:** Phase 3.1 repository failure-injection suite implemented and locally green as of 2026-07-05; Oracle-host proof, paper burn-in, live-host migration, and staged capital ramp are still pending operator/external gates.
 **Working directory:** `D:\XOLVER\XenAlgo`
 
 ## Safety Posture
@@ -117,6 +117,28 @@ change `live_trading.enabled=false` or `broker.order_api_enabled=false`.
   append-only `REJECTED` journal events, increment the failure counter, and can trip the
   existing failure breaker.
 
+## Phase 3 Status Boundary
+
+Phase 3.1 is the only Phase 3 item that is fully repo-local. It is implemented and locally
+verified through deterministic chaos tests only. No live Dhan order API path was called,
+enabled, or tested.
+
+The rest of Phase 3 cannot be truthfully completed from this checkout alone:
+
+- Phase 3.2a requires at least four calendar weeks of paper burn-in on live market data on
+  the Oracle/Tailscale paper host.
+- Phase 3.2b requires selecting/provisioning the paid live host, deploying the same Docker
+  image, setting up systemd/backups/heartbeat, and registering the new static IPs with Dhan
+  at least seven days before go-live.
+- Phase 3.3 requires at least one week of paper validation on the new live host after
+  migration.
+- Phase 3.4 requires the go-live checklist gate before enabling live trading at 10% capital.
+- Phase 3.5 requires the staged 10% -> 25% -> 50% -> 100% capital ramp with at least two
+  clean weeks at each stage.
+
+Until those external gates are evidenced, the repo status is: Phase 3.1 complete; full G3
+go-live not complete.
+
 ## Verification Evidence
 
 Run from repo root:
@@ -128,7 +150,7 @@ Run from repo root:
 Last observed result:
 
 ```text
-85 passed, 1 warning
+85 passed, 1 warning in 4.61s
 ```
 
 Run from `_source`:
@@ -140,7 +162,7 @@ Run from `_source`:
 Last observed result:
 
 ```text
-4 passed
+4 passed in 1.44s
 ```
 
 Targeted Phase 3.1 verification:
@@ -152,7 +174,7 @@ Targeted Phase 3.1 verification:
 Last observed result:
 
 ```text
-9 passed
+9 passed in 1.20s
 ```
 
 Targeted Phase 2 verification:
