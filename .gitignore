@@ -13,6 +13,7 @@ htmlcov/
 .venv/
 venv/
 _source/.venv/
+_source/
 
 *.duckdb
 *.duckdb.wal

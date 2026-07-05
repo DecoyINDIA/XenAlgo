@@ -37,7 +37,7 @@ The remaining go-live work is intentionally outside this checkout: Oracle/Tailsc
 
 The root `xenalgo/` package currently includes broker abstractions, risk, execution, governor, paper broker, token, data, scheduler, strategy, ops, alerting, reconciliation, paper-day orchestration, console state, FastAPI/SSE dashboard endpoints, postback HMAC validation, Telegram command routing, and Phase 3.2/3.3 evidence evaluation.
 
-The original research and backtest snapshot is kept under `_source/`. The promoted `Brain/` and `Strategies/` folders preserve the validated research surface. Strategy logic should not be changed casually.
+The original research and backtest snapshot is kept locally under `_source/` in the operator checkout. It is not required for GitHub Actions because the promoted `Brain/` and `Strategies/` folders preserve the validated research surface in this repository. Strategy logic should not be changed casually.
 
 ## Safety Model
 
@@ -64,7 +64,7 @@ XenAlgo/
 |-- tests/                  # unit, integration, and chaos specs
 |-- Brain/                  # promoted research and backtest engine
 |-- Strategies/             # promoted validated strategies
-`-- _source/                # original cloned research snapshot and venv
+`-- _source/                # optional local research snapshot and venv
 ```
 
 ## Read First
@@ -86,7 +86,7 @@ Use the pinned Python environment under `_source/.venv/` from PowerShell:
 ./_source/.venv/Scripts/python.exe -m pytest -q
 ```
 
-Run the original research-engine tests:
+Run the original research-engine tests when the optional local `_source/` snapshot is present:
 
 ```powershell
 cd _source

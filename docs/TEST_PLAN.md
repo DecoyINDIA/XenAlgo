@@ -23,7 +23,7 @@ Safety-critical code is written **test-first**. The unit tests in `tests/unit/` 
 - `MockBroker` — in-memory `BrokerInterface` with programmable acks/fills/rejections/latency.
 - `respx` — mock Dhan REST at the HTTP layer for `DhanGateway` tests (no live calls, ever).
 - `tmp_journal` — a throwaway SQLite WAL DB per test.
-- `synthetic_panel` — reuse existing test panel builders from `Lab/test_platform.py`.
+- `synthetic_panel` — use repo-local builders; the optional `_source/Lab` tests can still be run in the operator checkout.
 - **No test ever touches the real Dhan API or places a real order.**
 - Current contract coverage is paper-only until the operator explicitly approves a
   DhanGateway implementation; live-order-capable code is outside the current safe boundary.
@@ -33,7 +33,7 @@ Safety-critical code is written **test-first**. The unit tests in `tests/unit/` 
   run the calendar-time validation week, call Dhan, or enable live trading.
 
 ## 5. CI Policy
-- Full unit+contract+integration suite on every change; chaos suite nightly and pre-gate.
+- Full committed repo suite on every change; chaos suite nightly and pre-gate. Optional `_source/Lab` research tests are run separately when that local snapshot exists.
 - A failing **safety invariant** test blocks merge unconditionally.
 - Coverage gate enforced on `risk/` and `execution/`.
 

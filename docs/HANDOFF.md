@@ -56,7 +56,7 @@ placement.
   - `.gitignore`
   - `.env.example`
 - Added GitHub Actions CI definition at `.github/workflows/ci.yml`.
-- Updated `pytest.ini` so the root suite includes both `tests/` and `_source/Lab`.
+- Updated `pytest.ini` so the root suite runs the committed repo tests under `tests/`.
 - Added Phase 0 tests at `tests/test_phase0_scaffold.py`.
 - Added operator infra runbook at `docs/PHASE0_OPERATIONS.md`.
 
@@ -211,7 +211,7 @@ Run from repo root:
 Last observed result:
 
 ```text
-102 passed, 2 warnings in 14.52s
+98 passed, 2 warnings in 9.58s
 ```
 
 Note: an earlier full-suite attempt without repo-local `TMP`/`TEMP` failed during pytest
@@ -228,8 +228,18 @@ Run from `_source`:
 Last observed result:
 
 ```text
-4 passed, 1 warning in 2.06s
+4 passed, 1 warning in 2.21s
 ```
+
+CI checkout fix:
+
+- GitHub Actions run `28727549195` failed during checkout because `actions/checkout` tried
+  to initialize `_source` as a submodule from `https://github.com/anishbaral2012/quant-swing-trade.git`
+  and GitHub returned `Repository not found`.
+- `_source` is now treated as an optional local/operator research snapshot, not a required
+  GitHub submodule. CI installs `requirements.lock` and runs the committed repo suite.
+- `tests/test_phase0_scaffold.py` still verifies byte identity against `_source` when the
+  local snapshot is present, and skips that one check when it is absent.
 
 Targeted Phase 3.1 verification:
 
@@ -339,15 +349,9 @@ required calendar periods.
 ## Git / Workspace Notes
 
 The root `D:\XOLVER\XenAlgo` directory is now initialized as the XenAlgo Git repository.
-`_source/` remains a separate cloned research snapshot and is represented from the root repo
-as an explicit submodule (`.gitmodules`) pointing to:
-
-```text
-https://github.com/anishbaral2012/quant-swing-trade.git
-```
-
-GitHub Actions checks out submodules so root tests that compare promoted files against
-`_source/` and run `_source/Lab` continue to work. Do not commit `_source/.venv/`, `.env`,
+`_source/` remains a separate local cloned research snapshot in the operator checkout, but
+it is no longer represented as a Git submodule because the upstream snapshot URL is not
+available to GitHub Actions. Do not commit `_source/`, `_source/.venv/`, `.env`,
 `*.duckdb`, `Diary/`, `Supply/`, or secret material.
 
 ## Generated Artifacts

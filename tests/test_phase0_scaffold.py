@@ -5,6 +5,7 @@ import logging
 from io import StringIO
 from pathlib import Path
 
+import pytest
 import xenalgo
 from xenalgo.config import load_config
 from xenalgo.logging_setup import configure_logging
@@ -24,6 +25,10 @@ def test_promoted_research_packages_import_cleanly():
 
 
 def test_promoted_research_packages_match_source_bytes():
+    source_root = ROOT / "_source"
+    if not source_root.exists() or not (source_root / "Brain").exists():
+        pytest.skip("_source research snapshot is optional outside the operator checkout")
+
     for relative in [
         Path("Brain/alpha_engine.py"),
         Path("Brain/backtest_engine.py"),

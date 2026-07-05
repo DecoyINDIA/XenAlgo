@@ -15,7 +15,7 @@ Each phase has an explicit **exit gate** — the next phase does not start until
 | 0.2 | Split config: `config.research.yaml` (backtest) vs `config.live.yaml` (execution/risk/sleeves/governor per TRD §5). | S |
 | 0.1a | Provision Oracle Cloud Always Free instance (ARM A1, Mumbai/Hyderabad), reserve free public IP, install Tailscale, close all inbound ports except SSH. Write a `Dockerfile` so the app is portable to the future paid-VPS host unchanged. | S |
 | 0.3 | Pin all deps to exact versions (incl. `dhanhq==2.0.2`, `pytz`, `scipy`); add `pandas_market_calendars`, `apscheduler`, `httpx`, `pyotp`, `fastapi`, `uvicorn`, `python-telegram-bot`. Lockfile. | S |
-| 0.4 | Test harness: `tests/` dir, pytest config, move/extend existing `Lab/` tests; CI runs full suite on every change. | S |
+| 0.4 | Test harness: `tests/` dir, pytest config, move/extend existing `Lab` coverage into repo-local tests; CI runs the committed repo suite on every change. | S |
 | 0.5 | Structured logging + run-id context; `.env.example`; secrets hygiene (.gitignore, 0600). | S |
 
 **Exit Gate G0:** `pytest` green (existing 4 + new scaffolding), project imports cleanly, config loads both profiles, CI passes.

@@ -21,6 +21,6 @@ PRD goal → FR requirement → TRD component → build-plan task → success cr
 - `tests/unit/test_phase33_readiness.py` — Phase 3.3 evidence-gate checks for post-migration paper validation on the live host.
 - `tests/integration/` — paper-day orchestration and Phase 2 console/SSE/control-path integration tests.
 - `tests/chaos/` — failure-injection suite (Phase 3.1 go-live blocker).
-- `_source/Lab/` — existing research-engine tests (4 passing).
+- `_source/Lab/` — optional local research-engine tests when the operator snapshot is present.
 
-Run from repo root: `./_source/.venv/Scripts/python.exe -m pytest -q`. Safety-invariant regressions are unconditional release blockers.
+Run from repo root: `./_source/.venv/Scripts/python.exe -m pytest -q` in the operator checkout, or `python -m pytest -q` in CI after installing `requirements.lock`. Safety-invariant regressions are unconditional release blockers.

@@ -36,8 +36,8 @@ test = [
 ]
 
 [tool.pytest.ini_options]
-testpaths = ["tests", "_source/Lab"]
-pythonpath = [".", "_source"]
+testpaths = ["tests"]
+pythonpath = ["."]
 markers = [
     "chaos: adversarial failure-injection suite (Phase 3.1; run nightly/pre-gate)",
     "property: hypothesis-based invariant tests",
