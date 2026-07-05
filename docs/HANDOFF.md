@@ -263,7 +263,7 @@ Run from repo root:
 Last observed result:
 
 ```text
-107 passed, 2 warnings in 10.71s
+107 passed, 1 warning in 17.28s
 ```
 
 Note: full-suite attempts can fail during pytest fixture setup if Windows points pytest at
@@ -352,7 +352,7 @@ Targeted Phase 3.5 evidence verification:
 Last observed result:
 
 ```text
-4 passed, 1 warning in 0.34s
+4 passed in 0.37s
 ```
 
 Targeted Phase 2 verification:
