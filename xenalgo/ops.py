@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import datetime as dt
 import sqlite3
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
@@ -12,8 +14,17 @@ class KillSwitch:
         self.store = str(store)
         self._init()
 
-    def _connect(self):
-        return sqlite3.connect(self.store)
+    @contextmanager
+    def _connect(self) -> Iterator[sqlite3.Connection]:
+        con = sqlite3.connect(self.store)
+        try:
+            yield con
+            con.commit()
+        except Exception:
+            con.rollback()
+            raise
+        finally:
+            con.close()
 
     def _init(self) -> None:
         with self._connect() as con:

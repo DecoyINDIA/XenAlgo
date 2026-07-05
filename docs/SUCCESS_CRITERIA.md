@@ -8,6 +8,13 @@ Every criterion is **measurable and testable**. A phase gate passes only when al
 
 ## 1. Phase Exit Gates (must all pass)
 
+**Current evidence snapshot (2026-07-05):** G0, G1, and the repository-local Phase 3.1
+failure-injection suite are locally green. Phase 2 console behavior is covered by local
+snapshot/SSE/control tests, but the Tailscale network proof still requires the Oracle paper
+host. Full G3 go-live remains blocked by external/operator gates: Oracle-host proof,
+four-week paper burn-in, live-host migration, Dhan static-IP registration, backup/restore
+drills, live kill-switch proof, funded account setup, and staged capital ramp.
+
 ### G0 — Foundation
 - [ ] `pytest` full suite green (existing 4 + new).
 - [ ] Project imports cleanly; both config profiles load and validate.
@@ -28,6 +35,10 @@ Every criterion is **measurable and testable**. A phase gate passes only when al
 - [ ] No public inbound ports except the HMAC-validated Postback webhook (port scan proof).
 - [ ] Reachable only over Tailscale (verified from off-tailnet = refused).
 
+Local status: snapshot/SSE fill visibility and dashboard/Telegram kill-switch behavior are
+covered in `tests/integration/test_phase2_console.py`; deployed Tailscale/off-tailnet port
+evidence is pending until the Oracle paper host exists.
+
 ### G3 — Go-Live
 - [ ] Full failure-injection suite (Phase 3.1) **100%** green.
 - [ ] ≥4-week paper burn-in on live data completed.
@@ -37,6 +48,17 @@ Every criterion is **measurable and testable**. A phase gate passes only when al
 - [ ] Backup + **restore drill** completed successfully.
 - [ ] Kill switch verified against the live broker (Trader's-Control path).
 - [ ] Staged ramp complete: 10→25→50→100%, each ≥2 clean weeks.
+
+Local status: `tests/chaos/` covers the Phase 3.1 failure list locally. The remaining G3
+items require real host, broker, account, phone-alert, calendar-time, and operator evidence;
+they must not be marked complete from local tests alone.
+
+Phase 3.2 evidence support is covered locally by `tests/unit/test_phase32_readiness.py`:
+burn-in records are checked for four-week span, complete sleeve reviews, deviation ratio,
+token refresh success, safety incidents, and unresolved outliers; live-host evidence is
+checked for India-region host selection, static-IP lead time, Docker/systemd/backups/restore,
+heartbeat, Oracle warm-staging retention, and live-order toggles remaining disabled. Passing
+these local checks is necessary evidence hygiene, not a substitute for the external gate.
 
 ### G4 — Learning Layer
 - [ ] Produces structured post-trade insights + parameter proposals.

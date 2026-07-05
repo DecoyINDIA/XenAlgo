@@ -9,12 +9,14 @@ Read in this order:
 4. **[BUILD_PLAN.md](BUILD_PLAN.md)** — phased build with per-phase exit gates.
 5. **[SUCCESS_CRITERIA.md](SUCCESS_CRITERIA.md)** — measurable gates, safety invariants (SI-1..SI-12), quality metrics.
 6. **[TEST_PLAN.md](TEST_PLAN.md)** — test strategy; specs live in `../tests/`.
+7. **[PHASE3_2_OPERATIONS.md](PHASE3_2_OPERATIONS.md)** — burn-in and live-host evidence runbook.
 
 ## Traceability chain
 PRD goal → FR requirement → TRD component → build-plan task → success criterion / safety invariant → test.
 
 ## Test suite
 - `tests/unit/` — executable specs for risk, order-state-machine, governor, reconciler, data gates, sleeves, scheduler, kill switch. These now run against the Phase 1 implementation.
+- `tests/unit/test_phase32_readiness.py` — Phase 3.2 evidence-gate checks for burn-in and live-host readiness.
 - `tests/integration/` — paper-day orchestration and Phase 2 console/SSE/control-path integration tests.
 - `tests/chaos/` — failure-injection suite (Phase 3.1 go-live blocker).
 - `_source/Lab/` — existing research-engine tests (4 passing).

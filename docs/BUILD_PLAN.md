@@ -76,6 +76,11 @@ Build order is dependency-driven and each sub-step is independently testable:
 | 3.4 | Go-live checklist gate (below); enable `live_trading` with **10% capital**. | S |
 | 3.5 | **Staged capital ramp:** 10% → 25% → 50% → 100%, each stage ≥2 clean weeks (no safety incident, deviation within tolerance). | L |
 
+Repository-local Phase 3.2 support now lives in `xenalgo.phase32` and
+`docs/PHASE3_2_OPERATIONS.md`. It evaluates supplied burn-in and live-host evidence, but
+does not replace the required calendar-time burn-in, host provisioning, Dhan static-IP
+registration, restore drill, or heartbeat proof.
+
 **Go-Live Checklist (all mandatory):** G0–G2 passed · full failure-injection suite green · ≥4wk paper burn-in (Oracle) within deviation tolerance · ≥1wk post-migration paper validation on the live host green · static IP registered & verified on the live host · token auto-refresh proven over ≥5 sessions · backups + restore drill done on the live host · kill switch verified live · dedicated funded account · alerts confirmed on real phone.
 
 **Exit Gate G3:** Live at 100% capital, ≥2 clean weeks per stage, zero safety incidents, live-vs-backtest deviation within tolerance.

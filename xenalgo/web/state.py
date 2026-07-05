@@ -3,6 +3,8 @@ from __future__ import annotations
 import datetime as dt
 import json
 import sqlite3
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -26,10 +28,18 @@ class ConsoleStore:
         self.journal_path = str(journal_path)
         self._init()
 
-    def _connect(self) -> sqlite3.Connection:
+    @contextmanager
+    def _connect(self) -> Iterator[sqlite3.Connection]:
         con = sqlite3.connect(self.journal_path)
         con.row_factory = sqlite3.Row
-        return con
+        try:
+            yield con
+            con.commit()
+        except Exception:
+            con.rollback()
+            raise
+        finally:
+            con.close()
 
     def _init(self) -> None:
         with self._connect() as con:

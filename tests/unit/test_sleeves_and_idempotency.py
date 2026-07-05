@@ -56,12 +56,14 @@ def test_netting_preserves_nonzero():
 execu = pytest.importorskip("xenalgo.execution")
 
 
-def test_no_double_order_after_restart(mock_broker, tmp_journal):
+def test_no_double_order_across_1000_restart_attempts(mock_broker, tmp_journal):
     """
     Submit an order, simulate a crash BEFORE the ack is journaled, restart,
-    and re-run the same target. The gateway must adopt the existing order via
-    correlationId, not place a second one.
+    and re-run the same target 1,000 times. The gateway must adopt the
+    existing order via correlationId, not place a second one.
     """
+    calls = []
+    mock_broker.on_place = lambda req: calls.append(req)
     cid = "xa-20260701-std30-RELIANCE-BUY-1"
 
     eng = execu.ExecutionEngine(broker=mock_broker, journal=execu.Journal(tmp_journal))
@@ -69,12 +71,14 @@ def test_no_double_order_after_restart(mock_broker, tmp_journal):
                security_id="2885", side="BUY", qty=10, limit_price=1000.0)
 
     # Simulate crash + fresh process using the SAME journal + broker state.
-    eng2 = execu.ExecutionEngine(broker=mock_broker, journal=execu.Journal(tmp_journal))
-    eng2.submit(correlation_id=cid, sleeve="std30", symbol="RELIANCE",
-                security_id="2885", side="BUY", qty=10, limit_price=1000.0)
+    for _ in range(1000):
+        eng2 = execu.ExecutionEngine(broker=mock_broker, journal=execu.Journal(tmp_journal))
+        eng2.submit(correlation_id=cid, sleeve="std30", symbol="RELIANCE",
+                    security_id="2885", side="BUY", qty=10, limit_price=1000.0)
 
     # Broker saw exactly one order for this correlation id.
     assert len(mock_broker._orders) == 1
+    assert len(calls) == 1
 
 
 def test_place_order_hook_called_once_per_correlation(mock_broker, tmp_journal):

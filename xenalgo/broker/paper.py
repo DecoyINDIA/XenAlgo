@@ -34,22 +34,57 @@ class PaperBroker:
         price = float(getattr(req, "limit_price"))
         side = getattr(req, "side").upper()
         symbol = getattr(req, "symbol")
+        security_id = getattr(req, "security_id", "")
         self._orders[cid] = {
             "broker_order_id": oid,
             "state": "PENDING",
             "symbol": symbol,
+            "security_id": security_id,
             "side": side,
+            "requested_qty": qty,
+            "limit_price": price,
             "filled_qty": 0,
             "avg_price": 0.0,
         }
         if side == "BUY" and self.cash < qty * price:
             self._orders[cid]["state"] = "REJECTED"
             return PaperAck("REJECTED", oid, cid, "insufficient paper cash")
+        if side == "SELL" and self.holdings.get(symbol, 0) < qty:
+            self._orders[cid]["state"] = "REJECTED"
+            return PaperAck("REJECTED", oid, cid, "insufficient paper holdings")
         return PaperAck("PENDING", oid, cid)
+
+    def modify_order(
+        self,
+        broker_order_id: str,
+        *,
+        qty: int | None = None,
+        limit_price: float | None = None,
+    ) -> PaperAck:
+        order, cid = self._find_order(broker_order_id)
+        if order["state"] != "PENDING":
+            return PaperAck(
+                "REJECTED",
+                broker_order_id,
+                cid,
+                f"cannot modify {order['state']} order",
+            )
+        if qty is not None:
+            order["requested_qty"] = int(qty)
+        if limit_price is not None:
+            order["limit_price"] = float(limit_price)
+        return PaperAck("PENDING", broker_order_id, cid)
+
+    def cancel_order(self, broker_order_id: str) -> PaperAck:
+        order, cid = self._find_order(broker_order_id)
+        if order["state"] in {"TRADED", "REJECTED", "CANCELLED"}:
+            return PaperAck("REJECTED", broker_order_id, cid, f"cannot cancel {order['state']} order")
+        order["state"] = "CANCELLED"
+        return PaperAck("CANCELLED", broker_order_id, cid)
 
     def mark_filled(self, correlation_id: str) -> None:
         order = self._orders[correlation_id]
-        if order["state"] == "TRADED":
+        if order["state"] != "PENDING":
             return
         qty = int(order.get("requested_qty", 0) or order.get("filled_qty", 0) or 0)
         if qty <= 0:
@@ -63,6 +98,13 @@ class PaperBroker:
 
     def get_order_by_correlation(self, cid: str):
         return self._orders.get(cid)
+
+    def get_order_by_id(self, broker_order_id: str):
+        try:
+            order, _ = self._find_order(broker_order_id)
+        except KeyError:
+            return None
+        return order
 
     def get_holdings(self):
         return [
@@ -80,3 +122,9 @@ class PaperBroker:
 
     def get_funds(self):
         return {"availabelBalance": self.cash}
+
+    def _find_order(self, broker_order_id: str) -> tuple[dict, str]:
+        for cid, order in self._orders.items():
+            if order["broker_order_id"] == broker_order_id:
+                return order, cid
+        raise KeyError(f"unknown paper order id: {broker_order_id}")

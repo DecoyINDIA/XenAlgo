@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import datetime as dt
 import sqlite3
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
@@ -29,8 +31,17 @@ class TokenManager:
         self.clock = clock or (lambda: dt.datetime.now(dt.UTC))
         self._init()
 
-    def _connect(self):
-        return sqlite3.connect(self.store)
+    @contextmanager
+    def _connect(self) -> Iterator[sqlite3.Connection]:
+        con = sqlite3.connect(self.store)
+        try:
+            yield con
+            con.commit()
+        except Exception:
+            con.rollback()
+            raise
+        finally:
+            con.close()
 
     def _init(self) -> None:
         with self._connect() as con:

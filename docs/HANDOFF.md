@@ -1,7 +1,7 @@
 # XenAlgo Handoff
 
 **Last updated:** 2026-07-05  
-**Current phase:** Phase 3.1 repository failure-injection suite implemented and locally green as of 2026-07-05; Oracle-host proof, paper burn-in, live-host migration, and staged capital ramp are still pending operator/external gates.
+**Current phase:** Phase 3.2 repository-local evidence tooling implemented; actual Oracle-host proof, four-week paper burn-in, live-host migration, and staged capital ramp are still pending operator/external gates.
 **Working directory:** `D:\XOLVER\XenAlgo`
 
 ## Safety Posture
@@ -23,6 +23,10 @@ limits writes to authenticated operator controls in `risk_state` plus append-onl
 Phase 3.1 adds only local deterministic failure-injection coverage and paper-mode safety
 guards. It does not enable live trading, does not call the live Dhan order API, and does not
 change `live_trading.enabled=false` or `broker.order_api_enabled=false`.
+
+Phase 3.2 repository-local work adds evidence evaluators and an operations runbook only. It
+does not provision hosts, register Dhan static IPs, run calendar-time burn-in, call the live
+Dhan order API, or enable live order placement.
 
 ## Completed In Phase 0
 
@@ -55,13 +59,24 @@ change `live_trading.enabled=false` or `broker.order_api_enabled=false`.
 
 - Added the append-only SQLite journal and order state machine in `xenalgo/execution/`.
 - Added `PositionBook`, idempotent fill application, `FillListener`, and restart replay.
+- Hardened SQLite connection lifecycle for journal, token, kill-switch, and console-state
+  stores so each operation explicitly commits/rolls back and closes its connection.
+- Added Hypothesis property coverage for SI-3/SI-4: non-fill journal events never replay
+  into positions, and duplicate fill event keys apply only once.
+- Added a subprocess crash durability test for SI-9: a child process writes confirmed fills,
+  is killed abruptly, and the parent verifies SQLite integrity plus replayed positions.
 - Added `ExecutionEngine` with correlation-id adoption, write-ahead intent, rejection
   recording, consecutive-failure halting, kill-switch support, and mandatory risk checks.
+- Tightened the restart idempotency proof to 1,000 simulated restart attempts with a
+  single broker placement, matching `docs/SUCCESS_CRITERIA.md`.
 - Added pure `RiskEngine` with notional, ADV, price-collar, position-cap, cash, duplicate,
   restricted-list, and breaker checks.
 - Added the order governor token bucket and daily cap in `xenalgo/broker/governor.py`.
 - Added paper-mode broker, token manager, in-memory alerter, scheduler guards, data
   freshness/sanity gates, sleeve allocator/netting, kill switch, deploy guard, and reconciler.
+- Added `tests/contract/test_broker_contract.py` around the paper broker boundary:
+  correlation-id idempotency, fill accounting from requested quantity, rejected/cancelled
+  orders staying unfilled, and pending-order modify/cancel behavior.
 - Added a paper-day integration runner that performs token -> data -> risk -> order ->
   confirmed fill -> reconciliation -> alert without live broker calls.
 - Updated the stale Phase 0 scaffold test so Phase 1 modules are expected to import.
@@ -117,27 +132,48 @@ change `live_trading.enabled=false` or `broker.order_api_enabled=false`.
   append-only `REJECTED` journal events, increment the failure counter, and can trip the
   existing failure breaker.
 
+## Completed In Phase 3.2 Repo-Local Readiness
+
+- Added `xenalgo.phase32` for evaluating operator-supplied Phase 3.2 evidence:
+  - `BurnInReview` checks four-week burn-in span, minimum reviewed trading days, complete
+    sleeve coverage, per-sleeve daily deviation ratio, token refresh success, safety
+    incidents, and unresolved outliers.
+  - `evaluate_live_host_readiness()` checks India-region host selection, primary/secondary
+    static IP evidence with at least seven-day lead time, Docker image reference, systemd,
+    backups, restore drill, heartbeat, Oracle warm-staging retention, and live-order toggles
+    remaining disabled before go-live.
+  - `load_burn_in_csv()` reads the operator's non-secret burn-in evidence CSV.
+- Added `tests/unit/test_phase32_readiness.py` to prove clean evidence passes and incomplete
+  or unsafe evidence fails closed.
+- Added `docs/PHASE3_2_OPERATIONS.md` with the burn-in CSV schema and live-host evidence
+  checklist.
+- Updated README, build plan, success criteria, test plan, and docs index to point at the
+  Phase 3.2 evidence workflow.
+
 ## Phase 3 Status Boundary
 
-Phase 3.1 is the only Phase 3 item that is fully repo-local. It is implemented and locally
-verified through deterministic chaos tests only. No live Dhan order API path was called,
-enabled, or tested.
+Phase 3.1 and the Phase 3.2 evidence tooling are the only Phase 3 items that are fully
+repo-local. They are locally verified through deterministic tests only. No live Dhan order
+API path was called, enabled, or tested.
 
 The rest of Phase 3 cannot be truthfully completed from this checkout alone:
 
-- Phase 3.2a requires at least four calendar weeks of paper burn-in on live market data on
-  the Oracle/Tailscale paper host.
-- Phase 3.2b requires selecting/provisioning the paid live host, deploying the same Docker
-  image, setting up systemd/backups/heartbeat, and registering the new static IPs with Dhan
-  at least seven days before go-live.
+- Phase 3.2a still requires at least four calendar weeks of paper burn-in on live market
+  data on the Oracle/Tailscale paper host, then evaluation of the collected evidence with
+  `BurnInReview`.
+- Phase 3.2b still requires selecting/provisioning the paid live host, deploying the same
+  Docker image, setting up systemd/backups/heartbeat, and registering the new static IPs
+  with Dhan at least seven days before go-live, then checking the evidence with
+  `evaluate_live_host_readiness()`.
 - Phase 3.3 requires at least one week of paper validation on the new live host after
   migration.
 - Phase 3.4 requires the go-live checklist gate before enabling live trading at 10% capital.
 - Phase 3.5 requires the staged 10% -> 25% -> 50% -> 100% capital ramp with at least two
   clean weeks at each stage.
 
-Until those external gates are evidenced, the repo status is: Phase 3.1 complete; full G3
-go-live not complete.
+Until those external gates are evidenced, the repo status is: Phase 3.1 complete and Phase
+3.2 evidence tooling complete; actual Phase 3.2 external proof and full G3 go-live are not
+complete.
 
 ## Verification Evidence
 
@@ -150,7 +186,7 @@ Run from repo root:
 Last observed result:
 
 ```text
-85 passed, 1 warning in 4.61s
+98 passed, 2 warnings in 17.34s
 ```
 
 Run from `_source`:
@@ -175,6 +211,18 @@ Last observed result:
 
 ```text
 9 passed in 1.20s
+```
+
+Targeted Phase 3.2 evidence verification:
+
+```powershell
+./_source/.venv/Scripts/python.exe -m pytest tests/unit/test_phase32_readiness.py -q
+```
+
+Last observed result:
+
+```text
+5 passed, 1 warning in 0.34s
 ```
 
 Targeted Phase 2 verification:
@@ -224,6 +272,10 @@ gateway is still intentionally not live-enabled in this checkout; before any rea
 integration, keep `broker.order_api_enabled=false`, use HTTP-level mocks only, and require an
 explicit operator approval for any change that could touch real orders.
 
+The safe broker contract layer now covers `PaperBroker`. The Dhan gateway side of that
+contract remains intentionally absent until the operator explicitly approves an HTTP-mocked
+DhanGateway implementation; no live Dhan order path exists in this checkout.
+
 Phase 2's repository code is implemented, but G2's network assertions still require
 environment-side proof on the Oracle/Tailscale host:
 
@@ -235,10 +287,11 @@ environment-side proof on the Oracle/Tailscale host:
 - Keep the postback endpoint disabled until the HMAC secret and isolated public ingress are
   reviewed.
 
-Phase 3.1's repository failure-injection suite is implemented and locally green. The
-`docs/BUILD_PLAN.md` wording also says the suite runs on the Oracle dev host; that
+Phase 3.1's repository failure-injection suite and Phase 3.2 evidence evaluators are
+implemented and locally green. The `docs/BUILD_PLAN.md` wording also says the chaos suite
+runs on the Oracle dev host and Phase 3.2 burn-in runs on live market data; that
 environment-side execution is still pending until the Oracle/Tailscale paper host is
-provisioned.
+provisioned and operated through the required calendar period.
 
 ## Git / Workspace Notes
 
@@ -264,5 +317,6 @@ folders. They are ignored by `.gitignore`; remove them after verification if the
 Provision the Oracle/Tailscale paper host from `docs/PHASE0_OPERATIONS.md`, run the Phase 2
 console there with `XENALGO_CONSOLE_TOKEN` and `TAILSCALE_BIND_HOST`, and capture G2 network
 evidence. Then run the now-complete Phase 3.1 chaos suite on that host and attach the host
-evidence before starting the 4-week paper burn-in. Do not introduce a live Dhan order path
-without a separate, explicit operator request.
+evidence before starting the 4-week paper burn-in. During burn-in, collect the CSV evidence
+described in `docs/PHASE3_2_OPERATIONS.md` and evaluate it with `BurnInReview`. Do not
+introduce a live Dhan order path without a separate, explicit operator request.

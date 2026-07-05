@@ -31,7 +31,11 @@ The design bias is simple:
 
 ## Current Status
 
-Phase 1 paper execution core is implemented in the root `xenalgo/` package. The repo currently includes broker abstractions, risk, execution, governor, paper broker, token, data, scheduler, strategy, ops, alerting, reconciliation, and paper-day orchestration modules.
+The repository-local build is complete through Phase 3.1 failure-injection coverage, with Phase 3.2 evidence tooling now added. Phase 1 paper execution, Phase 2 operator console surfaces, the deterministic Phase 3.1 chaos suite, and Phase 3.2 burn-in/live-host readiness checks are implemented and tested locally.
+
+The remaining go-live work is intentionally outside this checkout: Oracle/Tailscale host proof, actual four-week paper burn-in on live market data, paid live-host provisioning, Dhan static-IP registration, backup and restore drills, and staged capital ramp. Live Dhan order placement remains disabled and must not be added or enabled without a separate explicit operator approval.
+
+The root `xenalgo/` package currently includes broker abstractions, risk, execution, governor, paper broker, token, data, scheduler, strategy, ops, alerting, reconciliation, paper-day orchestration, console state, FastAPI/SSE dashboard endpoints, postback HMAC validation, Telegram command routing, and Phase 3.2 evidence evaluation.
 
 The original research and backtest snapshot is kept under `_source/`. The promoted `Brain/` and `Strategies/` folders preserve the validated research surface. Strategy logic should not be changed casually.
 
