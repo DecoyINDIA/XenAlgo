@@ -11,8 +11,9 @@ Every criterion is **measurable and testable**. A phase gate passes only when al
 **Current evidence snapshot (2026-07-05):** G0, G1, and the repository-local Phase 3.1
 failure-injection suite are locally green. Phase 2 console behavior is covered by local
 snapshot/SSE/control tests, but the Tailscale network proof still requires the Oracle paper
-host. Phase 3.2, Phase 3.3, and Phase 3.4 now have local evidence evaluators, but the real
-gates still require operator-supplied host, calendar-time, and live-activation proof. Full
+host. Phase 3.2, Phase 3.3, Phase 3.4, and Phase 3.5 now have local evidence evaluators,
+but the real gates still require operator-supplied host, calendar-time, live-activation,
+and staged-ramp proof. Full
 G3 go-live remains blocked by
 external/operator gates: Oracle-host proof, four-week paper burn-in, live-host migration,
 Dhan static-IP registration, backup/restore drills, one-week live-host paper validation,
@@ -80,6 +81,15 @@ account, explicit operator approval, initial capital at no more than 10%, the 2 
 governor cap, and off-market activation timing. Passing this local check is necessary
 evidence hygiene, not a substitute for external proof or the operator's live enablement
 decision.
+
+Phase 3.5 evidence support is covered locally by `tests/unit/test_phase35_capital_ramp.py`:
+the staged-ramp evidence is checked for Phase 3.4 prerequisite proof, the exact
+10% -> 25% -> 50% -> 100% order, at least two calendar weeks and 10 reviewed trading days
+per stage, complete sleeve reviews, live-vs-backtest deviation tolerance, zero safety
+incidents, clean reconciliation, broker-side kill switch evidence, explicit operator
+approval per stage, config checksums, the 2 OPS governor cap, off-market stage changes, and
+non-overlapping stage order. Passing this local check is necessary evidence hygiene, not a
+substitute for the live staged ramp itself.
 
 ### G4 — Learning Layer
 - [ ] Produces structured post-trade insights + parameter proposals.

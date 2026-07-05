@@ -92,6 +92,11 @@ the initial 10% live-capital stage, but does not call Dhan, mutate config, fund 
 account, verify phone alerts, or replace explicit operator approval to enable live order
 placement.
 
+Repository-local Phase 3.5 support now lives in `xenalgo.phase35` and
+`docs/PHASE3_5_OPERATIONS.md`. It evaluates supplied staged-ramp evidence for
+10% -> 25% -> 50% -> 100% capital, but does not call Dhan, mutate config, advance capital,
+or replace the required two clean live weeks at each stage.
+
 **Go-Live Checklist (all mandatory):** G0–G2 passed · full failure-injection suite green · ≥4wk paper burn-in (Oracle) within deviation tolerance · ≥1wk post-migration paper validation on the live host green · static IP registered & verified on the live host · token auto-refresh proven over ≥5 sessions · backups + restore drill done on the live host · kill switch verified live · dedicated funded account · alerts confirmed on real phone.
 
 **Exit Gate G3:** Live at 100% capital, ≥2 clean weeks per stage, zero safety incidents, live-vs-backtest deviation within tolerance.

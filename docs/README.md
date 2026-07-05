@@ -12,6 +12,7 @@ Read in this order:
 7. **[PHASE3_2_OPERATIONS.md](PHASE3_2_OPERATIONS.md)** — burn-in and live-host evidence runbook.
 8. **[PHASE3_3_OPERATIONS.md](PHASE3_3_OPERATIONS.md)** — post-migration paper-validation evidence runbook.
 9. **[PHASE3_4_OPERATIONS.md](PHASE3_4_OPERATIONS.md)** — go-live checklist evidence runbook for the 10% live-capital stage.
+10. **[PHASE3_5_OPERATIONS.md](PHASE3_5_OPERATIONS.md)** — staged capital-ramp evidence runbook.
 
 ## Traceability chain
 PRD goal → FR requirement → TRD component → build-plan task → success criterion / safety invariant → test.
@@ -21,6 +22,7 @@ PRD goal → FR requirement → TRD component → build-plan task → success cr
 - `tests/unit/test_phase32_readiness.py` — Phase 3.2 evidence-gate checks for burn-in and live-host readiness.
 - `tests/unit/test_phase33_readiness.py` — Phase 3.3 evidence-gate checks for post-migration paper validation on the live host.
 - `tests/unit/test_phase34_go_live.py` — Phase 3.4 evidence-gate checks for the go-live checklist and 10% activation boundary.
+- `tests/unit/test_phase35_capital_ramp.py` — Phase 3.5 evidence-gate checks for the staged 10% to 100% capital ramp.
 - `tests/integration/` — paper-day orchestration and Phase 2 console/SSE/control-path integration tests.
 - `tests/chaos/` — failure-injection suite (Phase 3.1 go-live blocker).
 - `_source/Lab/` — optional local research-engine tests when the operator snapshot is present.
