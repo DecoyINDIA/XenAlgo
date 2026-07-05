@@ -15,7 +15,8 @@ PRD goal → FR requirement → TRD component → build-plan task → success cr
 
 ## Test suite
 - `tests/unit/` — executable specs for risk, order-state-machine, governor, reconciler, data gates, sleeves, scheduler, kill switch. These now run against the Phase 1 implementation.
+- `tests/integration/` — paper-day orchestration and Phase 2 console/SSE/control-path integration tests.
 - `tests/chaos/` — failure-injection suite (Phase 3.1 go-live blocker).
 - `_source/Lab/` — existing research-engine tests (4 passing).
 
-Run: `pytest` (from repo root). Safety-invariant regressions are unconditional release blockers.
+Run from repo root: `./_source/.venv/Scripts/python.exe -m pytest -q`. Safety-invariant regressions are unconditional release blockers.

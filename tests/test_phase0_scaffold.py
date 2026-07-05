@@ -41,6 +41,13 @@ def test_phase1_modules_import_cleanly():
     import xenalgo.risk  # noqa: F401
 
 
+def test_phase2_modules_import_cleanly():
+    import xenalgo.web  # noqa: F401
+    import xenalgo.web.app  # noqa: F401
+    import xenalgo.web.state  # noqa: F401
+    import xenalgo.web.telegram  # noqa: F401
+
+
 def test_config_profiles_load_and_enforce_phase0_safety_defaults():
     research = load_config("research", ROOT)
     live = load_config("live", ROOT)

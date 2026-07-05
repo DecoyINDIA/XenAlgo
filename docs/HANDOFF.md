@@ -1,18 +1,24 @@
 # XenAlgo Handoff
 
 **Last updated:** 2026-07-05  
-**Current phase:** Phase 1 paper execution core implemented; Phase 2 console not started.  
+**Current phase:** Phase 2 operator console implemented locally; Phase 3 hardening not started.
 **Working directory:** `D:\XOLVER\XenAlgo`
 
 ## Safety Posture
 
 XenAlgo is a real-money NSE trading system design. No live Dhan order API path was called,
-tested, or enabled during Phase 1. The live config keeps both `live_trading.enabled` and
-`broker.order_api_enabled` set to `false`; the implemented end-to-end path is paper-mode only.
+tested, or enabled during Phase 1 or Phase 2. The live config keeps both
+`live_trading.enabled` and `broker.order_api_enabled` set to `false`; the implemented
+end-to-end path remains paper-mode only.
 
 Phase 1 executable specs now run rather than skip. `ExecutionEngine.submit()` calls
 `RiskEngine.check()` before broker submission, and idempotency still adopts an existing
 correlation id instead of re-posting an order.
+
+Phase 2 adds operator visibility and control surfaces only. The dashboard reads paper/live
+state from SQLite, derives positions by replaying confirmed `TRADED` journal events, and
+limits writes to authenticated operator controls in `risk_state` plus append-only
+`audit_log` entries. It does not add a Dhan order-placement path.
 
 ## Completed In Phase 0
 
@@ -56,6 +62,36 @@ correlation id instead of re-posting an order.
   confirmed fill -> reconciliation -> alert without live broker calls.
 - Updated the stale Phase 0 scaffold test so Phase 1 modules are expected to import.
 
+## Completed In Phase 2
+
+- Added `xenalgo.web.ConsoleStore` for dashboard snapshots backed by SQLite.
+  - Reads `orders`, `order_events`, `risk_state`, `portfolio_snapshots`, and `audit_log`.
+  - Derives displayed positions from confirmed `TRADED` journal events, preserving the
+    positions-change-only-from-fills invariant.
+  - Recovers sleeve attribution from prior order events when fill events carry
+    `sleeve=unknown`.
+- Added the FastAPI operator console in `xenalgo/web/app.py`.
+  - `GET /` renders an HTML dashboard for overview, risk state, positions, orders, and
+    recent journal events.
+  - `GET /api/snapshot` exposes the same read model as JSON.
+  - `GET /events` serves SSE snapshots; `?once=true` is available for deterministic smoke
+    tests.
+  - `POST /control/kill` activates the persistent kill switch and blocks new submissions.
+  - `POST /control/rearm/{breaker}` clears an approved breaker key and audit-logs the
+    action.
+  - `POST /postback` validates an HMAC signature and records a postback enqueue audit entry
+    only; it does not apply fills or submit/cancel orders.
+- Added `xenalgo.web.TelegramCommandRouter` for `/status`, `/positions`, `/kill`, and
+  `/rearm <breaker>` command behavior against the same store.
+- Added `xenalgo.web.server` bootstrap:
+  - Loads the live config and journal path.
+  - Requires `XENALGO_CONSOLE_TOKEN` for operator controls.
+  - Refuses wildcard public binds (`0.0.0.0` / `::`) so the console runs on loopback or the
+    configured Tailscale interface.
+  - Keeps the public postback endpoint disabled unless the live config enables it and a
+    `POSTBACK_HMAC_SECRET` is present.
+- Added Phase 2 integration tests at `tests/integration/test_phase2_console.py`.
+
 ## Verification Evidence
 
 Run from repo root:
@@ -67,7 +103,7 @@ Run from repo root:
 Last observed result:
 
 ```text
-73 passed
+81 passed, 1 warning
 ```
 
 Run from `_source`:
@@ -80,6 +116,18 @@ Last observed result:
 
 ```text
 4 passed
+```
+
+Targeted Phase 2 verification:
+
+```powershell
+./_source/.venv/Scripts/python.exe -m pytest tests/integration/test_phase2_console.py tests/test_phase0_scaffold.py -q
+```
+
+Last observed result:
+
+```text
+13 passed, 1 warning
 ```
 
 Config validation:
@@ -102,17 +150,34 @@ operator's OCI and Tailscale access:
 - Install Docker and Tailscale.
 - Close inbound ports except SSH.
 - Confirm the app image validates with `.env` on the host.
+- Set `XENALGO_CONSOLE_TOKEN` on the host before running the console.
+- Set `TAILSCALE_BIND_HOST` to the host's Tailscale IP/interface address before exposing the
+  dashboard beyond loopback.
+- Keep `web.public_postback_enabled=false` until the isolated webhook endpoint is explicitly
+  deployed with `POSTBACK_HMAC_SECRET` and port exposure is reviewed.
 
 Follow `docs/PHASE0_OPERATIONS.md` for the checklist.
 
-## Phase 1 Limitations / Next Engineering Boundary
+## Phase 2 Limitations / Next Engineering Boundary
 
 The paper-mode core is implemented and tested locally. The production Dhan REST/WebSocket
 gateway is still intentionally not live-enabled in this checkout; before any real broker
 integration, keep `broker.order_api_enabled=false`, use HTTP-level mocks only, and require an
-explicit operator approval for any change that could touch real orders. Phase 2 should start
-with the FastAPI/HTMX console, SSE state feed, kill-switch endpoint, and authenticated breaker
-re-arm flow.
+explicit operator approval for any change that could touch real orders.
+
+Phase 2's repository code is implemented, but G2's network assertions still require
+environment-side proof on the Oracle/Tailscale host:
+
+- Dashboard fill reflection is covered locally through the SSE/snapshot path; verify
+  <=3 seconds on the deployed paper host once Oracle is provisioned.
+- Dashboard kill switch is covered locally and blocks submission in under 1 second; repeat
+  the timed check from phone/laptop over Tailscale.
+- Prove off-tailnet refusal with a port scan once the host exists.
+- Keep the postback endpoint disabled until the HMAC secret and isolated public ingress are
+  reviewed.
+
+Next engineering phase is Phase 3.1 failure-injection hardening after the paper console is
+deployed on the Oracle/Tailscale host.
 
 ## Git / Workspace Notes
 
@@ -135,7 +200,7 @@ folders. They are ignored by `.gitignore`; remove them after verification if the
 
 ## Next Safe Step
 
-Start Phase 2 only after re-reading `PLAN.md`, `docs/PRD.md`, `docs/TRD.md`,
-`docs/BUILD_PLAN.md`, `docs/SUCCESS_CRITERIA.md`, and `docs/TEST_PLAN.md`. Build the console
-against the paper-mode state surfaces first; do not introduce a live Dhan order path without a
-separate, explicit operator request.
+Provision the Oracle/Tailscale paper host from `docs/PHASE0_OPERATIONS.md`, run the Phase 2
+console there with `XENALGO_CONSOLE_TOKEN` and `TAILSCALE_BIND_HOST`, and capture G2 network
+evidence before starting Phase 3.1 failure injection. Do not introduce a live Dhan order path
+without a separate, explicit operator request.
