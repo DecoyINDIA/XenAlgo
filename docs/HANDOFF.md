@@ -1,7 +1,7 @@
 # XenAlgo Handoff
 
-**Last updated:** 2026-07-05  
-**Current phase:** Phase 3.5 repository-local evidence tooling implemented; actual Oracle-host proof, four-week paper burn-in, live-host migration, one-week live-host paper validation, operator-approved 10% live activation, and the real staged capital ramp are still pending operator/external gates.
+**Last updated:** 2026-07-09
+**Current phase:** Phase 4 repository-local learning scaffolding implemented on top of the existing paper/live journal; the Oracle paper VM is recorded and SSH was briefly restored on 2026-07-09, but the paper-host bootstrap wedged before Docker/Tailscale/systemd completed, so deployed-host proof, four-week paper burn-in, live-host migration, one-week live-host paper validation, operator-approved 10% live activation, the real staged capital ramp, external AI-provider selection, and reviewed live proposals are still pending operator/external gates.
 **Working directory:** `D:\XOLVER\XenAlgo`
 
 ## Safety Posture
@@ -67,6 +67,9 @@ the required live two-week stages from this checkout.
 - Updated `pytest.ini` so the root suite runs the committed repo tests under `tests/`.
 - Added Phase 0 tests at `tests/test_phase0_scaffold.py`.
 - Added operator infra runbook at `docs/PHASE0_OPERATIONS.md`.
+- Added `deploy/oracle/` with an Oracle Linux 9 paper-host bootstrap script, a
+  Tailscale-only Docker/systemd service, and a host-local env template. The deployment kit
+  refuses market-hours bootstrap and keeps live trading plus broker order APIs disabled.
 
 ## Completed In Phase 1
 
@@ -252,6 +255,40 @@ tooling complete, and Phase 3.5 evidence tooling complete; actual Phase 3.2/3.3/
 external proof and full G3 go-live are not
 complete.
 
+## Completed In Phase 4 Repo-Local Learning
+
+- Added `xenalgo.learning` for proposal-only post-trade review:
+  - `TradeJournalAnalytics` derives per-sleeve attribution, slippage-vs-model metrics,
+    regime tags, and alpha-decay checks from SQLite journal/read-model state only.
+  - `LearningMemoryStore` stores observations and proposal drafts in SQLite, keeps proposals
+    pending by default, records approval/rejection decisions in `audit_log`, and writes an
+    approved config snapshot into `config_versions`.
+  - `AIProposalReviewer` accepts an injected review client and schema-validates strict JSON
+    proposal output before it can be stored.
+- Extended the console with `GET /api/learning`, pending proposal display, and authenticated
+  approve/reject endpoints.
+- Added `config.learning` defaults that keep the AI provider offline/proposal-only until an
+  explicit external provider is selected.
+- Added `tests/unit/test_phase4_learning.py` to prove deterministic analytics, pending-only
+  memory behavior, strict AI proposal validation, authenticated approval, and audit/config
+  version recording.
+
+This Phase 4 work does not call Dhan, add a broker path, apply live orders, or mutate live
+risk limits automatically. It is repo-local scaffolding; G4 still needs real post-trade
+history and operator-reviewed actionable proposals.
+
+## Completed In Research Validation Harness
+
+- Added `Brain.walk_forward` for offline anchored walk-forward validation of promoted
+  research alpha score panels.
+- The harness reuses `PortfolioEngine` and `BacktestEngine`, so out-of-sample windows use
+  the existing one-bar signal lag, transaction-cost model, and slippage assumptions.
+- Added `docs/RESEARCH_VALIDATION.md` and `tests/unit/test_research_walk_forward.py`.
+
+This does not claim that `std30`, `alpha_027`, or `alpha_062` are freshly validated for
+live capital. It provides the repo-local harness needed to produce dated validation
+evidence from the intended market-data snapshot.
+
 ## Verification Evidence
 
 Run from repo root:
@@ -263,7 +300,7 @@ Run from repo root:
 Last observed result:
 
 ```text
-107 passed, 1 warning in 17.28s
+114 passed, 1 warning in 14.12s
 ```
 
 Note: full-suite attempts can fail during pytest fixture setup if Windows points pytest at
@@ -355,6 +392,30 @@ Last observed result:
 4 passed in 0.37s
 ```
 
+Targeted Phase 4 learning verification:
+
+```powershell
+./_source/.venv/Scripts/python.exe -m pytest tests/unit/test_phase4_learning.py tests/integration/test_phase2_console.py -q
+```
+
+Last observed result:
+
+```text
+11 passed, 1 warning in 1.70s
+```
+
+Targeted research walk-forward verification:
+
+```powershell
+./_source/.venv/Scripts/python.exe -m pytest tests/unit/test_research_walk_forward.py -q
+```
+
+Last observed result:
+
+```text
+3 passed in 0.81s
+```
+
 Targeted Phase 2 verification:
 
 ```powershell
@@ -379,11 +440,57 @@ Both profiles loaded and emitted checksum metadata.
 ## Known Non-Repo / Operator-Side Work
 
 Phase 0 task `0.1a` includes Oracle Cloud and Tailscale provisioning. The repo now contains
-the Docker artifact and an operations runbook, but the actual cloud work still requires the
-operator's OCI and Tailscale access:
+the Docker artifact and an operations runbook. OCI instance creation was completed from the
+operator's account on 2026-07-06, but host setup and deployed-app proof are still pending.
 
-- Provision Oracle Cloud Always Free ARM instance in Mumbai or Hyderabad.
-- Reserve and attach the public IP.
+Current OCI paper host:
+
+- Instance: `XenAlso`
+- Region: India West / Mumbai (`ap-mumbai-1`)
+- OS: Oracle Linux 9
+- Shape: `VM.Standard.E2.1.Micro`
+- Private IP: `10.0.0.246`
+- Public IP: `80.225.212.3` (ephemeral public IPv4)
+- SSH user: `opc`
+
+Notes:
+
+- The original A1 Flex attempt failed because the selected Oracle Linux image was not valid
+  for `VM.Standard.A1.Flex`; the instance was created successfully after switching to
+  `VM.Standard.E2.1.Micro`.
+- The public IP is ephemeral, not reserved. Re-check it after stop/start or recreation.
+- SSH command shape:
+  `ssh -i <path-to-downloaded-private-key> opc@80.225.212.3`
+
+2026-07-09 paper-host deployment attempt:
+
+- OCI showed `XenAlso` running in `ap-mumbai-1` with public IP `80.225.212.3`, private IP
+  `10.0.0.246`, no VNIC network security group, and the subnet using the default security
+  list.
+- Local SSH initially timed out, then port 22 became reachable after inspecting the subnet
+  security list. A stale local host-key entry and loose ACLs on the downloaded private key
+  blocked authentication; the working session used a locked-down temporary key copy under
+  `.tmp/` and a temporary known-hosts file. Do not commit either file.
+- The current working tree was packaged and copied to `/opt/xenalgo/app` on the VM. The VM
+  copy was checked before bootstrap and still had `live_trading.enabled: false` and
+  `broker.order_api_enabled: false`.
+- The operator explicitly overrode the market-hours deployment hold because no Dhan API keys
+  or funded capital were configured. No live Dhan order path was called or enabled.
+- `sudo bash deploy/oracle/bootstrap_oracle_linux9.sh` was started at about `08:50:50 IST`.
+  It entered `dnf install -y dnf-plugins-core firewalld sqlite`, then the micro VM became
+  overloaded. Later checks showed TCP/22 open but SSH timing out during banner exchange.
+- Last confirmed incomplete state: Docker not installed, Tailscale not installed,
+  `/etc/systemd/system/xenalgo-paper.service` not installed, and the paper console not
+  running.
+- A bootstrap-script bug was found from the log (`0850: value too great for base`) and fixed
+  in the repo by forcing base-10 comparisons for the IST time guard. The VM may still have
+  the pre-fix script until the app bundle is recopied after instance recovery.
+
+Remaining host-side tasks:
+
+- Recover the OCI VM first. If SSH continues to connect at TCP level but time out before the
+  SSH banner, use the OCI console to reboot `XenAlso`, then reconnect.
+- Recopy the updated deployment bundle so the fixed bootstrap guard is present on the VM.
 - Install Docker and Tailscale.
 - Close inbound ports except SSH.
 - Confirm the app image validates with `.env` on the host.
@@ -410,7 +517,7 @@ Phase 2's repository code is implemented, but G2's network assertions still requ
 environment-side proof on the Oracle/Tailscale host:
 
 - Dashboard fill reflection is covered locally through the SSE/snapshot path; verify
-  <=3 seconds on the deployed paper host once Oracle is provisioned.
+  <=3 seconds on the deployed paper host once Docker/Tailscale setup is complete.
 - Dashboard kill switch is covered locally and blocks submission in under 1 second; repeat
   the timed check from phone/laptop over Tailscale.
 - Prove off-tailnet refusal with a port scan once the host exists.
@@ -440,12 +547,15 @@ folders. They are ignored by `.gitignore`; remove them after verification if the
 
 ## Next Safe Step
 
-Provision the Oracle/Tailscale paper host from `docs/PHASE0_OPERATIONS.md`, run the Phase 2
-console there with `XENALGO_CONSOLE_TOKEN` and `TAILSCALE_BIND_HOST`, and capture G2 network
-evidence. Then run the now-complete Phase 3.1 chaos suite on that host and attach the host
-evidence before starting the 4-week paper burn-in. During burn-in, collect the CSV evidence
-described in `docs/PHASE3_2_OPERATIONS.md` and evaluate it with `BurnInReview`. After paid
-live-host migration, collect the post-migration CSV evidence described in
+Recover or reboot the Oracle `XenAlso` VM, verify SSH responds past banner exchange, recopy
+the updated `deploy/oracle/` bundle, and rerun the paper-host bootstrap only with
+`live_trading.enabled=false` and `broker.order_api_enabled=false`. Then install/approve
+Tailscale, set `XENALGO_CONSOLE_TOKEN` and `TAILSCALE_BIND_HOST`, start
+`xenalgo-paper.service`, and capture G2 network evidence. Then run the now-complete Phase
+3.1 chaos suite on that host and attach the host evidence before starting the 4-week paper
+burn-in. During burn-in, collect the CSV evidence described in `docs/PHASE3_2_OPERATIONS.md`
+and evaluate it with `BurnInReview`. After paid live-host migration, collect the
+post-migration CSV evidence described in
 `docs/PHASE3_3_OPERATIONS.md` and evaluate it with `PostMigrationValidationReview`. Then
 collect the Phase 3.4 go-live checklist evidence described in
 `docs/PHASE3_4_OPERATIONS.md` and evaluate it with `GoLiveChecklistReview`. After the

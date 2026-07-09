@@ -13,7 +13,7 @@ Each phase has an explicit **exit gate** — the next phase does not start until
 |---|---|---|
 | 0.1 | Promote `_source/` into XenAlgo layout: keep `Brain/` (research/backtest) and `Strategies/` verbatim; add empty `xenalgo/` package for the live system. | S |
 | 0.2 | Split config: `config.research.yaml` (backtest) vs `config.live.yaml` (execution/risk/sleeves/governor per TRD §5). | S |
-| 0.1a | Provision Oracle Cloud Always Free instance (ARM A1, Mumbai/Hyderabad), reserve free public IP, install Tailscale, close all inbound ports except SSH. Write a `Dockerfile` so the app is portable to the future paid-VPS host unchanged. | S |
+| 0.1a | Provision Oracle Cloud Always Free instance in Mumbai/Hyderabad, attach a public IP, install Tailscale, close all inbound ports except SSH. Current paper VM was created 2026-07-06 as Oracle Linux 9 on `VM.Standard.E2.1.Micro` after the selected image failed on A1 Flex; the `Dockerfile` keeps the app portable to the future paid-VPS host unchanged. | S |
 | 0.3 | Pin all deps to exact versions (incl. `dhanhq==2.0.2`, `pytz`, `scipy`); add `pandas_market_calendars`, `apscheduler`, `httpx`, `pyotp`, `fastapi`, `uvicorn`, `python-telegram-bot`. Lockfile. | S |
 | 0.4 | Test harness: `tests/` dir, pytest config, move/extend existing `Lab` coverage into repo-local tests; CI runs the committed repo suite on every change. | S |
 | 0.5 | Structured logging + run-id context; `.env.example`; secrets hygiene (.gitignore, 0600). | S |

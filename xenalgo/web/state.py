@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from xenalgo.config import load_config
+from xenalgo.learning import LearningMemoryStore, TradeJournalAnalytics
 
 
 REARMABLE_BREAKERS = {
@@ -154,6 +155,7 @@ class ConsoleStore:
                 """,
             )
             positions = self._positions_from_events(con)
+        learning = self.learning_snapshot()
 
         return {
             "generated_utc": dt.datetime.now(dt.UTC).isoformat(),
@@ -163,13 +165,49 @@ class ConsoleStore:
             "portfolio": portfolio,
             "recent_events": events,
             "audit": audit,
+            "learning": learning,
             "summary": {
                 "open_orders": sum(1 for order in orders if order["state"] not in _TERMINAL_STATES),
                 "positions": len(positions),
                 "active_breakers": len(risk_state),
                 "events": len(events),
+                "pending_learning_proposals": len(learning["pending_proposals"]),
             },
         }
+
+    def learning_snapshot(self) -> dict[str, Any]:
+        analytics = TradeJournalAnalytics(self.journal_path).build_report().as_dict()
+        memory = LearningMemoryStore(self.journal_path)
+        proposals = memory.proposals(limit=100)
+        return {
+            "analytics": analytics,
+            "proposals": proposals,
+            "pending_proposals": [
+                proposal for proposal in proposals if proposal["status"] == "PENDING"
+            ],
+        }
+
+    def approve_learning_proposal(
+        self,
+        proposal_id: str,
+        *,
+        actor: str,
+        reason: str,
+        yaml_snapshot: str,
+    ) -> str:
+        return LearningMemoryStore(self.journal_path).approve_proposal(
+            proposal_id,
+            actor=actor,
+            reason=reason,
+            yaml_snapshot=yaml_snapshot,
+        )
+
+    def reject_learning_proposal(self, proposal_id: str, *, actor: str, reason: str) -> None:
+        LearningMemoryStore(self.journal_path).reject_proposal(
+            proposal_id,
+            actor=actor,
+            reason=reason,
+        )
 
     def activate_kill(self, source: str = "dashboard", actor: str = "operator") -> None:
         now = dt.datetime.now(dt.UTC).isoformat()

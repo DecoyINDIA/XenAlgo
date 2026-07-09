@@ -1,0 +1,17 @@
+[Unit]
+Description=XenAlgo paper operator console
+Wants=network-online.target tailscaled.service
+After=network-online.target docker.service tailscaled.service
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/xenalgo/xenalgo.env
+ExecStartPre=/usr/bin/docker run --rm --env-file /etc/xenalgo/xenalgo.env --network host -v /var/lib/xenalgo/Diary:/app/Diary -v /var/lib/xenalgo/Supply:/app/Supply xenalgo:oracle-paper python -m xenalgo --profile live
+ExecStart=/usr/bin/docker run --rm --name xenalgo-paper --env-file /etc/xenalgo/xenalgo.env --network host -v /var/lib/xenalgo/Diary:/app/Diary -v /var/lib/xenalgo/Supply:/app/Supply xenalgo:oracle-paper python -m xenalgo.web.server --profile live
+ExecStop=/usr/bin/docker stop xenalgo-paper
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

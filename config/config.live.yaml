@@ -84,6 +84,13 @@ web:
   public_postback_enabled: false
   postback_hmac_secret_env: POSTBACK_HMAC_SECRET
 
+learning:
+  enabled: true
+  memory_backend: sqlite
+  ai_provider: offline
+  ai_api_key_env: XENALGO_LEARNING_AI_API_KEY
+  proposal_only: true
+
 logging:
   level: INFO
   format: json

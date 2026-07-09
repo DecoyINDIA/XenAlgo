@@ -14,7 +14,7 @@ Planned 2026-07-04. Source base: `_source/` (clone of quant-swing-trade — rese
 
 **Latency truth:** this is a daily-bar swing system. "Fast" = the bot reacts in **seconds** and never misses its execution window — not microseconds. Dhan's order engine is <25ms; an India-region VPS is 5–35ms RTT. We spend the latency budget on **correctness**: fill confirmation, reconciliation, and pre-trade checks. Colocation-style optimization is irrelevant at this cadence and will not be pursued.
 
-**Broker & hosting (decided 2026-07-05):** **Dhan** stays the broker — order placement API is free, only the historical/real-time data API is paid (~₹499+tax/mo); the 3 alphas' backtests are already validated on real Dhan historical data, so switching brokers would mean re-validating edge on a different data source for no clear gain. **Oracle Cloud "Always Free"** (ARM Ampere A1, Mumbai/Hyderabad region) is the host for development and paper-trading — genuinely free forever, includes a permanent reserved public IP. Oracle's known account-suspension risk means **live capital moves to a small paid VPS** (~$10-15/mo — AWS ap-south-1 or DO Bangalore) at the Phase 3 go-live transition; see §6.
+**Broker & hosting (decided 2026-07-05; OCI instance started 2026-07-06):** **Dhan** stays the broker — order placement API is free, only the historical/real-time data API is paid (~₹499+tax/mo); the 3 alphas' backtests are already validated on real Dhan historical data, so switching brokers would mean re-validating edge on a different data source for no clear gain. **Oracle Cloud "Always Free"** in Mumbai/Hyderabad is the host for development and paper-trading. The first paper VM is Oracle Linux 9 on `VM.Standard.E2.1.Micro` with an ephemeral public IPv4; an A1 Flex attempt failed against the selected image. Oracle's known account-suspension risk means **live capital moves to a small paid VPS** (~$10-15/mo — AWS ap-south-1 or DO Bangalore) at the Phase 3 go-live transition; see §6.
 
 ---
 
@@ -152,16 +152,16 @@ Lesson from every documented disaster (Knight, Everbright, Mizuho, Flash Crash):
 
 | Stage | Host | Cost | Used for |
 |---|---|---|---|
-| **Dev / Paper (Phase 0–3.3)** | **Oracle Cloud "Always Free"** — VM.Standard.A1.Flex (ARM Ampere, 2 OCPU/12GB), Mumbai or Hyderabad region | $0 forever | Build, unit/integration/chaos tests, ≥4-week paper burn-in |
+| **Dev / Paper (Phase 0–3.3)** | **Oracle Cloud "Always Free"** — current paper VM is Oracle Linux 9 on `VM.Standard.E2.1.Micro` in Mumbai; A1 Flex remains a possible future resize only with a compatible ARM image | $0 forever | Build, unit/integration/chaos tests, ≥4-week paper burn-in |
 | **Live capital (Phase 3.4+)** | Small paid VPS — AWS ap-south-1 or DO Bangalore, t3.micro/small equivalent | ~$10-15/mo | Real-money execution |
 
 Rationale: Oracle's free tier is genuine (not a trial) and gives an India-region static IP at zero cost, but carries a documented risk of surprise account suspension — acceptable for development/paper where downtime costs nothing, not acceptable once real capital is live. The migration from Oracle → paid VPS is itself a static-IP change, so it must happen **≥7 days before go-live**, never mid-ramp.
 
 | Item | Decision |
 |---|---|
-| Dev/paper host | Oracle Cloud Always Free, ARM A1, Mumbai/Hyderabad |
+| Dev/paper host | Oracle Cloud Always Free, current `VM.Standard.E2.1.Micro` in Mumbai |
 | Live host | AWS ap-south-1 (Mumbai) — or DO Bangalore for cost; finalize at Phase-3 start |
-| IP | Free Oracle reserved public IP for dev/paper; on migration to live host, reserved/Elastic static IP ×2 (primary+secondary) registered with Dhan ≥7 days pre-go-live |
+| IP | Current Oracle dev/paper IP is ephemeral (`80.225.212.3` at creation time) and must be re-checked after stop/start; on migration to live host, reserved/Elastic static IP ×2 (primary+secondary) registered with Dhan ≥7 days pre-go-live |
 | Supervision | systemd (`Restart=on-failure`), journald logs; Docker optional for env pinning (portable across the Oracle→paid-VPS migration) |
 | Secrets | `.env` outside repo, 0600, never in backups; TOTP secret + client-id only (tokens are ephemeral) |
 | Backups | Nightly SQLite `.backup` + DuckDB→Parquet export → S3/B2; weekly VPS snapshot; monthly restore drill |

@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi import Body, FastAPI, Header, HTTPException, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse, StreamingResponse
 
 from xenalgo.web.state import ConsoleStore
@@ -46,6 +46,10 @@ def create_app(
     def config() -> dict[str, Any]:
         return store.config_summary("live", config_root)
 
+    @app.get("/api/learning")
+    def learning() -> dict[str, Any]:
+        return store.learning_snapshot()
+
     @app.get("/events")
     async def events(once: bool = False, interval_ms: int = 1000):
         if once:
@@ -81,6 +85,44 @@ def create_app(
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
         return {"ok": True, "rearmed": breaker, "snapshot": store.snapshot()["summary"]}
+
+    @app.post("/learning/proposals/{proposal_id}/approve")
+    def approve_learning_proposal(
+        proposal_id: str,
+        x_xenalgo_console_token: str | None = Header(default=None),
+        actor: str = "operator",
+        reason: str = "",
+        yaml_snapshot: str = Body(..., media_type="text/plain"),
+    ) -> dict[str, Any]:
+        require_control_token(x_xenalgo_console_token)
+        try:
+            checksum = store.approve_learning_proposal(
+                proposal_id,
+                actor=actor,
+                reason=reason,
+                yaml_snapshot=yaml_snapshot,
+            )
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        return {"ok": True, "proposal_id": proposal_id, "config_checksum": checksum}
+
+    @app.post("/learning/proposals/{proposal_id}/reject")
+    def reject_learning_proposal(
+        proposal_id: str,
+        x_xenalgo_console_token: str | None = Header(default=None),
+        actor: str = "operator",
+        reason: str = "",
+    ) -> dict[str, Any]:
+        require_control_token(x_xenalgo_console_token)
+        try:
+            store.reject_learning_proposal(proposal_id, actor=actor, reason=reason)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        return {"ok": True, "proposal_id": proposal_id, "status": "REJECTED"}
 
     @app.post("/postback")
     async def postback(
@@ -122,6 +164,11 @@ def _render_dashboard(snapshot: dict[str, Any]) -> str:
     positions = snapshot["positions"]
     risk_state = snapshot["risk_state"]
     events = snapshot["recent_events"][:20]
+    proposals = snapshot["learning"]["pending_proposals"][:20]
+    sleeves = [
+        {"sleeve": sleeve, **metrics}
+        for sleeve, metrics in snapshot["learning"]["analytics"]["sleeves"].items()
+    ]
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -170,11 +217,15 @@ def _render_dashboard(snapshot: dict[str, Any]) -> str:
     <div class="panel"><div class="value">{summary["open_orders"]}</div><div class="label">Open orders</div></div>
     <div class="panel"><div class="value">{summary["positions"]}</div><div class="label">Positions</div></div>
     <div class="panel"><div class="value">{summary["active_breakers"]}</div><div class="label">Active breakers</div></div>
-    <div class="panel"><div class="value">{summary["events"]}</div><div class="label">Journal events</div></div>
+    <div class="panel"><div class="value">{summary["pending_learning_proposals"]}</div><div class="label">Learning proposals</div></div>
   </section>
   <section class="split">
     <div class="panel"><h2>Risk State</h2>{_table(risk_state, ["key", "value", "updated_utc"], empty="No active breakers")}</div>
     <div class="panel"><h2>Positions</h2>{_table(positions, ["symbol", "qty", "avg_price", "sleeves"], empty="No positions")}</div>
+  </section>
+  <section class="split" style="margin-top:12px">
+    <div class="panel"><h2>Sleeve Analytics</h2>{_table(sleeves, ["sleeve", "fill_count", "gross_notional", "avg_slippage_bps", "realized_return_pct"], empty="No fills for analytics")}</div>
+    <div class="panel"><h2>Learning Proposals</h2>{_table(proposals, ["proposal_id", "sleeve", "title", "confidence", "status"], empty="No pending proposals")}</div>
   </section>
   <section class="panel" style="margin-top:12px"><h2>Orders</h2>{_table(orders, ["correlation_id", "broker_order_id", "state", "filled_qty", "avg_fill_price"], empty="No orders")}</section>
   <section class="panel" style="margin-top:12px"><h2>Recent Events</h2>{_table(events, ["event_id", "correlation_id", "symbol", "side", "state", "filled_qty", "reason"], empty="No journal events")}</section>
