@@ -334,7 +334,7 @@ evidence remain part of the pre-live operational gates.
 
 ### Evidence gates
 
-The repository contains conservative evaluators for the four-week paper burn-in, paid
+The repository contains conservative evidence tooling for software commissioning, paid
 live-host readiness, post-migration paper validation, first 10% activation checklist, and
 the staged 10%, 25%, 50% and 100% capital ramp.
 
@@ -371,17 +371,23 @@ paper-execution components and an integration-level `PaperDayRunner`, but it doe
 have the scheduled production paper daemon required to run all three strategies unattended
 on live market data every trading day.
 
-Therefore, the real four-week paper burn-in has **not started**.
+Therefore, the one-week software commissioning run has **not started**.
+
+This is not another strategy research exercise. The three strategies already have five-year
+backtest evidence. The commissioning week exists to prove that the bot can run correctly for
+at least five consecutive NSE trading sessions using live market data and paper execution.
+Profit or loss during those five sessions is observed, but it does not decide whether the
+software passed.
 
 Remaining milestones include:
 
 1. Build and verify the scheduled, data-only production paper daemon using `PaperBroker`.
-2. Run at least four calendar weeks of paper trading on live market data.
-3. Review each strategy sleeve against its backtest expectations every trading day.
+2. Run one commissioning week covering at least five consecutive NSE trading sessions on live market data.
+3. Review whether each session completed scheduling, data, signals, risk, paper fills, reconciliation, journaling, alerts and restart recovery correctly.
 4. Configure off-box backups, external heartbeat and restore-drill evidence.
 5. Choose and provision the paid India-region live host.
 6. Register static IPs with Dhan and wait the required lead time.
-7. Run at least one further week of paper validation on the paid host.
+7. Run focused deployment-parity and startup checks on the paid host using the same image and config checksum.
 8. Complete the go-live checklist and receive explicit operator approval.
 9. Start with no more than 10% of allocated capital.
 10. Move through 25%, 50% and 100% only after at least two clean weeks at every stage.
@@ -397,8 +403,10 @@ reliable daily operation, private supervision, accurate journaling and clean rec
 
 ### Stage 2: Prove durability over time
 
-Complete the four-week burn-in. Measure uptime, token refresh, deviations from the research
-model, safety incidents and unexplained outliers.
+Complete the one-week software commissioning run. Measure session completion, token refresh,
+data freshness, signals, risk decisions, confirmed paper fills, reconciliation, alerts,
+restart recovery, safety incidents and unexplained software outliers. Weekly returns are
+recorded but do not pass or fail the bot.
 
 ### Stage 3: Move to production infrastructure
 
@@ -432,7 +440,7 @@ behaviour. The software may recommend changes; the founder remains the final app
 > including failure-injection tests designed around real trading-system disasters.
 >
 > We are deliberately not presenting it as live-ready today. The next milestone is the
-> scheduled production paper daemon, followed by a four-week live-market paper burn-in. Real
+> scheduled production paper daemon, followed by a one-week live-market software commissioning run covering at least five NSE sessions. Real
 > capital moves only after a paid-host migration, static-IP registration, backup and restore
 > proof, another paper-validation week, and an explicit go-live review. Capital then enters
 > in controlled stages from 10% to 100%.
@@ -450,7 +458,7 @@ paper-to-live process, and a learning system that proposes rather than silently 
 
 ### What not to claim
 
-Do not tell an investor that XenAlgo is already trading real money, has completed its burn-in,
+Do not tell an investor that XenAlgo is already trading real money, has completed its commissioning week,
 or has proven live profitability. Those claims are not currently true.
 
 Do not promise guaranteed returns. Historical evidence cannot guarantee future performance.

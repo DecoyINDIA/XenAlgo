@@ -152,7 +152,7 @@ Lesson from every documented disaster (Knight, Everbright, Mizuho, Flash Crash):
 
 | Stage | Host | Cost | Used for |
 |---|---|---|---|
-| **Dev / Paper (Phase 0–3.3)** | **Oracle Cloud "Always Free"** — current paper VM is Oracle Linux 9 on `VM.Standard.E2.1.Micro` in Mumbai; A1 Flex remains a possible future resize only with a compatible ARM image | $0 forever | Build, unit/integration/chaos tests, ≥4-week paper burn-in |
+| **Dev / Paper (Phase 0–3.3)** | **Oracle Cloud "Always Free"** — current paper VM is Oracle Linux 9 on `VM.Standard.E2.1.Micro` in Mumbai; A1 Flex remains a possible future resize only with a compatible ARM image | $0 forever | Build, unit/integration/chaos tests, one-week software commissioning |
 | **Live capital (Phase 3.4+)** | Small paid VPS — AWS ap-south-1 or DO Bangalore, t3.micro/small equivalent | ~$10-15/mo | Real-money execution |
 
 Rationale: Oracle's free tier is genuine (not a trial) and gives an India-region static IP at zero cost, but carries a documented risk of surprise account suspension — acceptable for development/paper where downtime costs nothing, not acceptable once real capital is live. The migration from Oracle → paid VPS is itself a static-IP change, so it must happen **≥7 days before go-live**, never mid-ramp.
@@ -183,7 +183,7 @@ SQLite journal + order state machine · Dhan BrokerGateway (httpx, rate-buckets,
 FastAPI+HTMX dashboard, SSE, kill switch, breaker re-arm, Tailscale deployment.
 
 **Phase 3 — Hardening & go-live**
-Failure-injection tests (kill process mid-order, drop WS mid-fill, expire token mid-session, corrupt a candle, simulate rejection storms) · **≥4 weeks paper burn-in** with daily paper-vs-backtest deviation review · go-live checklist gate · staged capital ramp: 10% → 25% → 50% → 100%, each stage ≥2 clean weeks.
+Failure-injection tests (kill process mid-order, drop WS mid-fill, expire token mid-session, corrupt a candle, simulate rejection storms) · **one commissioning week covering at least five consecutive NSE trading sessions** in paper mode on live market data · go-live checklist gate · staged capital ramp: 10% → 25% → 50% → 100%, each stage ≥2 clean weeks. The commissioning week validates software operation, not strategy profitability; the three strategies already have five-year backtest evidence.
 
 **Phase 4 — Learning layer (user's "version 2")**
 Trade-journal analytics feeding a memory layer (evaluate open-source options: Letta/MemGPT, mem0, Zep, or purpose-built SQLite memory); AI-API post-trade review (regime tagging, slippage analysis, per-sleeve health); parameter adaptation proposals — **always human-approved, never self-modifying live risk limits**.
@@ -201,3 +201,4 @@ Trade-journal analytics feeding a memory layer (evaluate open-source options: Le
 - ~~Broker choice~~ → **Dhan**, confirmed 2026-07-05 (backtests already validated on real Dhan historical data; Fyers considered and rejected to avoid re-validation risk).
 - ~~Dev/paper host~~ → **Oracle Cloud Always Free**, confirmed 2026-07-05.
 - ~~Real-data validation~~ → not applicable; **backtests were run on real Dhan API data throughout** (synthetic mode only triggers locally when no API keys are configured — confirmed by owner 2026-07-04).
+- ~~Paper duration and purpose~~ → **one commissioning week covering at least five consecutive NSE trading sessions**, confirmed 2026-07-11. This validates the bot's software flow, not strategy profitability; strategy evidence comes from the existing five-year backtests.

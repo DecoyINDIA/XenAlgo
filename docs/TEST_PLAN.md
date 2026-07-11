@@ -30,7 +30,12 @@ Safety-critical code is written **test-first**. The unit tests in `tests/unit/` 
 - Phase 3.2 tests validate operator-supplied evidence only. They do not provision hosts,
   register static IPs, call Dhan, or enable live trading.
 - Phase 3.3 tests validate operator-supplied post-migration paper evidence only. They do not
-  run the calendar-time validation week, call Dhan, or enable live trading.
+  operate the paid host, call Dhan, or enable live trading.
+- The owner revised the paper gate on 2026-07-11: Phase 3.2 becomes one software
+  commissioning week with at least five consecutive NSE sessions, and Phase 3.3 becomes
+  focused deployment parity. The current Phase 3.2/3.3 evaluator tests still encode the
+  legacy duration thresholds; update those implementations and tests before using their
+  `passed` result as authoritative commissioning or go-live evidence.
 - Phase 3.4 tests validate operator-supplied go-live checklist evidence only. They do not
   call Dhan, fund accounts, mutate config, or place live orders.
 - Phase 3.5 tests validate operator-supplied staged-ramp evidence only. They do not call

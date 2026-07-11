@@ -8,15 +8,16 @@ Every criterion is **measurable and testable**. A phase gate passes only when al
 
 ## 1. Phase Exit Gates (must all pass)
 
-**Current evidence snapshot (2026-07-05):** G0, G1, and the repository-local Phase 3.1
-failure-injection suite are locally green. Phase 2 console behavior is covered by local
-snapshot/SSE/control tests, but the Tailscale network proof still requires the Oracle paper
-host. Phase 3.2, Phase 3.3, Phase 3.4, and Phase 3.5 now have local evidence evaluators,
+**Current evidence snapshot (2026-07-11):** G0, G1, and the repository-local Phase 3.1
+failure-injection suite are locally green. The Oracle/Tailscale console host is deployed;
+private access, public port refusal and the authenticated 333 ms kill/rearm route are proven.
+Snapshot/SSE fill visibility remains locally covered until the production paper daemon can
+produce a scheduled host-side fill. Phase 3.2, Phase 3.3, Phase 3.4, and Phase 3.5 have local evidence evaluators,
 but the real gates still require operator-supplied host, calendar-time, live-activation,
 and staged-ramp proof. Full
 G3 go-live remains blocked by
-external/operator gates: Oracle-host proof, four-week paper burn-in, live-host migration,
-Dhan static-IP registration, backup/restore drills, one-week live-host paper validation,
+external/operator gates: Oracle-host proof, one-week software commissioning, live-host migration,
+Dhan static-IP registration, backup/restore drills, live-host deployment-parity validation,
 live kill-switch proof, funded account setup, operator-approved 10% activation, and staged
 capital ramp.
 
@@ -41,13 +42,15 @@ capital ramp.
 - [ ] Reachable only over Tailscale (verified from off-tailnet = refused).
 
 Local status: snapshot/SSE fill visibility and dashboard/Telegram kill-switch behavior are
-covered in `tests/integration/test_phase2_console.py`; deployed Tailscale/off-tailnet port
-evidence is pending until the Oracle paper host exists.
+covered in `tests/integration/test_phase2_console.py`. The deployed Tailscale route, public
+port refusal and authenticated dashboard kill/rearm path are proven; a scheduled host-side
+fill timing remains pending on the production paper daemon.
 
 ### G3 — Go-Live
 - [ ] Full failure-injection suite (Phase 3.1) **100%** green.
-- [ ] ≥4-week paper burn-in on live data completed.
-- [ ] Per-sleeve daily return deviation (paper vs backtest expectation) within **±X%** tolerance (set during burn-in, default ±0.5% abs daily) on ≥90% of days; no unexplained outliers.
+- [ ] One paper commissioning week covering at least five consecutive NSE trading sessions on live market data completed.
+- [ ] Every expected session completes its schedule, data-freshness checks, three-sleeve signal generation, risk decisions, paper execution, confirmed-fill accounting, reconciliation, journal writes, alerts and daily summary without an unresolved software or safety failure.
+- [ ] Weekly profit is recorded for observation but is not a commissioning pass/fail criterion; strategy validation rests on the existing five-year backtest evidence.
 - [ ] Token auto-refresh succeeded on ≥5 consecutive live sessions.
 - [ ] Static IP registered & startup-verified; DH-905/invalid-IP path proven.
 - [ ] Backup + **restore drill** completed successfully.
@@ -59,19 +62,18 @@ items require real host, broker, account, phone-alert, calendar-time, and operat
 they must not be marked complete from local tests alone.
 
 Phase 3.2 evidence support is covered locally by `tests/unit/test_phase32_readiness.py`:
-burn-in records are checked for four-week span, complete sleeve reviews, deviation ratio,
+commissioning records are intended to check five consecutive reviewed trading sessions, complete sleeve reviews, token refresh, safety incidents and unresolved software outliers. The current `BurnInReview` implementation still carries the legacy 28-calendar-day/18-trading-day defaults and must be updated and re-tested before it is used as the authoritative commissioning evaluator. Until then, the signed daily evidence plus this acceptance checklist are the governing decision record. The existing evaluator also checks deviation ratio,
 token refresh success, safety incidents, and unresolved outliers; live-host evidence is
 checked for India-region host selection, static-IP lead time, Docker/systemd/backups/restore,
 heartbeat, Oracle warm-staging retention, and live-order toggles remaining disabled. Passing
 these local checks is necessary evidence hygiene, not a substitute for the external gate.
 
-Phase 3.3 evidence support is covered locally by `tests/unit/test_phase33_readiness.py`:
-post-migration records are checked for one-week span, minimum reviewed sessions, complete
-sleeve reviews, host-id consistency, static-IP startup verification before validation,
-deviation ratio, token refresh success, clean reconciliation, no safety incidents, no
-unresolved outliers, and live-order toggles remaining disabled. Passing this local check is
-necessary evidence hygiene, not a substitute for operating the paid live host for the
-required calendar week.
+Phase 3.3 evidence is intended to cover focused deployment parity on the paid host: image and
+config checksum identity, host-id consistency, static-IP startup verification, token refresh,
+three-sleeve paper execution, clean reconciliation, alerts, restart recovery, kill-switch
+behaviour, no safety incidents, and live-order toggles remaining disabled. The current
+`PostMigrationValidationReview` still encodes the legacy one-week defaults and must be
+updated before it becomes authoritative for the revised gate.
 
 Phase 3.4 evidence support is covered locally by `tests/unit/test_phase34_go_live.py`:
 the go-live checklist is checked for all prior phase gates, live-host identity, config
@@ -121,7 +123,7 @@ An invariant regression is a **release blocker**, regardless of feature complete
 ## 3. Quality Metrics (targets)
 
 - **Test coverage:** ≥90% overall; **100%** on `xenalgo/risk/` and `xenalgo/execution/` (safety-critical).
-- **Reliability:** ≥99% market-hours uptime during burn-in; auto-recovery from induced crash ≤60 s.
+- **Reliability:** 100% of expected commissioning sessions accounted for; auto-recovery from an induced crash ≤60 s.
 - **Latency:** signal→order-submitted ≤2 s in-window; dashboard push ≤3 s.
 - **Durability:** 0 acknowledged-order losses across ≥1,000 crash-injection cycles.
 - **Alerting:** 100% of orders/fills/rejections/breaker events produce an alert (no silent action).

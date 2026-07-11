@@ -137,4 +137,4 @@ XenAlgo is a fully autonomous swing-trading system for Indian NSE equities, exec
 | Static-IP misconfiguration blocks orders | Startup IP-verification gate; DH-905 detection; secondary IP. |
 
 ## 9. Success Metrics
-See `SUCCESS_CRITERIA.md`. Headline: ≥4 weeks paper burn-in with per-sleeve daily deviation within tolerance, zero double-orders/state-drift incidents, and 100% of injected failures handled safely, before any real capital.
+See `SUCCESS_CRITERIA.md`. Headline: one live-market paper commissioning week covering at least five consecutive NSE trading sessions, with clean scheduling, data, signals, risk decisions, fills, reconciliation, journaling, alerts, restart recovery and kill-switch behaviour before any real capital. This is a software commissioning gate, not a repeat of strategy validation; the strategies already have five-year backtest evidence.

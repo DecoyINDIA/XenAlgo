@@ -2,13 +2,17 @@
 
 Phase 3.2 is an evidence gate, not a local-only code milestone. It has two parts:
 
-- Phase 3.2a: at least four calendar weeks of paper burn-in on live market data.
+- Phase 3.2a: one software commissioning week covering at least five consecutive NSE trading sessions in paper mode on live market data.
 - Phase 3.2b: paid live-host migration readiness before any live capital is enabled.
 
 This repository now includes `xenalgo.phase32` to evaluate supplied evidence. The module does
 not call Dhan, read secrets, register IPs, deploy hosts, or enable live trading.
 
-## Burn-In Evidence
+## Commissioning Evidence
+
+The strategies already have five-year backtest evidence. This week is not intended to decide
+whether a strategy is profitable from five market days. It validates whether the production
+software runs unattended and faithfully executes the already-tested strategy logic.
 
 Record one row per sleeve per trading day:
 
@@ -19,15 +23,25 @@ trading_date,sleeve,paper_return,backtest_return,token_refresh_ok,safety_inciden
 2026-07-06,alpha_062,-0.0020,-0.0025,true,0,false,clean
 ```
 
-Pass conditions encoded in `BurnInReview`:
+Commissioning pass conditions:
 
-- Burn-in spans at least 28 calendar days.
-- At least 18 reviewed live-market trading days are present.
+- At least five consecutive expected NSE trading sessions are reviewed.
 - Every reviewed day has all three sleeve reviews.
-- At least 90% of sleeve-days are within absolute daily tolerance, default `0.005`.
+- Scheduling, live-data ingestion, freshness checks, all three strategy runs, risk decisions,
+  paper orders, confirmed-fill accounting, reconciliation, journaling, alerts and daily
+  summaries complete without an unresolved software failure.
+- A controlled restart is recovered safely, without duplicate orders or lost acknowledged
+  state.
+- Token refresh succeeds across all five sessions.
+- The authenticated kill switch halts new submission within one second.
 - No safety incidents are recorded.
 - No unexplained outlier remains open.
-- Token refresh succeeds for every recorded session.
+- Paper return and backtest expectation are recorded for observation, but weekly profit or
+  loss does not determine whether the software commissioning gate passed.
+
+`BurnInReview` currently retains the legacy 28-calendar-day and 18-trading-day defaults.
+Update and re-test that implementation before using it as the authoritative evaluator for
+this revised gate. Until then, keep signed daily evidence and review this checklist manually.
 
 Use this as a local evidence check:
 

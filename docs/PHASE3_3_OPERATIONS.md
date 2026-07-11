@@ -1,8 +1,9 @@
 # Phase 3.3 Operations Runbook
 
-Phase 3.3 is the final paper-validation gate on the paid live host. It happens after
-Phase 3.2a burn-in and Phase 3.2b live-host migration readiness are complete, and before
-any live capital is enabled.
+Phase 3.3 is the final deployment-parity gate on the paid live host. It happens after
+Phase 3.2a software commissioning and Phase 3.2b live-host migration readiness are complete,
+and before any live capital is enabled. It confirms that the same verified image and config
+behave correctly on the new IP and server; it is not a second fixed paper-trading week.
 
 This repository includes `xenalgo.phase33` to evaluate supplied evidence. The module does
 not call Dhan, read secrets, register IPs, deploy hosts, or enable live trading.
@@ -23,7 +24,7 @@ Record these non-secret facts for the new live host:
 
 Phase 3.3 is still paper mode. If either live-order flag is enabled, the evidence fails.
 
-## Paper Validation Evidence
+## Deployment-Parity Evidence
 
 Record one row per sleeve per trading day on the new live host:
 
@@ -34,17 +35,21 @@ validation_date,host_id,sleeve,paper_return,backtest_return,token_refresh_ok,saf
 2026-08-03,aws-mumbai-live-1,alpha_062,-0.0020,-0.0025,true,0,true,true,false,clean
 ```
 
-Pass conditions encoded in `PostMigrationValidationReview`:
+Required focused checks:
 
-- validation spans at least 7 calendar days,
-- at least 5 reviewed trading days are present,
-- every reviewed day has all three sleeve reviews,
+- all three sleeves run on current live-market data in paper mode,
 - every record is from the expected live host id,
 - static IP was startup-verified before validation started,
-- at least 90% of sleeve-days are within absolute daily tolerance, default `0.005`,
-- token refresh succeeds for at least 5 sessions and has no recorded failures,
+- the deployed Docker image and config checksums match the commissioned artifacts,
+- token refresh, scheduling, data freshness, journal writes, reconciliation, alerts, restart
+  recovery and the kill switch are rechecked on the new host,
 - no safety incidents, reconciliation failures, or unexplained outliers are recorded,
 - every record confirms the live order API stayed disabled.
+
+`PostMigrationValidationReview` currently retains the legacy seven-calendar-day/five-session
+defaults. Update and re-test it before treating it as the authoritative evaluator for this
+focused deployment-parity gate. Until then, retain signed check results and perform the
+go-live checklist review manually.
 
 Use this as a local evidence check:
 

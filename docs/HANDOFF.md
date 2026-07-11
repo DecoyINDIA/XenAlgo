@@ -1,7 +1,7 @@
 # XenAlgo Handoff
 
 **Last updated:** 2026-07-11
-**Current phase:** Phase 4 repository-local learning scaffolding implemented on top of the existing paper/live journal. On 2026-07-11 the Oracle paper VM was recovered and Docker, Tailscale, firewalld, the paper image, and the enabled systemd console service were installed. The console is healthy on the operator's personal Tailscale network, host tests plus the chaos gate are green, public port 8080 is refused, and the Windows-to-VM G2 kill/rearm proof completed in 333 ms. The four-week paper burn-in, live-host migration, one-week live-host paper validation, operator-approved 10% live activation, the real staged capital ramp, external AI-provider selection, and reviewed live proposals are still pending operator/external gates.
+**Current phase:** Phase 4 repository-local learning scaffolding implemented on top of the existing paper/live journal. On 2026-07-11 the Oracle paper VM was recovered and Docker, Tailscale, firewalld, the paper image, and the enabled systemd console service were installed. The console is healthy on the operator's personal Tailscale network, host tests plus the chaos gate are green, public port 8080 is refused, and the Windows-to-VM G2 kill/rearm proof completed in 333 ms. The remaining pre-live gate is a one-week software commissioning run covering at least five consecutive NSE trading sessions, followed by live-host migration and focused deployment-parity checks. Strategy profitability is not being revalidated during that week because the three strategies already have five-year backtest evidence. Operator-approved 10% live activation, the staged capital ramp, external AI-provider selection, and reviewed live proposals remain pending.
 **Working directory:** `D:\XOLVER\XenAlgo`
 
 ## Safety Posture
@@ -25,7 +25,7 @@ guards. It does not enable live trading, does not call the live Dhan order API, 
 change `live_trading.enabled=false` or `broker.order_api_enabled=false`.
 
 Phase 3.2 repository-local work adds evidence evaluators and an operations runbook only. It
-does not provision hosts, register Dhan static IPs, run calendar-time burn-in, call the live
+does not provision hosts, register Dhan static IPs, run the commissioning sessions, call the live
 Dhan order API, or enable live order placement.
 
 Phase 3.3 repository-local work adds post-migration evidence evaluators and an operations
@@ -151,7 +151,9 @@ the required live two-week stages from this checkout.
 ## Completed In Phase 3.2 Repo-Local Readiness
 
 - Added `xenalgo.phase32` for evaluating operator-supplied Phase 3.2 evidence:
-  - `BurnInReview` checks four-week burn-in span, minimum reviewed trading days, complete
+  - `BurnInReview` currently checks the legacy four-week span and minimum reviewed trading
+    days; the governing decision is now a one-week/five-session software commissioning gate,
+    so this evaluator must be updated before authoritative use. It also checks complete
     sleeve coverage, per-sleeve daily deviation ratio, token refresh success, safety
     incidents, and unresolved outliers.
   - `evaluate_live_host_readiness()` checks India-region host selection, primary/secondary
@@ -169,8 +171,9 @@ the required live two-week stages from this checkout.
 ## Completed In Phase 3.3 Repo-Local Readiness
 
 - Added `xenalgo.phase33` for evaluating operator-supplied Phase 3.3 evidence:
-  - `PostMigrationValidationReview` checks at least one calendar week of post-migration
-    paper records, minimum reviewed trading sessions, complete sleeve coverage, host-id
+  - `PostMigrationValidationReview` currently checks the legacy one-calendar-week
+    post-migration requirement. The governing decision now requires focused deployment
+    parity rather than another fixed week, so the evaluator must be updated. It also checks complete sleeve coverage, host-id
     consistency, static-IP startup verification before validation starts, deviation ratio,
     token refresh success, clean reconciliation, no safety incidents, no unresolved
     outliers, and live-order toggles remaining disabled.
@@ -233,14 +236,14 @@ No live Dhan order API path was called, enabled, or tested.
 
 The rest of Phase 3 cannot be truthfully completed from this checkout alone:
 
-- Phase 3.2a still requires at least four calendar weeks of paper burn-in on live market
+- Phase 3.2a now requires one software commissioning week covering at least five consecutive NSE trading sessions on live market
   data on the Oracle/Tailscale paper host, then evaluation of the collected evidence with
   `BurnInReview`.
 - Phase 3.2b still requires selecting/provisioning the paid live host, deploying the same
   Docker image, setting up systemd/backups/heartbeat, and registering the new static IPs
   with Dhan at least seven days before go-live, then checking the evidence with
   `evaluate_live_host_readiness()`.
-- Phase 3.3 requires at least one week of paper validation on the new live host after
+- Phase 3.3 requires focused deployment-parity checks on the new live host after
   migration, then evaluation of the collected evidence with `PostMigrationValidationReview`.
 - Phase 3.4 requires external/operator evidence for the go-live checklist before enabling
   live trading at 10% capital; `GoLiveChecklistReview` can evaluate that evidence, but the
@@ -442,7 +445,7 @@ Both profiles loaded and emitted checksum metadata.
 Phase 0 task `0.1a` includes Oracle Cloud and Tailscale provisioning. The Oracle paper host,
 Docker image, systemd console service, firewall isolation, and personal-tailnet enrollment
 are now deployed and verified. This proves the secure operator-console host; it does not yet
-start the calendar-time Phase 3.2 paper burn-in because the deployed service is console-only.
+start the Phase 3.2 software commissioning week because the deployed service is console-only.
 
 Current OCI paper host:
 
@@ -500,7 +503,7 @@ Remaining host-side tasks:
 - Keep the Dhan order API disabled while building and testing that daemon. Any future
   live-order-capable Dhan gateway remains a separate explicit approval boundary and must be
   tested with HTTP/WebSocket mocks before any operator-controlled live activation.
-- Once the paper daemon is proven on-host, begin the real four-week Phase 3.2 burn-in and
+- Once the paper daemon is proven on-host, begin the one-week/five-session Phase 3.2 software commissioning run and
   collect one evidence row per sleeve per reviewed trading day.
 - Add off-box backups, restore-drill proof, external heartbeat proof, and real-phone alert
   confirmation as required by the later gates.
@@ -528,17 +531,17 @@ the main dashboard control/network boundary:
 - The authenticated dashboard kill/rearm route completed in 333 ms over Tailscale and was
   reflected in persisted risk state plus the audit trail.
 - Snapshot/SSE fill reflection remains locally covered. A real scheduled paper fill cannot
-  be measured on-host until the production paper daemon exists and begins the burn-in.
+  be measured on-host until the production paper daemon exists and begins commissioning.
 - Keep the postback endpoint disabled until the HMAC secret and isolated public ingress are
   reviewed.
 
 Phase 3.1's repository failure-injection suite and Phase 3.2/3.3/3.4/3.5 evidence
 evaluators are implemented locally. The `docs/BUILD_PLAN.md` wording also says the chaos
-suite runs on the Oracle dev host, Phase 3.2 burn-in runs on live market data, Phase 3.3
-paper validation runs on the paid live host, Phase 3.4 requires the go-live checklist
+suite runs on the Oracle dev host, Phase 3.2 commissioning runs on live market data, Phase 3.3
+deployment parity runs on the paid live host, Phase 3.4 requires the go-live checklist
 evidence before the 10% live stage, and Phase 3.5 requires two clean live weeks per ramp
 stage; that environment-side execution is still pending until the Oracle/Tailscale paper
-daemon is implemented, the Oracle host completes its burn-in, and the paid live host is
+daemon is implemented, the Oracle host completes commissioning, and the paid live host is
 provisioned and operated through the required calendar periods.
 
 ## Git / Workspace Notes
@@ -560,7 +563,7 @@ Implement the scheduled, data-only production paper daemon behind the existing s
 freshness, risk, journal, governor, reconciliation, and alert boundaries. It must use
 `PaperBroker`, keep `live_trading.enabled=false` and `broker.order_api_enabled=false`, and
 add no code path that can submit a real Dhan order. Verify it locally with mocks and on the
-Oracle host before beginning the four-week burn-in. During burn-in, collect the CSV evidence
+Oracle host before beginning the one-week software commissioning run. During commissioning, collect the CSV evidence
 described in `docs/PHASE3_2_OPERATIONS.md` and evaluate it with `BurnInReview`. After paid
 live-host migration, collect the post-migration CSV evidence described in
 `docs/PHASE3_3_OPERATIONS.md` and evaluate it with `PostMigrationValidationReview`. Then

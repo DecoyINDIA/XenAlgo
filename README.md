@@ -31,9 +31,9 @@ The design bias is simple:
 
 ## Current Status
 
-The repository-local build is complete through Phase 3.1 failure-injection coverage, with Phase 3.2, Phase 3.3, Phase 3.4, and Phase 3.5 evidence tooling now added. Phase 1 paper execution, Phase 2 operator console surfaces, the deterministic Phase 3.1 chaos suite, Phase 3.2 burn-in/live-host readiness checks, Phase 3.3 post-migration paper-validation checks, Phase 3.4 go-live checklist checks, and Phase 3.5 staged capital-ramp checks are implemented and tested locally.
+The repository-local build is complete through Phase 3.1 failure-injection coverage, with Phase 3.2, Phase 3.3, Phase 3.4, and Phase 3.5 evidence tooling now added. Phase 1 paper execution, Phase 2 operator console surfaces, the deterministic Phase 3.1 chaos suite, Phase 3.2 commissioning/live-host readiness checks, Phase 3.3 post-migration deployment checks, Phase 3.4 go-live checklist checks, and Phase 3.5 staged capital-ramp checks are implemented and tested locally.
 
-The Oracle/Tailscale console host is now deployed and privately reachable, with public dashboard access refused and the authenticated paper kill/rearm route proven in 333 ms. The next engineering boundary is the scheduled, data-only production paper daemon; the currently deployed service is the operator console, while the existing `PaperDayRunner` is an integration runner. The actual four-week paper burn-in, paid live-host provisioning, Dhan static-IP registration, backup and restore drills, at least one week of paper validation on the paid live host, operator-approved 10% live activation, and the real staged capital ramp remain pending. Live Dhan order placement remains disabled in the committed config and must not be added or enabled without a separate explicit operator approval.
+The Oracle/Tailscale console host is now deployed and privately reachable, with public dashboard access refused and the authenticated paper kill/rearm route proven in 333 ms. The next engineering boundary is the scheduled, data-only production paper daemon; the currently deployed service is the operator console, while the existing `PaperDayRunner` is an integration runner. The remaining pre-live proof is one software commissioning week covering at least five consecutive NSE trading sessions, paid live-host provisioning, Dhan static-IP registration, backup and restore drills, focused deployment-parity checks on the paid host, operator-approved 10% live activation, and the real staged capital ramp. The strategies already have five-year backtest evidence; commissioning evaluates the bot, not one-week profitability. Live Dhan order placement remains disabled in the committed config and must not be added or enabled without a separate explicit operator approval.
 
 The root `xenalgo/` package currently includes broker abstractions, risk, execution, governor, paper broker, token, data, scheduler, strategy, ops, alerting, reconciliation, paper-day orchestration, console state, FastAPI/SSE dashboard endpoints, postback HMAC validation, Telegram command routing, and Phase 3.2/3.3/3.4/3.5 evidence evaluation.
 
@@ -110,8 +110,8 @@ XenAlgo is not ready because it starts. It is ready only when the safety gates p
 - Journal replay matches derived state after crash recovery.
 - Governor never exceeds 2 orders per second.
 - Reconciler halts on injected broker/local drift.
-- At least four weeks of clean paper burn-in before live-host migration.
-- At least one week of clean paper validation on the paid live host before live capital.
+- One commissioning week with at least five consecutive NSE sessions proving the bot's software flow before live-host migration.
+- Focused deployment-parity and startup checks on the paid live host before live capital.
 
 The complete acceptance matrix is in [docs/SUCCESS_CRITERIA.md](docs/SUCCESS_CRITERIA.md).
 
@@ -119,7 +119,7 @@ The complete acceptance matrix is in [docs/SUCCESS_CRITERIA.md](docs/SUCCESS_CRI
 
 Copy `.env.example` to a local `.env` only when runtime credentials are needed. Never commit secrets, Dhan tokens, TOTP material, broker IDs, generated databases, or market-data stores.
 
-Live deployment is intentionally gated. Development and paper trading target Oracle Cloud Always Free. Live capital moves only after paper burn-in, static IP registration, backup drills, and go-live checks.
+Live deployment is intentionally gated. Development and software commissioning target Oracle Cloud Always Free. Live capital moves only after the commissioning week, static IP registration, backup drills, deployment-parity checks, and go-live review.
 
 ## Contributor Notes
 
