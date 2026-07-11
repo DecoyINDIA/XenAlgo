@@ -43,14 +43,16 @@ governor:
   max_quotes_per_sec: 1
 
 broker:
-  provider: dhan
-  dhan_sdk_version: "2.0.2"
-  client_id_env: DHAN_CLIENT_ID
-  pin_env: DHAN_PIN
-  totp_secret_env: DHAN_TOTP_SECRET
-  access_token_env: DHAN_ACCESS_TOKEN
-  static_ip_primary_env: DHAN_STATIC_IP_PRIMARY
-  static_ip_secondary_env: DHAN_STATIC_IP_SECONDARY
+  provider: fyers
+  fyers_sdk_version: external-injected
+  app_id_env: FYERS_APP_ID
+  secret_key_env: FYERS_SECRET_KEY
+  redirect_uri_env: FYERS_REDIRECT_URI
+  pin_env: FYERS_PIN
+  totp_secret_env: FYERS_TOTP_SECRET
+  token_store: .xenalgo-secrets/fyers_token.sqlite
+  static_ip_primary_env: XENALGO_STATIC_IP_PRIMARY
+  static_ip_secondary_env: XENALGO_STATIC_IP_SECONDARY
   order_api_enabled: false
 
 storage:
@@ -81,8 +83,6 @@ alerts:
 web:
   bind_host_env: TAILSCALE_BIND_HOST
   bind_port: 8080
-  public_postback_enabled: false
-  postback_hmac_secret_env: POSTBACK_HMAC_SECRET
 
 learning:
   enabled: true

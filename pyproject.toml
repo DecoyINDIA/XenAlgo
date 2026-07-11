@@ -5,7 +5,6 @@ description = "Autonomous NSE swing-trading system scaffold."
 requires-python = ">=3.14,<3.15"
 dependencies = [
     "apscheduler==3.11.3",
-    "dhanhq==2.0.2",
     "duckdb==1.5.4",
     "fastapi==0.139.0",
     "httpx==0.28.1",
@@ -32,6 +31,7 @@ test = [
     "hypothesis==6.156.1",
     "pytest==9.1.1",
     "pytest-asyncio==1.4.0",
+    "pytest-cov==7.0.0",
     "respx==0.23.1",
 ]
 

@@ -2,8 +2,8 @@
 BrokerInterface contract coverage.
 
 Covers Phase 1 tasks 1.5/1.6 at the safe boundary: PaperBroker must behave like
-the gateway contract without any live Dhan order API access. DhanGateway remains
-intentionally absent until separately approved for HTTP-mocked implementation.
+the gateway contract without any live Fyers order API access. FyersGateway coverage
+uses injected/mocked clients only.
 """
 from __future__ import annotations
 

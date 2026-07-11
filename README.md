@@ -1,10 +1,10 @@
 # XenAlgo
 
-XenAlgo is an autonomous NSE swing-trading system for a single Dhan account. It is built for one practical goal: let the strategies do their job, while the safety layer makes sure nothing reckless reaches the broker.
+XenAlgo is an autonomous NSE swing-trading system for a single Fyers account. It is built for one practical goal: let the strategies do their job, while the safety layer makes sure nothing reckless reaches the broker.
 
 This is not a signal toy, a broker demo, or a "move fast and break things" trading bot. It is a careful execution system around three already validated NSE equity strategies, with paper trading, risk checks, order journaling, broker reconciliation, and operator control built in from the start.
 
-> Important: when configured for live use, this system can affect real capital. Development and tests must use `MockBroker` or `PaperBroker` only. Do not place, modify, or cancel real Dhan orders from a dev or test context.
+> Important: when configured for live use, this system can affect real capital. Development and tests must use `MockBroker` or `PaperBroker` only. Do not place, modify, or cancel real Fyers orders from a dev or test context.
 
 ## What XenAlgo Does
 
@@ -14,7 +14,7 @@ This is not a signal toy, a broker demo, or a "move fast and break things" tradi
 - Sends every order through `RiskEngine.check()` before broker submission.
 - Writes order intent and state changes to an append-only SQLite journal.
 - Updates positions only after confirmed fills.
-- Reconciles local state against Dhan broker truth before and during trading.
+- Reconciles local state against Fyers broker truth before and during trading.
 - Keeps order rate capped at 2 orders per second, far below the SEBI retail-algo threshold.
 - Uses paper execution as the proving ground before live capital is even considered.
 
@@ -33,9 +33,14 @@ The design bias is simple:
 
 The repository-local build is complete through Phase 3.1 failure-injection coverage, with Phase 3.2, Phase 3.3, Phase 3.4, and Phase 3.5 evidence tooling now added. Phase 1 paper execution, Phase 2 operator console surfaces, the deterministic Phase 3.1 chaos suite, Phase 3.2 commissioning/live-host readiness checks, Phase 3.3 post-migration deployment checks, Phase 3.4 go-live checklist checks, and Phase 3.5 staged capital-ramp checks are implemented and tested locally.
 
-The Oracle/Tailscale console host is now deployed and privately reachable, with public dashboard access refused and the authenticated paper kill/rearm route proven in 333 ms. The next engineering boundary is the scheduled, data-only production paper daemon; the currently deployed service is the operator console, while the existing `PaperDayRunner` is an integration runner. The remaining pre-live proof is one software commissioning week covering at least five consecutive NSE trading sessions, paid live-host provisioning, Dhan static-IP registration, backup and restore drills, focused deployment-parity checks on the paid host, operator-approved 10% live activation, and the real staged capital ramp. The strategies already have five-year backtest evidence; commissioning evaluates the bot, not one-week profitability. Live Dhan order placement remains disabled in the committed config and must not be added or enabled without a separate explicit operator approval.
+The repository now includes the paper-only production composition, scheduled job owner,
+Fyers live-data/observation adapters, and evaluator-ready commissioning evidence. The
+remaining work is external deployment proof: Oracle installation, five consecutive NSE
+commissioning sessions, paid-host parity, and separately approved staged live activation.
+Commissioning evaluates the software, not one-week profitability. Live Fyers order placement
+remains disabled and is outside the B0-B6 authorization boundary.
 
-The root `xenalgo/` package currently includes broker abstractions, risk, execution, governor, paper broker, token, data, scheduler, strategy, ops, alerting, reconciliation, paper-day orchestration, console state, FastAPI/SSE dashboard endpoints, postback HMAC validation, Telegram command routing, and Phase 3.2/3.3/3.4/3.5 evidence evaluation.
+The root `xenalgo/` package includes broker abstractions, risk, execution, governor, paper broker, token, data, scheduler, strategy, ops, alerting, reconciliation, production paper orchestration, console state, FastAPI/SSE dashboard endpoints, Telegram command routing, and Phase 3.2/3.3/3.4/3.5 evidence evaluation.
 
 The original research and backtest snapshot is kept locally under `_source/` in the operator checkout. It is not required for GitHub Actions because the promoted `Brain/` and `Strategies/` folders preserve the validated research surface in this repository. Strategy logic should not be changed casually.
 
@@ -43,7 +48,7 @@ The original research and backtest snapshot is kept locally under `_source/` in 
 
 XenAlgo is designed around independent checks, not hope:
 
-- **No live order calls in development.** Tests must never touch the real Dhan order API.
+- **No live order calls in development.** Tests must never touch the real Fyers order API.
 - **Risk is a veto layer.** Strategy and execution code do not bypass it.
 - **Fills are the source of truth.** Pending, submitted, or accepted orders do not change positions.
 - **The order journal is append-only.** Current state is derived by replay.
@@ -117,7 +122,7 @@ The complete acceptance matrix is in [docs/SUCCESS_CRITERIA.md](docs/SUCCESS_CRI
 
 ## Configuration
 
-Copy `.env.example` to a local `.env` only when runtime credentials are needed. Never commit secrets, Dhan tokens, TOTP material, broker IDs, generated databases, or market-data stores.
+Copy `.env.example` to a local `.env` only when runtime credentials are needed. Never commit secrets, Fyers tokens, 2FA material, broker IDs, generated databases, or market-data stores.
 
 Live deployment is intentionally gated. Development and software commissioning target Oracle Cloud Always Free. Live capital moves only after the commissioning week, static IP registration, backup drills, deployment-parity checks, and go-live review.
 

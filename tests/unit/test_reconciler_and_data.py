@@ -32,6 +32,14 @@ def test_swing_positions_read_from_holdings_not_positions(mock_broker):
     assert truth["TCS"] == 10
 
 
+def test_broker_truth_merges_intraday_positions(mock_broker):
+    mock_broker.holdings = {"RELIANCE": 50}
+    mock_broker.positions = {"RELIANCE": -5, "INFY": 3}
+    r = reconcile.Reconciler(mock_broker)
+
+    assert r.broker_truth_positions() == {"RELIANCE": 45, "INFY": 3}
+
+
 def test_detects_drift_and_signals_halt(mock_broker):
     mock_broker.holdings = {"RELIANCE": 50}
     r = reconcile.Reconciler(mock_broker)
@@ -93,3 +101,41 @@ def test_price_sanity_rejects_out_of_collar():
 
 def test_price_sanity_accepts_normal():
     assert data.price_is_sane(1010.0, prev_close=1000.0, collar_pct=0.03) is True
+
+
+def test_history_validation_and_restricted_snapshot_fail_closed():
+    frame = pd.DataFrame(
+        [{
+            "symbol": "SBIN", "date": _dt.date(2026, 7, 1), "open": 100,
+            "high": 102, "low": 99, "close": 101, "volume": 1_000,
+            "security_id": "NSE:SBIN-EQ",
+        }]
+    )
+    data.validate_history_frame(frame, start=_dt.date(2026, 7, 1), end=_dt.date(2026, 7, 1))
+    report = data.data_parity_report(frame, frame.copy())
+    assert report.passed is True
+    assert report.baseline_rows == report.candidate_rows == 1
+
+    now = _dt.datetime(2026, 7, 2, tzinfo=_dt.UTC)
+    snapshot = data.RestrictedSnapshot(
+        frozenset({"ABC"}), now - _dt.timedelta(hours=1), "exchange-list"
+    )
+    assert snapshot.require_fresh(now, _dt.timedelta(hours=2)) == frozenset({"ABC"})
+    with pytest.raises(data.StaleDataError, match="stale"):
+        snapshot.require_fresh(now, _dt.timedelta(minutes=30))
+
+
+def test_history_validation_rejects_duplicate_and_invalid_ohlc():
+    row = {
+        "symbol": "SBIN", "date": _dt.date(2026, 7, 1), "open": 100,
+        "high": 90, "low": 99, "close": 101, "volume": 1_000,
+        "security_id": "NSE:SBIN-EQ",
+    }
+    with pytest.raises(data.CorruptDataError, match="duplicate"):
+        data.validate_history_frame(
+            pd.DataFrame([row, row]), start=_dt.date(2026, 7, 1), end=_dt.date(2026, 7, 1)
+        )
+    with pytest.raises(data.CorruptDataError, match="high"):
+        data.validate_history_frame(
+            pd.DataFrame([row]), start=_dt.date(2026, 7, 1), end=_dt.date(2026, 7, 1)
+        )

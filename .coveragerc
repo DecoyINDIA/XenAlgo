@@ -1,0 +1,3 @@
+[run]
+omit =
+    xenalgo/__main__.py

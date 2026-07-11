@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import ipaddress
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -19,7 +20,6 @@ class WebRuntime:
     port: int
     journal_path: Path
     control_token: str
-    postback_secret: str | None
 
 
 def runtime_from_config(
@@ -35,27 +35,28 @@ def runtime_from_config(
 
     host_env = str(web.get("bind_host_env", "TAILSCALE_BIND_HOST"))
     host = env.get(host_env, "127.0.0.1")
-    if host in {"0.0.0.0", "::"}:
-        raise ValueError("console must bind to loopback or a Tailscale interface, not a public wildcard")
+    if not _is_allowed_bind_host(host):
+        raise ValueError("console must bind only to loopback or a Tailscale 100.64.0.0/10 address")
 
     control_token = env.get("XENALGO_CONSOLE_TOKEN")
     if not control_token:
         raise ValueError("XENALGO_CONSOLE_TOKEN is required to run the console")
-
-    postback_secret = None
-    if web.get("public_postback_enabled") is True:
-        secret_env = str(web.get("postback_hmac_secret_env", "POSTBACK_HMAC_SECRET"))
-        postback_secret = env.get(secret_env)
-        if not postback_secret:
-            raise ValueError(f"{secret_env} is required when public postback is enabled")
 
     return WebRuntime(
         host=host,
         port=int(web.get("bind_port", 8080)),
         journal_path=base / str(storage["journal_sqlite"]),
         control_token=control_token,
-        postback_secret=postback_secret,
     )
+
+
+def _is_allowed_bind_host(host: str) -> bool:
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError as exc:
+        raise ValueError(f"console bind host must be an IP address, got {host!r}") from exc
+    tailscale_cgnat = ipaddress.ip_network("100.64.0.0/10")
+    return ip.is_loopback or ip in tailscale_cgnat
 
 
 def build_app_from_config(
@@ -69,7 +70,6 @@ def build_app_from_config(
     return create_app(
         ConsoleStore(runtime.journal_path),
         control_token=runtime.control_token,
-        postback_secret=runtime.postback_secret,
         config_root=root,
     )
 
@@ -86,7 +86,6 @@ def main() -> None:
     app = create_app(
         ConsoleStore(runtime.journal_path),
         control_token=runtime.control_token,
-        postback_secret=runtime.postback_secret,
         config_root=root,
     )
     uvicorn.run(app, host=runtime.host, port=runtime.port)

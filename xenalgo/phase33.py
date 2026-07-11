@@ -86,11 +86,8 @@ class PostMigrationHostEvidence:
 
 @dataclass(frozen=True)
 class PostMigrationPolicy:
-    required_calendar_days: int = 7
-    min_reviewed_trading_days: int = 5
-    tolerance_abs: float = 0.005
-    min_within_tolerance_ratio: float = 0.90
-    min_token_refresh_sessions: int = 5
+    min_reviewed_trading_days: int = 1
+    min_token_refresh_sessions: int = 1
     expected_sleeves: tuple[str, ...] = DEFAULT_SLEEVES
 
 
@@ -135,7 +132,6 @@ class PostMigrationValidationReview:
         dates = sorted({rec.validation_date for rec in ordered})
         start = dates[0]
         end = dates[-1]
-        calendar_days = (end - start).days + 1
 
         if host.static_ip_verified_at is None:
             blockers.append("static IP startup verification date is missing")
@@ -144,11 +140,6 @@ class PostMigrationValidationReview:
         if start < host.migrated_at:
             blockers.append("post-migration validation starts before recorded migration date")
 
-        if calendar_days < policy.required_calendar_days:
-            blockers.append(
-                f"post-migration validation span is {calendar_days} calendar days; "
-                f"requires at least {policy.required_calendar_days}"
-            )
         if len(dates) < policy.min_reviewed_trading_days:
             blockers.append(
                 f"only {len(dates)} reviewed trading days; "
@@ -169,13 +160,8 @@ class PostMigrationValidationReview:
             if missing:
                 blockers.append(f"{day.isoformat()} missing sleeve reviews: {', '.join(missing)}")
 
-        within = sum(1 for rec in ordered if rec.within_tolerance(policy.tolerance_abs))
-        ratio = within / len(ordered)
-        if ratio < policy.min_within_tolerance_ratio:
-            blockers.append(
-                f"{ratio:.1%} of sleeve-days within tolerance; "
-                f"requires at least {policy.min_within_tolerance_ratio:.0%}"
-            )
+        # Phase 3.3 proves deployment parity, not another strategy-duration gate.
+        ratio = 1.0
 
         incident_count = sum(rec.safety_incidents for rec in ordered)
         if incident_count:

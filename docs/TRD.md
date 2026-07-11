@@ -6,7 +6,7 @@
 
 ## 1. System Overview
 
-Single-process Python **asyncio monolith** (`xenalgo` service), one systemd unit. Reuses the existing research/backtest engine (`Brain/`) and strategies (`Strategies/`); adds a new live-execution package (`xenalgo/`). DuckDB for market data (read-mostly), SQLite (WAL) for transactional state. Dashboard served in-process (FastAPI). Broker connectivity via a `dhanhq`-backed gateway with a broker-agnostic interface.
+Single-process Python **asyncio monolith** (`xenalgo` service), one systemd unit. Reuses the existing research/backtest engine (`Brain/`) and strategies (`Strategies/`); adds a new live-execution package (`xenalgo/`). DuckDB for market data (read-mostly), SQLite (WAL) for transactional state. Dashboard served in-process (FastAPI). Broker connectivity via a Fyers-backed gateway with a broker-agnostic interface.
 
 **Runtime:** CPython 3.12/3.13 (standard build; free-threading not used). Prod pins Python and every dependency to exact versions.
 
@@ -15,18 +15,18 @@ Single-process Python **asyncio monolith** (`xenalgo` service), one systemd unit
 ## 2. Component Specification
 
 ### 2.1 BrokerGateway (`xenalgo/broker/`)
-Abstract `BrokerInterface` + `DhanGateway` implementation. All Dhan I/O funnels here.
+Abstract `BrokerInterface` + `FyersGateway` implementation. All Fyers I/O funnels here.
 - **Transport:** `httpx.AsyncClient` for REST; SDK/`websockets` for streams.
-- **Rate limiting:** per-API-class token buckets — orders ≤2/s (self-imposed, well under Dhan's 25/s and SEBI's 10/s), non-trading ≤15/s, data ≤8/s, quote ≤1/s. Buckets are the single choke point; strategy code cannot bypass them.
-- **Idempotency:** every order sends a deterministic `correlationId` (≤30 chars) = `xa-{yyyymmdd}-{sleeve}-{symbol}-{side}-{seq}` truncated/hashed. Pre-submit, gateway calls `GET /orders/external/{correlationId}`; if an order exists, it adopts that order instead of re-submitting.
+- **Rate limiting:** per-API-class token buckets — orders ≤2/s (self-imposed, well under Fyers' 10/s and SEBI's 10/s), non-trading/data calls queued under broker limits. Buckets are the single choke point; strategy code cannot bypass them.
+- **Idempotency:** every order sends a deterministic `correlationId` as the Fyers order `tag`. Pre-submit, the gateway checks cached/orderbook rows for that tag; if an order exists, it adopts that order instead of re-submitting.
 - **Order type:** marketable LIMIT (LTP ± collar), `productType=CNC`, `validity=DAY`. Raw MARKET is disallowed by policy.
 - **Retries:** idempotent GETs retried with exponential backoff + jitter; POSTs never blind-retried — on ambiguous failure, gateway reconciles via correlationId before any resend.
 - **Error mapping:** DH-905 (invalid IP / bad fields) and DH-906 (account not enabled) surfaced as typed exceptions; DH-905/invalid-IP triggers a startup-gate failure, not a silent retry loop.
 - **SDK containment:** WebSocket clients (`MarketFeed`, `OrderUpdate`) run under an external supervisor task with a hard timeout on `close_connection()` (SDK bug #139) and force-kill+reconnect on hang/auth-race (#75/#65). Exact SDK version pinned.
 
 ### 2.2 TokenManager (`xenalgo/broker/token.py`)
-- Refresh via `POST auth.dhan.co/app/generateAccessToken` using stored client-id + PIN + `pyotp` TOTP, scheduled 08:15 IST.
-- Persists token + expiry to SQLite (encrypted at rest optional); `RenewToken` before expiry as backup.
+- Refresh via the Fyers OAuth2 auth-code/token flow, scheduled 08:15 IST.
+- Persists token + expiry to a dedicated token SQLite file outside backup scope; POSIX hosts chmod it to `0600`.
 - Exposes `ensure_valid()` used by the startup gate; failure → `TradingBlocked` for the session + critical alert.
 
 ### 2.3 DataService (`xenalgo/data/`)
@@ -52,7 +52,7 @@ Abstract `BrokerInterface` + `DhanGateway` implementation. All Dhan I/O funnels 
 - Never assumes fills — waits for FillListener confirmation to advance state and mutate positions.
 
 ### 2.7 FillListener (`xenalgo/execution/fills.py`)
-- Primary: Dhan Order Update WebSocket. Redundant: Postback webhook (isolated FastAPI route, HMAC/token-validated, enqueue-only). Tertiary: REST `get_order_by_id` poll for orders stuck in non-terminal state past a timeout.
+- Primary: Fyers Order WebSocket. Redundant: REST orderbook poll for orders stuck in non-terminal state past a timeout. There is no public HTTP postback route.
 - Deduplicates by `orderId`+status; idempotent application to the journal (applying the same fill twice is a no-op).
 
 ### 2.8 Reconciler (`xenalgo/execution/reconcile.py`)
@@ -178,7 +178,7 @@ governor:
   max_orders_per_day: 500
 
 broker:
-  dhan_sdk_version: "2.0.2"   # pinned exactly
+  fyers_sdk_version: "external-injected"   # SDK/REST client injected at the live boundary
   static_ip_primary: "x.x.x.x"
   static_ip_secondary: "y.y.y.y"
 ```
@@ -187,13 +187,17 @@ broker:
 
 ## 6. Security & Ops
 - Secrets (`client_id`, `PIN`, TOTP secret, Telegram/Pushover tokens) in `.env` (0600, gitignored, excluded from backups). Access tokens are ephemeral (not backed up).
-- Dashboard on Tailscale interface only; zero public ports except the Postback webhook (HMAC-validated, enqueue-only, no trading authority).
+- Dashboard on loopback or Tailscale interface only; zero public postback ports.
 - Startup gate (all must pass or refuse to trade): valid token · static IP verified · calendar/scrip-master current · reconciliation clean · config checksum matches · journal replay self-check passes.
 - No deploy during market hours (enforced in deploy script). Nightly `.backup` + DuckDB→Parquet → off-box; monthly restore drill.
 - **Hosting is two-stage** (PLAN.md §6): Oracle Cloud Always Free in Mumbai/Hyderabad for dev/paper; the current paper VM is Oracle Linux 9 on `VM.Standard.E2.1.Micro` with local SQLite/DuckDB files. Migrate to a small paid VPS (AWS ap-south-1 or DO Bangalore) before live capital. Docker is used for the app runtime specifically so this migration is a redeploy, not a rewrite — the same image runs on both hosts. The migration itself is a static-IP change and must be scheduled ≥7 days before go-live.
 
 ## 7. Technology Choices (locked)
-DuckDB (market data, read-only in live) · SQLite WAL/FULL (state) · asyncio monolith · httpx · APScheduler · pandas_market_calendars(XNSE)+overrides · FastAPI+HTMX+SSE · Tailscale · systemd · Telegram+Pushover · **Oracle Cloud Always Free (dev/paper) → AWS ap-south-1 or DO Bangalore (live)**. Broker: **Dhan** (dhanhq==2.0.2 pinned; order API free, data API ~₹499+tax/mo). Rationale in `PLAN.md` §3–§6.
+DuckDB (market data, read-only in live) · SQLite WAL/FULL (state) · asyncio monolith · httpx · APScheduler · pandas_market_calendars(XNSE)+overrides · FastAPI+HTMX+SSE · Tailscale · systemd · Telegram+Pushover · **Oracle Cloud Always Free (dev/paper) → AWS ap-south-1 or DO Bangalore (live)**. Broker: **Fyers** via injected SDK/REST client; current `fyers-apiv3` releases are kept out of CI until their Python 3.14 dependency chain is installable. Rationale in `PLAN.md` §3–§6.
 
 ## 8. Traceability
 Each TRD component maps to PRD FRs: BrokerGateway→FR-7, TokenManager→FR-1, DataService→FR-3/FR-4, StrategyEngine→FR-4/FR-5, RiskEngine→FR-9/FR-10/FR-19, ExecutionEngine→FR-6, FillListener→FR-8, Reconciler→FR-11, Scheduler→FR-2, Alerter→FR-14, Dashboard→FR-15, Journal→FR-16, KillSwitch→FR-12, Paper mode→FR-13.
+
+The authoritative executable mapping is maintained in `docs/TRACEABILITY.md`. Broker-neutral
+interfaces are frozen in `xenalgo/broker/contracts.py`; Fyers-specific payloads remain inside
+the injected adapters described in `docs/FYERS_CONTRACT.md`.

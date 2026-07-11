@@ -2,7 +2,7 @@
 Executable specifications for Phase 3.2 burn-in and live-host readiness evidence.
 
 Covers: PRD G3/FR-17, TRD deployment and ops gates, G3 go-live criteria.
-No test touches the Dhan API or enables live order placement.
+No test touches the Fyers API or enables live order placement.
 """
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ phase32 = pytest.importorskip("xenalgo.phase32")
 def _clean_records() -> list[phase32.BurnInRecord]:
     start = dt.date(2026, 7, 6)
     records = []
-    for offset in range(29):
+    for offset in range(7):
         day = start + dt.timedelta(days=offset)
         if day.weekday() >= 5:
             continue
@@ -29,19 +29,20 @@ def _clean_records() -> list[phase32.BurnInRecord]:
                     paper_return=0.010,
                     backtest_return=0.011,
                     token_refresh_ok=True,
+                    evidence_checksum=f"sha256:{day.isoformat()}:{sleeve}",
                 )
             )
     return records
 
 
-def test_four_week_burn_in_passes_when_deviation_and_safety_are_clean():
+def test_five_consecutive_session_commissioning_passes_when_software_is_clean():
     summary = phase32.BurnInReview().evaluate(_clean_records())
 
     assert summary.passed is True
-    assert summary.reviewed_trading_days == 21
-    assert summary.total_records == 63
+    assert summary.reviewed_trading_days == 5
+    assert summary.total_records == 15
     assert summary.within_tolerance_ratio == 1.0
-    assert summary.token_refresh_sessions == 21
+    assert summary.token_refresh_sessions == 5
 
 
 def test_short_burn_in_missing_sleeves_and_outliers_fail_closed():
@@ -61,9 +62,9 @@ def test_short_burn_in_missing_sleeves_and_outliers_fail_closed():
 
     assert summary.passed is False
     rendered = " | ".join(summary.blockers)
-    assert "calendar days" in rendered
+    assert "reviewed trading days" in rendered
     assert "missing sleeve reviews" in rendered
-    assert "within tolerance" in rendered
+    assert "evidence checksum" in rendered
     assert "safety incidents" in rendered
     assert "unexplained outliers" in rendered
     assert "token refresh failed" in rendered

@@ -2,7 +2,7 @@
 Executable specifications for Phase 3.5 staged capital-ramp evidence.
 
 Covers: PRD G3/G4, TRD deployment and ops gates, G3 go-live criteria,
-SI-5/SI-10/SI-12. No test touches the Dhan API or places a live order.
+SI-5/SI-10/SI-12. No test touches the Fyers API or places a live order.
 """
 from __future__ import annotations
 
@@ -85,7 +85,7 @@ def test_capital_ramp_fails_closed_on_missing_or_unsafe_evidence():
             governor_max_orders_per_sec=3,
             safety_incidents=1,
             reconciliation_clean=False,
-            broker_kill_switch_armed=False,
+            compensating_kill_controls_armed=False,
             unexplained_outlier=True,
         )
     ]
@@ -117,7 +117,7 @@ def test_capital_ramp_fails_closed_on_missing_or_unsafe_evidence():
     assert "within tolerance" in rendered
     assert "safety incidents" in rendered
     assert "reconciliation checks" in rendered
-    assert "kill switch" in rendered
+    assert "compensating kill controls" in rendered
     assert "unexplained ramp outliers" in rendered
 
 
@@ -151,7 +151,7 @@ def test_capital_ramp_csv_loader_reads_operator_evidence():
         "stage,capital_fraction,stage_started_at,stage_ended_at,trading_date,sleeve,"
         "live_return,backtest_return,live_host_id,config_checksum,operator_approval_id,"
         "governor_max_orders_per_sec,safety_incidents,reconciliation_clean,"
-        "broker_kill_switch_armed,unexplained_outlier,notes\n"
+        "compensating_kill_controls_armed,unexplained_outlier,notes\n"
         "10%,0.10,2026-08-16T08:00:00,2026-08-29T18:00:00,2026-08-17,std30,"
         "0.010,0.011,aws-mumbai-live-1,sha256:10,approval-10,2,0,true,true,false,clean\n",
         encoding="utf-8",

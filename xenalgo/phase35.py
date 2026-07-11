@@ -75,7 +75,7 @@ class RampRecord:
     governor_max_orders_per_sec: float
     safety_incidents: int = 0
     reconciliation_clean: bool = True
-    broker_kill_switch_armed: bool = True
+    compensating_kill_controls_armed: bool = True
     unexplained_outlier: bool = False
     notes: str = ""
 
@@ -96,7 +96,9 @@ class RampRecord:
             governor_max_orders_per_sec=float(row.get("governor_max_orders_per_sec", "0") or 0),
             safety_incidents=int(row.get("safety_incidents", "0") or 0),
             reconciliation_clean=_as_bool(row.get("reconciliation_clean", "true")),
-            broker_kill_switch_armed=_as_bool(row.get("broker_kill_switch_armed", "true")),
+            compensating_kill_controls_armed=_as_bool(
+                row.get("compensating_kill_controls_armed", "true")
+            ),
             unexplained_outlier=_as_bool(row.get("unexplained_outlier", "false")),
             notes=row.get("notes", ""),
         )
@@ -142,7 +144,7 @@ def load_ramp_csv(path: str | Path) -> list[RampRecord]:
 class CapitalRampReview:
     """Evaluates the repository-verifiable evidence gate for Phase 3.5.
 
-    This validates supplied evidence only. It does not call Dhan, change live
+    This validates supplied evidence only. It does not call Fyers, change live
     configuration, or place/modify/cancel live orders.
     """
 
@@ -190,8 +192,8 @@ class CapitalRampReview:
             blockers.append(f"{incident_count} safety incidents recorded during ramp")
         if any(not rec.reconciliation_clean for rec in ordered):
             blockers.append("one or more reconciliation checks were not clean during ramp")
-        if any(not rec.broker_kill_switch_armed for rec in ordered):
-            blockers.append("broker-side kill switch was not armed for every ramp record")
+        if any(not rec.compensating_kill_controls_armed for rec in ordered):
+            blockers.append("compensating kill controls were not armed for every ramp record")
         if any(rec.unexplained_outlier for rec in ordered):
             blockers.append("one or more unexplained ramp outliers remain open")
 

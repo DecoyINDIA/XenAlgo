@@ -37,16 +37,23 @@ class TokenBucket:
 
 
 class OrderGovernor:
-    def __init__(self, max_per_sec: float = 2, max_per_day: int = 500) -> None:
+    def __init__(
+        self,
+        max_per_sec: float = 2,
+        max_per_day: int = 500,
+        clock=time.monotonic,
+    ) -> None:
         if max_per_sec > 2 or max_per_sec >= 10:
             raise ValueError("order governor must stay at or below 2 orders/sec")
         self.max_per_sec = float(max_per_sec)
         self.max_per_day = int(max_per_day)
         self._used_today = 0
-        self.bucket = TokenBucket(rate_per_sec=self.max_per_sec)
+        self.bucket = TokenBucket(rate_per_sec=self.max_per_sec, clock=clock)
 
     def allow(self) -> bool:
         if self._used_today >= self.max_per_day:
+            return False
+        if not self.bucket.try_acquire():
             return False
         self._used_today += 1
         return True

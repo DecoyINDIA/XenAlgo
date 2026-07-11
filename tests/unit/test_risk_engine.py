@@ -113,9 +113,51 @@ def test_rejects_restricted_symbol(base_risk_config):
 # ── cash sufficiency with fee buffer ─────────────────────────────────────
 def test_rejects_when_insufficient_cash(base_risk_config):
     eng = risk.RiskEngine(base_risk_config)
-    ctx = _ctx(cash=5_000.0)  # can't afford 10 * 1000
+    ctx = _ctx(cash=0.0)
     decision, _, reason = eng.check(_order(qty=10), ctx)
-    assert decision in (risk.RiskDecision.REJECT, risk.RiskDecision.SCALE)
+    assert decision is risk.RiskDecision.REJECT
+    assert "cash" in reason
+
+
+def test_rejects_non_positive_quantity_and_price(base_risk_config):
+    eng = risk.RiskEngine(base_risk_config)
+
+    decision, qty, reason = eng.check(_order(qty=0), _ctx())
+    assert decision is risk.RiskDecision.REJECT
+    assert qty == 0
+    assert "quantity" in reason
+
+    decision, qty, reason = eng.check(_order(limit_price=0.0), _ctx())
+    assert decision is risk.RiskDecision.REJECT
+    assert qty == 0
+    assert "price" in reason
+
+
+def test_rejects_missing_previous_close_and_zero_adv_cap(base_risk_config):
+    eng = risk.RiskEngine(base_risk_config)
+
+    decision, _, reason = eng.check(_order(), _ctx(prev_close={}))
+    assert decision is risk.RiskDecision.REJECT
+    assert "previous close" in reason
+
+    decision, _, reason = eng.check(_order(), _ctx(adv={"RELIANCE": 0}))
+    assert decision is risk.RiskDecision.REJECT
+    assert "ADV" in reason
+
+
+def test_scales_to_adv_and_cash_caps(base_risk_config):
+    cfg = dict(base_risk_config, max_order_notional_inr=10_000_000)
+    eng = risk.RiskEngine(cfg)
+
+    decision, qty, reason = eng.check(_order(qty=100), _ctx(adv={"RELIANCE": 1000}))
+    assert decision is risk.RiskDecision.SCALE
+    assert qty == 50
+    assert "ADV" in reason
+
+    decision, qty, reason = eng.check(_order(qty=10), _ctx(cash=5_000.0))
+    assert decision is risk.RiskDecision.SCALE
+    assert qty < 10
+    assert "cash" in reason
 
 
 # ── SI-7: breakers veto everything ───────────────────────────────────────

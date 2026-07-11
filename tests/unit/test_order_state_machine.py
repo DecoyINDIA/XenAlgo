@@ -88,6 +88,53 @@ def test_duplicate_fill_is_idempotent(tmp_journal):
     assert book.qty("TCS") == 5
 
 
+def test_cumulative_partial_fills_do_not_overstate_position(tmp_journal):
+    """SI-4: broker partial-fill quantities are cumulative, not per-event deltas."""
+    journal = execu.Journal(tmp_journal)
+    book = execu.PositionBook(journal)
+
+    book.apply_fill(
+        execu.Fill(
+            correlation_id="cid-cumulative",
+            broker_order_id="oid-cumulative",
+            symbol="SBIN",
+            side="BUY",
+            filled_qty=4,
+            avg_price=600.0,
+            event_key="oid-cumulative:PART_TRADED:4",
+            state="PART_TRADED",
+        )
+    )
+    book.apply_fill(
+        execu.Fill(
+            correlation_id="cid-cumulative",
+            broker_order_id="oid-cumulative",
+            symbol="SBIN",
+            side="BUY",
+            filled_qty=10,
+            avg_price=601.0,
+            event_key="oid-cumulative:TRADED:10",
+        )
+    )
+    book.apply_fill(
+        execu.Fill(
+            correlation_id="cid-cumulative",
+            broker_order_id="oid-cumulative",
+            symbol="SBIN",
+            side="BUY",
+            filled_qty=10,
+            avg_price=601.0,
+            event_key="oid-cumulative:TRADED:10-duplicate-channel",
+        )
+    )
+
+    assert book.qty("SBIN") == 10
+    assert book.qty_for("cid-cumulative") == 10
+    replayed = execu.PositionBook.from_replay(journal)
+    assert replayed.qty("SBIN") == 10
+    assert replayed.qty_for("cid-cumulative") == 10
+
+
 # ── SI-9: journal is append-only and replay == derived state ─────────────
 def test_journal_is_append_only(tmp_journal):
     j = execu.Journal(tmp_journal)
@@ -113,8 +160,8 @@ def test_replay_reconstructs_derived_state(tmp_journal):
 # ── SI-9: crash mid-write leaves a consistent, replayable journal ────────
 def test_partial_fill_accumulates(tmp_journal):
     book = execu.PositionBook(execu.Journal(tmp_journal))
-    book.apply_fill(execu.Fill("cid-9", "ITC", "BUY", 4, 400.0, event_key="a"))
-    book.apply_fill(execu.Fill("cid-9", "ITC", "BUY", 6, 401.0, event_key="b"))
+    book.apply_fill(execu.Fill("cid-9", "ITC", "BUY", 4, 400.0, event_key="a", state="PART_TRADED"))
+    book.apply_fill(execu.Fill("cid-9", "ITC", "BUY", 10, 401.0, event_key="b"))
     assert book.qty("ITC") == 10
 
 
@@ -180,7 +227,7 @@ def test_journal_survives_abrupt_process_exit_and_replays(tmp_path):
     assert replayed.qty("RELIANCE") == traded_rows
 
 
-NON_FILL_STATES = [state for state in LEGAL if state != "TRADED"]
+NON_FILL_STATES = [state for state in LEGAL if state not in {"PART_TRADED", "TRADED"}]
 SYMBOLS = ["RELIANCE", "TCS", "INFY", "SBIN", "ITC"]
 
 

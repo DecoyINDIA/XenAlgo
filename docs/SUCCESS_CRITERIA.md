@@ -17,7 +17,7 @@ but the real gates still require operator-supplied host, calendar-time, live-act
 and staged-ramp proof. Full
 G3 go-live remains blocked by
 external/operator gates: Oracle-host proof, one-week software commissioning, live-host migration,
-Dhan static-IP registration, backup/restore drills, live-host deployment-parity validation,
+static-IP registration, backup/restore drills, live-host deployment-parity validation,
 live kill-switch proof, funded account setup, operator-approved 10% activation, and staged
 capital ramp.
 
@@ -38,7 +38,7 @@ capital ramp.
 ### G2 — Console
 - [ ] Dashboard reflects a paper fill within **3 s** (measured).
 - [ ] Kill switch via each of 3 paths halts new-order submission within **1 s** (measured).
-- [ ] No public inbound ports except the HMAC-validated Postback webhook (port scan proof).
+- [ ] No public inbound console or postback ports (port scan proof).
 - [ ] Reachable only over Tailscale (verified from off-tailnet = refused).
 
 Local status: snapshot/SSE fill visibility and dashboard/Telegram kill-switch behavior are
@@ -78,7 +78,7 @@ updated before it becomes authoritative for the revised gate.
 Phase 3.4 evidence support is covered locally by `tests/unit/test_phase34_go_live.py`:
 the go-live checklist is checked for all prior phase gates, live-host identity, config
 checksum, static-IP startup verification, at least five token-refresh sessions,
-backup/restore drill, broker-side kill switch proof, real-phone alerts, dedicated funded
+backup/restore drill, local kill-path and session-revocation proof, real-phone alerts, dedicated funded
 account, explicit operator approval, initial capital at no more than 10%, the 2 OPS
 governor cap, and off-market activation timing. Passing this local check is necessary
 evidence hygiene, not a substitute for external proof or the operator's live enablement
@@ -88,7 +88,7 @@ Phase 3.5 evidence support is covered locally by `tests/unit/test_phase35_capita
 the staged-ramp evidence is checked for Phase 3.4 prerequisite proof, the exact
 10% -> 25% -> 50% -> 100% order, at least two calendar weeks and 10 reviewed trading days
 per stage, complete sleeve reviews, live-vs-backtest deviation tolerance, zero safety
-incidents, clean reconciliation, broker-side kill switch evidence, explicit operator
+incidents, clean reconciliation, compensating kill-control evidence, explicit operator
 approval per stage, config checksums, the 2 OPS governor cap, off-market stage changes, and
 non-overlapping stage order. Passing this local check is necessary evidence hygiene, not a
 substitute for the live staged ramp itself.

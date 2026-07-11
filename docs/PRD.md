@@ -6,9 +6,9 @@
 
 ## 1. Summary
 
-XenAlgo is a fully autonomous swing-trading system for Indian NSE equities, executing three pre-validated alpha strategies through the Dhan broker API with zero human intervention in the trading loop. It runs unattended on a Mumbai-region server, enforces institutional-grade risk controls, and exposes a secure real-time console for observation and override. The operator's role is to *supervise the machine*, not to place trades.
+XenAlgo is a fully autonomous swing-trading system for Indian NSE equities, executing three pre-validated alpha strategies through the Fyers broker API with zero human intervention in the trading loop. It runs unattended on a Mumbai-region server, enforces institutional-grade risk controls, and exposes a secure real-time console for observation and override. The operator's role is to *supervise the machine*, not to place trades.
 
-**Product thesis:** A single operator's edge (three backtested alphas on real Dhan data) is only worth deploying if execution is flawless and losses are bounded by construction. XenAlgo's value is not the strategies — those exist — it is the **safety, autonomy, and auditability** wrapped around them.
+**Product thesis:** A single operator's edge (three backtested alphas on historical NSE data originally obtained through Dhan) is only worth deploying if execution is flawless and losses are bounded by construction. XenAlgo's value is not the strategies — those exist — it is the **safety, autonomy, and auditability** wrapped around them.
 
 ---
 
@@ -23,9 +23,9 @@ XenAlgo is a fully autonomous swing-trading system for Indian NSE equities, exec
 - **G6 — Compliance:** Operate within SEBI's 2025 retail-algo framework without requiring exchange algo registration.
 
 ### 2.2 Non-Goals (v1)
-- Multi-user / multi-account (single operator, single Dhan account).
+- Multi-user / multi-account (single operator, single Fyers account).
 - Intraday scalping / HFT / options / F&O / other asset classes.
-- Other brokers (broker layer is abstracted for the future, but only Dhan is implemented).
+- Other brokers (broker layer is abstracted for the future, but only Fyers is targeted now).
 - Strategy research or invention — the three alphas are fixed for v1.
 - Self-modifying risk limits (learning layer in Phase 4 proposes; humans approve).
 
@@ -44,7 +44,7 @@ XenAlgo is a fully autonomous swing-trading system for Indian NSE equities, exec
 ## 4. User Stories & Acceptance Criteria
 
 ### Epic A — Autonomous Operation
-- **A1** *As the operator, I want the bot to refresh its Dhan token before market open automatically* so I never have to log in.
+- **A1** *As the operator, I want the bot to refresh its Fyers token before market open automatically* so I never have to log in.
   - AC: Token refreshed via TOTP by 08:15 IST daily; on failure, trading is blocked for the day and a critical alert is sent.
 - **A2** *As the operator, I want the bot to run the full rebalance cycle on scheduled days without me* .
   - AC: On a rebalance day, signals compute from the latest completed daily bars and orders execute within the 15:00–15:20 IST window; on non-rebalance days no orders are placed.
@@ -85,14 +85,14 @@ XenAlgo is a fully autonomous swing-trading system for Indian NSE equities, exec
 
 | ID | Requirement | Priority |
 |---|---|---|
-| FR-1 | Automated daily Dhan token refresh via TOTP before market open. | P0 |
+| FR-1 | Automated daily Fyers OAuth/token refresh before market open. | P0 |
 | FR-2 | Market-calendar-aware scheduler (IST, XNSE + manual override list). | P0 |
 | FR-3 | Load daily OHLCV panel from DuckDB with a freshness gate. | P0 |
 | FR-4 | Compute the three alphas as independent capital sleeves. | P0 |
 | FR-5 | Portfolio construction per sleeve (existing engine, sleeve-scoped capital). | P0 |
 | FR-6 | Order state machine with write-ahead intent and correlationId idempotency. | P0 |
-| FR-7 | Dhan BrokerGateway: place/modify/cancel + funds/holdings/positions, rate-limited. | P0 |
-| FR-8 | Dual-channel fill confirmation (Order Update WS + Postback webhook + REST fallback). | P0 |
+| FR-7 | Fyers BrokerGateway: place/modify/cancel + funds/holdings/positions, rate-limited. | P0 |
+| FR-8 | Dual-channel fill confirmation (Fyers Order WebSocket + REST orderbook fallback). | P0 |
 | FR-9 | RiskEngine independent pre-trade check battery (Layer 1). | P0 |
 | FR-10 | Portfolio circuit breakers (daily loss, drawdown, consecutive failure, stale data, reconciliation). | P0 |
 | FR-11 | Reconciler merging holdings + positions against local state on startup and periodically. | P0 |
@@ -113,7 +113,7 @@ XenAlgo is a fully autonomous swing-trading system for Indian NSE equities, exec
 - **NFR-1 Reliability:** ≥99% uptime during market hours; auto-restart on failure; safe restart guaranteed.
 - **NFR-2 Latency:** signal→order-submitted ≤2s within the execution window; dashboard push ≤3s. (Correctness > speed; no HFT targets.)
 - **NFR-3 Durability:** zero acknowledged-order loss across crash/power failure (`synchronous=FULL` journal).
-- **NFR-4 Security:** no public inbound ports except the isolated, authenticated Postback webhook; secrets 0600, outside repo, excluded from backups.
+- **NFR-4 Security:** no public inbound console or postback ports; secrets 0600, outside repo, excluded from backups.
 - **NFR-5 Recoverability:** full state restore from off-box backup verified monthly; RPO ≤24h, RTO ≤1h.
 - **NFR-6 Auditability:** 100% of orders traceable from intent to terminal state.
 - **NFR-7 Compliance:** provably ≤10 OPS; static IP registered; no exchange algo ID required.
@@ -122,9 +122,9 @@ XenAlgo is a fully autonomous swing-trading system for Indian NSE equities, exec
 ---
 
 ## 7. Assumptions & Constraints
-- Single dedicated Dhan account, funded only with allocated trading capital (bounded blast radius).
+- Single dedicated Fyers account, funded only with allocated trading capital (bounded blast radius).
 - Static IP with a 7-day change lock — infra chosen ≥7 days before go-live.
-- Dhan tokens are 24h and refreshable only while active.
+- Fyers access tokens are refreshed through the approved OAuth flow before market open.
 - Daily-bar swing cadence — colocation/microsecond optimization out of scope.
 - The three alphas are validated on real Dhan historical data and fixed for v1.
 
@@ -132,7 +132,7 @@ XenAlgo is a fully autonomous swing-trading system for Indian NSE equities, exec
 | Risk | Mitigation |
 |---|---|
 | Strategy edge decays post-deployment | Per-sleeve live-vs-backtest deviation monitoring; drawdown halt; Phase-4 review. |
-| Dhan API outage during window | Retry/backoff; missed-window is safe (no partial rebalance committed); alert. |
+| Fyers API outage during window | Retry/backoff; missed-window is safe (no partial rebalance committed); alert. |
 | Operator over-trusts autonomy | Mandatory alerts on every action; weekly review ritual; staged capital ramp. |
 | Static-IP misconfiguration blocks orders | Startup IP-verification gate; DH-905 detection; secondary IP. |
 

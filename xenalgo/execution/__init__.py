@@ -7,8 +7,9 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
+from xenalgo.broker.governor import OrderGovernor
 from xenalgo.risk import OrderRequest, RiskContext, RiskDecision, RiskEngine
 
 
@@ -38,6 +39,7 @@ class Fill:
     avg_price: float
     broker_order_id: str | None = None
     event_key: str | None = None
+    state: str = "TRADED"
 
 
 @dataclass(frozen=True)
@@ -121,6 +123,15 @@ class Journal:
                   event_key TEXT PRIMARY KEY,
                   correlation_id TEXT NOT NULL,
                   applied_utc TEXT NOT NULL
+                )
+                """
+            )
+            con.execute(
+                """
+                CREATE TABLE IF NOT EXISTS risk_state(
+                  key TEXT PRIMARY KEY,
+                  value TEXT NOT NULL,
+                  updated_utc TEXT NOT NULL
                 )
                 """
             )
@@ -220,6 +231,25 @@ class Journal:
         except sqlite3.IntegrityError:
             return False
 
+    def risk_state_get(self, key: str) -> str | None:
+        with self._connect() as con:
+            row = con.execute("SELECT value FROM risk_state WHERE key=?", (key,)).fetchone()
+        return None if row is None else str(row["value"])
+
+    def risk_state_set(self, key: str, value: str) -> None:
+        with self._connect() as con:
+            con.execute(
+                """
+                INSERT OR REPLACE INTO risk_state(key, value, updated_utc)
+                VALUES (?, ?, ?)
+                """,
+                (key, value, dt.datetime.now(dt.UTC).isoformat()),
+            )
+
+    def risk_state_clear(self, key: str) -> None:
+        with self._connect() as con:
+            con.execute("DELETE FROM risk_state WHERE key=?", (key,))
+
 
 class OrderStateMachine:
     def __init__(
@@ -234,11 +264,12 @@ class OrderStateMachine:
         if state == "INTENT" and not self.journal.has_correlation(correlation_id):
             self.journal.append(correlation_id=correlation_id, state="INTENT")
 
-    def to(self, state: str) -> None:
+    def to(self, state: str, **journal_fields: Any) -> None:
         if state not in LEGAL_TRANSITIONS.get(self.state, set()):
             raise IllegalTransition(f"illegal transition {self.state}->{state}")
         self.state = state
-        self.journal.append(correlation_id=self.correlation_id, state=state)
+        journal_fields.pop("correlation_id", None)
+        self.journal.append(correlation_id=self.correlation_id, state=state, **journal_fields)
 
 
 class PositionBook:
@@ -246,6 +277,7 @@ class PositionBook:
         self.journal = journal
         self._qty: dict[str, int] = {}
         self._qty_by_cid: dict[str, int] = {}
+        self._cumulative_qty_by_order: dict[str, int] = {}
 
     def apply_state(self, sm: OrderStateMachine) -> None:
         return None
@@ -254,14 +286,19 @@ class PositionBook:
         event_key = fill.event_key or f"{fill.correlation_id}:{fill.filled_qty}:{fill.avg_price}"
         if not self.journal.mark_applied(event_key, fill.correlation_id):
             return
+        order_key = fill.broker_order_id or fill.correlation_id
+        cumulative_qty = int(fill.filled_qty)
+        previous_qty = self._cumulative_qty_by_order.get(order_key, 0)
+        delta_qty = max(cumulative_qty - previous_qty, 0)
+        self._cumulative_qty_by_order[order_key] = max(previous_qty, cumulative_qty)
         sign = 1 if fill.side.upper() == "BUY" else -1
-        delta = sign * int(fill.filled_qty)
+        delta = sign * delta_qty
         self._qty[fill.symbol] = self._qty.get(fill.symbol, 0) + delta
         self._qty_by_cid[fill.correlation_id] = self._qty_by_cid.get(fill.correlation_id, 0) + delta
         self.journal.append(
             correlation_id=fill.correlation_id,
             broker_order_id=fill.broker_order_id,
-            state="TRADED",
+            state=fill.state,
             symbol=fill.symbol,
             side=fill.side,
             intended_qty=fill.filled_qty,
@@ -281,15 +318,20 @@ class PositionBook:
         book = cls(journal)
         seen: set[str] = set()
         for event in journal.events():
-            if event["state"] != "TRADED" or not event["filled_qty"]:
+            if event["state"] not in {"PART_TRADED", "TRADED"} or not event["filled_qty"]:
                 continue
             raw = json.loads(event["raw_json"] or "{}")
             event_key = raw.get("event_key") or f"{event['event_id']}"
             if event_key in seen:
                 continue
             seen.add(event_key)
+            order_key = event["broker_order_id"] or event["correlation_id"]
+            cumulative_qty = int(event["filled_qty"])
+            previous_qty = book._cumulative_qty_by_order.get(order_key, 0)
+            delta_qty = max(cumulative_qty - previous_qty, 0)
+            book._cumulative_qty_by_order[order_key] = max(previous_qty, cumulative_qty)
             sign = 1 if event["side"].upper() == "BUY" else -1
-            delta = sign * int(event["filled_qty"])
+            delta = sign * delta_qty
             book._qty[event["symbol"]] = book._qty.get(event["symbol"], 0) + delta
             book._qty_by_cid[event["correlation_id"]] = (
                 book._qty_by_cid.get(event["correlation_id"], 0) + delta
@@ -306,6 +348,8 @@ class ExecutionEngine:
         consecutive_failure_halt: int = 3,
         risk_engine: RiskEngine | None = None,
         risk_context: RiskContext | None = None,
+        risk_context_provider: Callable[[OrderRequest], RiskContext] | None = None,
+        governor: OrderGovernor | None = None,
     ) -> None:
         self.broker = broker
         self.journal = journal
@@ -321,8 +365,10 @@ class ExecutionEngine:
             }
         )
         self.risk_context = risk_context
-        self._failures = 0
-        self._halted = False
+        self.risk_context_provider = risk_context_provider
+        self.governor = governor
+        self._failures = self._load_failure_count()
+        self._halted = self._load_halted()
 
     def submit(self, **kwargs) -> SubmissionResult:
         if self._halted or (self.kill_switch and not self.kill_switch.allow_submission()):
@@ -342,46 +388,77 @@ class ExecutionEngine:
             qty=int(kwargs["qty"]),
             limit_price=float(kwargs["limit_price"]),
         )
-        risk_ctx = self.risk_context or _default_risk_context(risk_order)
+        risk_ctx = self._risk_context(risk_order)
         decision, allowed_qty, reason = self.risk_engine.check(risk_order, risk_ctx)
         if decision is RiskDecision.REJECT:
             self.journal.append(state="REJECTED", reason=reason, **_journal_fields(kwargs))
-            self._failures += 1
-            if self._failures >= self.consecutive_failure_halt:
-                self._halted = True
+            self._record_failure()
             return SubmissionResult("REJECTED", None, cid, reason)
         if decision is RiskDecision.SCALE:
             kwargs = dict(kwargs, qty=allowed_qty)
 
         if not self.journal.has_correlation(cid):
             self.journal.append(state="INTENT", **_journal_fields(kwargs))
+        sm = OrderStateMachine(self.journal, cid, state="INTENT")
+
+        if self.governor and not self.governor.allow():
+            reason = "daily cap reached" if self.governor.remaining_today() <= 0 else "rate limited"
+            sm.to("REJECTED", reason=reason, **_journal_fields(kwargs))
+            return SubmissionResult("REJECTED", None, cid, reason)
+
+        sm.to("SUBMITTED", **_journal_fields(kwargs))
 
         try:
             ack = self.broker.place_order(_Request(**kwargs))
         except Exception as exc:
             reason = f"broker submission failed: {exc}"
-            self.journal.append(state="REJECTED", reason=reason, **_journal_fields(kwargs))
-            self._failures += 1
-            if self._failures >= self.consecutive_failure_halt:
-                self._halted = True
+            sm.to("REJECTED", reason=reason, **_journal_fields(kwargs))
+            self._record_failure()
             return SubmissionResult("REJECTED", None, cid, reason)
         state = "REJECTED" if ack.status == "REJECTED" else "PENDING"
-        self.journal.append(
-            state=state,
+        sm.to(
+            state,
             broker_order_id=ack.broker_order_id,
             reason=getattr(ack, "reason", ""),
             **_journal_fields(kwargs),
         )
         if state == "REJECTED":
-            self._failures += 1
-            if self._failures >= self.consecutive_failure_halt:
-                self._halted = True
+            self._record_failure()
         else:
-            self._failures = 0
+            self._record_success()
         return SubmissionResult(state, ack.broker_order_id, cid, getattr(ack, "reason", ""))
 
     def is_halted(self) -> bool:
         return self._halted
+
+    def _risk_context(self, order: OrderRequest) -> RiskContext:
+        if self.risk_context_provider is not None:
+            return self.risk_context_provider(order)
+        return self.risk_context or _default_risk_context(order)
+
+    def _load_failure_count(self) -> int:
+        value = self.journal.risk_state_get("consecutive_failures")
+        if value is None:
+            return 0
+        try:
+            return int(value)
+        except ValueError:
+            return 0
+
+    def _load_halted(self) -> bool:
+        halted = self.journal.risk_state_get("execution_halted") == "true"
+        return halted or self._failures >= self.consecutive_failure_halt
+
+    def _record_failure(self) -> None:
+        self._failures += 1
+        self.journal.risk_state_set("consecutive_failures", str(self._failures))
+        if self._failures >= self.consecutive_failure_halt:
+            self._halted = True
+            self.journal.risk_state_set("execution_halted", "true")
+
+    def _record_success(self) -> None:
+        self._failures = 0
+        self.journal.risk_state_clear("consecutive_failures")
 
 
 class FillListener:

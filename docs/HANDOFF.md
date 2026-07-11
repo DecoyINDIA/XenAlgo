@@ -1,575 +1,123 @@
-# XenAlgo Handoff
+# XenAlgo B0-B6 Engineering Handoff
 
-**Last updated:** 2026-07-11
-**Current phase:** Phase 4 repository-local learning scaffolding implemented on top of the existing paper/live journal. On 2026-07-11 the Oracle paper VM was recovered and Docker, Tailscale, firewalld, the paper image, and the enabled systemd console service were installed. The console is healthy on the operator's personal Tailscale network, host tests plus the chaos gate are green, public port 8080 is refused, and the Windows-to-VM G2 kill/rearm proof completed in 333 ms. The remaining pre-live gate is a one-week software commissioning run covering at least five consecutive NSE trading sessions, followed by live-host migration and focused deployment-parity checks. Strategy profitability is not being revalidated during that week because the three strategies already have five-year backtest evidence. Operator-approved 10% live activation, the staged capital ramp, external AI-provider selection, and reviewed live proposals remain pending.
-**Working directory:** `D:\XOLVER\XenAlgo`
+**Prepared:** 2026-07-12
+**Boundary:** Repository engineering and local release proof only. No Fyers order was placed,
+modified, or cancelled. Live-order flags remain false.
 
-## Safety Posture
+## Delivered build
 
-XenAlgo is a real-money NSE trading system design. No live Dhan order API path was called,
-tested, or enabled during Phase 1 or Phase 2. The live config keeps both
-`live_trading.enabled` and `broker.order_api_enabled` set to `false`; the implemented
-end-to-end path remains paper-mode only.
+- Fyers-only runtime contract and broker-neutral interfaces:
+  `docs/FYERS_CONTRACT.md`, `xenalgo/broker/contracts.py`.
+- Injected/mockable OAuth, order gateway, symbol/history, Order WebSocket, REST orderbook,
+  cumulative-fill, channel-health, and parity boundaries.
+- Concrete-`PaperBroker` production composition that rejects any live gateway injection.
+- One owner per journal, engine, broker, listener, reconciler, governor, kill switch, and alert
+  bus; deterministic replay and no duplicate intent after restart.
+- Startup gates for daily authentication, calendar, config identity, replay, data quality,
+  kill/breaker state, and reconciliation.
+- Scheduled token/data/startup/reconciliation/execution/EOD/backup/heartbeat job ownership.
+- SELL-before-BUY session execution, dynamic risk context, confirmed cumulative paper fills,
+  graceful shutdown, and tamper-evident JSON/CSV evidence.
+- Phase 3.2 five-consecutive-session evaluator and focused Phase 3.3 parity evaluator.
+- Fyers-accurate compensating kill evidence for Phase 3.4/3.5.
+- Traceability matrix: `docs/TRACEABILITY.md`.
 
-Phase 1 executable specs now run rather than skip. `ExecutionEngine.submit()` calls
-`RiskEngine.check()` before broker submission, and idempotency still adopts an existing
-correlation id instead of re-posting an order.
+## Release identity
 
-Phase 2 adds operator visibility and control surfaces only. The dashboard reads paper/live
-state from SQLite, derives positions by replaying confirmed `TRADED` journal events, and
-limits writes to authenticated operator controls in `risk_state` plus append-only
-`audit_log` entries. It does not add a Dhan order-placement path.
-
-Phase 3.1 adds only local deterministic failure-injection coverage and paper-mode safety
-guards. It does not enable live trading, does not call the live Dhan order API, and does not
-change `live_trading.enabled=false` or `broker.order_api_enabled=false`.
-
-Phase 3.2 repository-local work adds evidence evaluators and an operations runbook only. It
-does not provision hosts, register Dhan static IPs, run the commissioning sessions, call the live
-Dhan order API, or enable live order placement.
-
-Phase 3.3 repository-local work adds post-migration evidence evaluators and an operations
-runbook only. It does not operate the paid live host for the required week, verify Dhan
-static IPs through a real startup, call the live Dhan order API, or enable live order
-placement.
-
-Phase 3.4 repository-local work adds go-live checklist evidence evaluators and an operations
-runbook only. It does not call Dhan, mutate config, fund the dedicated account, verify phone
-alerts, or enable live order placement from this checkout.
-
-Phase 3.5 repository-local work adds staged capital-ramp evidence evaluators and an
-operations runbook only. It does not call Dhan, mutate config, advance capital, or prove
-the required live two-week stages from this checkout.
-
-## Completed In Phase 0
-
-- Promoted `_source/Brain` to root `Brain/`.
-- Promoted `_source/Strategies` to root `Strategies/`.
-- Verified promoted research files are byte-identical to `_source` for the checked modules.
-- Added the live-system scaffold package under `xenalgo/`:
-  - `xenalgo.config` loads and validates config profiles.
-  - `xenalgo.logging_setup` emits structured JSON logs with a run id.
-  - `python -m xenalgo --profile live|research` validates config and prints checksum metadata.
-- Split config into:
-  - `config/config.research.yaml`
-  - `config/config.live.yaml`
-  - `config/nse_overrides.yaml`
-- Added dependency and build hygiene:
-  - `requirements.in`
-  - `requirements.txt`
-  - `requirements.lock`
-  - `pyproject.toml`
-  - `Dockerfile`
-  - `.dockerignore`
-  - `.gitignore`
-  - `.env.example`
-- Added GitHub Actions CI definition at `.github/workflows/ci.yml`.
-- Updated `pytest.ini` so the root suite runs the committed repo tests under `tests/`.
-- Added Phase 0 tests at `tests/test_phase0_scaffold.py`.
-- Added operator infra runbook at `docs/PHASE0_OPERATIONS.md`.
-- Added `deploy/oracle/` with an Oracle Linux 9 paper-host bootstrap script, a
-  Tailscale-only Docker/systemd service, and a host-local env template. The deployment kit
-  refuses market-hours bootstrap and keeps live trading plus broker order APIs disabled.
-
-## Completed In Phase 1
-
-- Added the append-only SQLite journal and order state machine in `xenalgo/execution/`.
-- Added `PositionBook`, idempotent fill application, `FillListener`, and restart replay.
-- Hardened SQLite connection lifecycle for journal, token, kill-switch, and console-state
-  stores so each operation explicitly commits/rolls back and closes its connection.
-- Added Hypothesis property coverage for SI-3/SI-4: non-fill journal events never replay
-  into positions, and duplicate fill event keys apply only once.
-- Added a subprocess crash durability test for SI-9: a child process writes confirmed fills,
-  is killed abruptly, and the parent verifies SQLite integrity plus replayed positions.
-- Added `ExecutionEngine` with correlation-id adoption, write-ahead intent, rejection
-  recording, consecutive-failure halting, kill-switch support, and mandatory risk checks.
-- Tightened the restart idempotency proof to 1,000 simulated restart attempts with a
-  single broker placement, matching `docs/SUCCESS_CRITERIA.md`.
-- Added pure `RiskEngine` with notional, ADV, price-collar, position-cap, cash, duplicate,
-  restricted-list, and breaker checks.
-- Added the order governor token bucket and daily cap in `xenalgo/broker/governor.py`.
-- Added paper-mode broker, token manager, in-memory alerter, scheduler guards, data
-  freshness/sanity gates, sleeve allocator/netting, kill switch, deploy guard, and reconciler.
-- Added `tests/contract/test_broker_contract.py` around the paper broker boundary:
-  correlation-id idempotency, fill accounting from requested quantity, rejected/cancelled
-  orders staying unfilled, and pending-order modify/cancel behavior.
-- Added a paper-day integration runner that performs token -> data -> risk -> order ->
-  confirmed fill -> reconciliation -> alert without live broker calls.
-- Updated the stale Phase 0 scaffold test so Phase 1 modules are expected to import.
-
-## Completed In Phase 2
-
-- Added `xenalgo.web.ConsoleStore` for dashboard snapshots backed by SQLite.
-  - Reads `orders`, `order_events`, `risk_state`, `portfolio_snapshots`, and `audit_log`.
-  - Derives displayed positions from confirmed `TRADED` journal events, preserving the
-    positions-change-only-from-fills invariant.
-  - Recovers sleeve attribution from prior order events when fill events carry
-    `sleeve=unknown`.
-- Added the FastAPI operator console in `xenalgo/web/app.py`.
-  - `GET /` renders an HTML dashboard for overview, risk state, positions, orders, and
-    recent journal events.
-  - `GET /api/snapshot` exposes the same read model as JSON.
-  - `GET /events` serves SSE snapshots; `?once=true` is available for deterministic smoke
-    tests.
-  - `POST /control/kill` activates the persistent kill switch and blocks new submissions.
-  - `POST /control/rearm/{breaker}` clears an approved breaker key and audit-logs the
-    action.
-  - `POST /postback` validates an HMAC signature and records a postback enqueue audit entry
-    only; it does not apply fills or submit/cancel orders.
-- Added `xenalgo.web.TelegramCommandRouter` for `/status`, `/positions`, `/kill`, and
-  `/rearm <breaker>` command behavior against the same store.
-- Added `xenalgo.web.server` bootstrap:
-  - Loads the live config and journal path.
-  - Requires `XENALGO_CONSOLE_TOKEN` for operator controls.
-  - Refuses wildcard public binds (`0.0.0.0` / `::`) so the console runs on loopback or the
-    configured Tailscale interface.
-  - Keeps the public postback endpoint disabled unless the live config enables it and a
-    `POSTBACK_HMAC_SECRET` is present.
-- Added Phase 2 integration tests at `tests/integration/test_phase2_console.py`.
-
-## Completed In Phase 3.1
-
-- Expanded the chaos suite at `tests/chaos/test_failure_injection.py` to cover the full
-  Phase 3.1 failure list from `docs/BUILD_PLAN.md`:
-  - crash/restart mid-order without duplicate submission,
-  - dropped WebSocket fill channel with REST fallback recovery,
-  - duplicate fill events from redundant channels as a no-op,
-  - token expiry blocking order submission before broker access,
-  - corrupt candle rejection before sizing/order flow,
-  - rejection storm tripping the consecutive-failure breaker,
-  - reconciliation drift signaling a halt,
-  - broker/network partition journaled as a rejected submission instead of crashing,
-  - clock skew blocking time-sensitive scheduler gates.
-- Added `xenalgo.data.CorruptDataError` and `assert_latest_prices_sane()`; the paper-day
-  runner now applies this price sanity gate after freshness validation.
-- Added `xenalgo.scheduler.ClockSkewError` and `assert_clock_in_sync()` for host-clock
-  drift detection.
-- Hardened `ExecutionEngine.submit()` so broker submission exceptions are converted into
-  append-only `REJECTED` journal events, increment the failure counter, and can trip the
-  existing failure breaker.
-
-## Completed In Phase 3.2 Repo-Local Readiness
-
-- Added `xenalgo.phase32` for evaluating operator-supplied Phase 3.2 evidence:
-  - `BurnInReview` currently checks the legacy four-week span and minimum reviewed trading
-    days; the governing decision is now a one-week/five-session software commissioning gate,
-    so this evaluator must be updated before authoritative use. It also checks complete
-    sleeve coverage, per-sleeve daily deviation ratio, token refresh success, safety
-    incidents, and unresolved outliers.
-  - `evaluate_live_host_readiness()` checks India-region host selection, primary/secondary
-    static IP evidence with at least seven-day lead time, Docker image reference, systemd,
-    backups, restore drill, heartbeat, Oracle warm-staging retention, and live-order toggles
-    remaining disabled before go-live.
-  - `load_burn_in_csv()` reads the operator's non-secret burn-in evidence CSV.
-- Added `tests/unit/test_phase32_readiness.py` to prove clean evidence passes and incomplete
-  or unsafe evidence fails closed.
-- Added `docs/PHASE3_2_OPERATIONS.md` with the burn-in CSV schema and live-host evidence
-  checklist.
-- Updated README, build plan, success criteria, test plan, and docs index to point at the
-  Phase 3.2 evidence workflow.
-
-## Completed In Phase 3.3 Repo-Local Readiness
-
-- Added `xenalgo.phase33` for evaluating operator-supplied Phase 3.3 evidence:
-  - `PostMigrationValidationReview` currently checks the legacy one-calendar-week
-    post-migration requirement. The governing decision now requires focused deployment
-    parity rather than another fixed week, so the evaluator must be updated. It also checks complete sleeve coverage, host-id
-    consistency, static-IP startup verification before validation starts, deviation ratio,
-    token refresh success, clean reconciliation, no safety incidents, no unresolved
-    outliers, and live-order toggles remaining disabled.
-  - `PostMigrationHostEvidence` records the non-secret live-host facts needed for the
-    evidence check, including provider/region, migration date, Docker image, config
-    checksum, systemd/backups/heartbeat, and Phase 3.2 readiness status.
-  - `load_post_migration_csv()` reads the operator's non-secret post-migration validation
-    CSV.
-- Added `tests/unit/test_phase33_readiness.py` to prove clean evidence passes and incomplete
-  or unsafe evidence fails closed.
-- Added `docs/PHASE3_3_OPERATIONS.md` with the post-migration CSV schema and live-host
-  evidence checklist.
-- Updated README, build plan, success criteria, test plan, and docs index to point at the
-  Phase 3.3 evidence workflow.
-
-## Completed In Phase 3.4 Repo-Local Readiness
-
-- Added `xenalgo.phase34` for evaluating operator-supplied Phase 3.4 evidence:
-  - `GoLiveChecklistReview` checks that G0, G1, G2, Phase 3.1, Phase 3.2 burn-in,
-    Phase 3.2 live-host readiness, and Phase 3.3 post-migration evidence have passed.
-  - It checks live-host id, config checksum, static-IP startup verification, at least five
-    token-refresh sessions, live-host restore drill, broker-side kill switch proof,
-    real-phone alert confirmation, dedicated funded account evidence, explicit operator
-    approval, initial capital no greater than 10%, governor cap at or below 2 OPS, and
-    off-market activation timing.
-  - It supports a pre-activation review mode that requires live-order flags to remain off,
-    plus an activation review mode for the separately approved 10% live stage.
-- Added `tests/unit/test_phase34_go_live.py` to prove clean evidence passes and incomplete,
-  over-sized, in-market, or accidentally enabled evidence fails closed.
-- Added `docs/PHASE3_4_OPERATIONS.md` with the go-live checklist CSV schema and review
-  commands.
-- Updated README, build plan, success criteria, test plan, and docs index to point at the
-  Phase 3.4 evidence workflow.
-
-## Completed In Phase 3.5 Repo-Local Readiness
-
-- Added `xenalgo.phase35` for evaluating operator-supplied Phase 3.5 evidence:
-  - `CapitalRampReview` checks that Phase 3.4 go-live evidence passed before the ramp
-    review starts.
-  - It requires the exact 10% -> 25% -> 50% -> 100% stage order, at least 14 calendar days
-    and 10 reviewed trading days per stage, complete sleeve reviews, and non-overlapping
-    stage windows.
-  - It checks live-vs-backtest deviation tolerance, zero safety incidents, clean
-    reconciliation, broker-side kill switch evidence, explicit operator approval per stage,
-    config checksums, governor cap at or below 2 OPS, and off-market stage changes.
-  - `load_ramp_csv()` reads the operator's non-secret staged-ramp evidence CSV.
-- Added `tests/unit/test_phase35_capital_ramp.py` to prove clean ramp evidence passes and
-  incomplete, misordered, unsafe, over-rate, in-market, or out-of-tolerance evidence fails
-  closed.
-- Added `docs/PHASE3_5_OPERATIONS.md` with the staged-ramp CSV schema and review command.
-- Updated README, build plan, success criteria, test plan, and docs index to point at the
-  Phase 3.5 evidence workflow.
-
-## Phase 3 Status Boundary
-
-Phase 3.1, Phase 3.2 evidence tooling, Phase 3.3 evidence tooling, Phase 3.4 evidence
-tooling, and Phase 3.5 evidence tooling are the only Phase 3 items that are fully
-repo-local. They are locally verified through deterministic tests only.
-No live Dhan order API path was called, enabled, or tested.
-
-The rest of Phase 3 cannot be truthfully completed from this checkout alone:
-
-- Phase 3.2a now requires one software commissioning week covering at least five consecutive NSE trading sessions on live market
-  data on the Oracle/Tailscale paper host, then evaluation of the collected evidence with
-  `BurnInReview`.
-- Phase 3.2b still requires selecting/provisioning the paid live host, deploying the same
-  Docker image, setting up systemd/backups/heartbeat, and registering the new static IPs
-  with Dhan at least seven days before go-live, then checking the evidence with
-  `evaluate_live_host_readiness()`.
-- Phase 3.3 requires focused deployment-parity checks on the new live host after
-  migration, then evaluation of the collected evidence with `PostMigrationValidationReview`.
-- Phase 3.4 requires external/operator evidence for the go-live checklist before enabling
-  live trading at 10% capital; `GoLiveChecklistReview` can evaluate that evidence, but the
-  committed config still keeps live order placement disabled.
-- Phase 3.5 requires the staged 10% -> 25% -> 50% -> 100% capital ramp with at least two
-  clean weeks at each stage; `CapitalRampReview` can evaluate collected evidence after the
-  ramp, but it does not advance capital or prove live operation by itself.
-
-Until those external gates are evidenced, the repo status is: Phase 3.1 complete, Phase 3.2
-evidence tooling complete, Phase 3.3 evidence tooling complete, Phase 3.4 evidence
-tooling complete, and Phase 3.5 evidence tooling complete; actual Phase 3.2/3.3/3.4/3.5
-external proof and full G3 go-live are not
-complete.
-
-## Completed In Phase 4 Repo-Local Learning
-
-- Added `xenalgo.learning` for proposal-only post-trade review:
-  - `TradeJournalAnalytics` derives per-sleeve attribution, slippage-vs-model metrics,
-    regime tags, and alpha-decay checks from SQLite journal/read-model state only.
-  - `LearningMemoryStore` stores observations and proposal drafts in SQLite, keeps proposals
-    pending by default, records approval/rejection decisions in `audit_log`, and writes an
-    approved config snapshot into `config_versions`.
-  - `AIProposalReviewer` accepts an injected review client and schema-validates strict JSON
-    proposal output before it can be stored.
-- Extended the console with `GET /api/learning`, pending proposal display, and authenticated
-  approve/reject endpoints.
-- Added `config.learning` defaults that keep the AI provider offline/proposal-only until an
-  explicit external provider is selected.
-- Added `tests/unit/test_phase4_learning.py` to prove deterministic analytics, pending-only
-  memory behavior, strict AI proposal validation, authenticated approval, and audit/config
-  version recording.
-
-This Phase 4 work does not call Dhan, add a broker path, apply live orders, or mutate live
-risk limits automatically. It is repo-local scaffolding; G4 still needs real post-trade
-history and operator-reviewed actionable proposals.
-
-## Completed In Research Validation Harness
-
-- Added `Brain.walk_forward` for offline anchored walk-forward validation of promoted
-  research alpha score panels.
-- The harness reuses `PortfolioEngine` and `BacktestEngine`, so out-of-sample windows use
-  the existing one-bar signal lag, transaction-cost model, and slippage assumptions.
-- Added `docs/RESEARCH_VALIDATION.md` and `tests/unit/test_research_walk_forward.py`.
-
-This does not claim that `std30`, `alpha_027`, or `alpha_062` are freshly validated for
-live capital. It provides the repo-local harness needed to produce dated validation
-evidence from the intended market-data snapshot.
-
-## Verification Evidence
-
-Run from repo root:
+Create the immutable identity from the final committed checkout:
 
 ```powershell
-./_source/.venv/Scripts/python.exe -m pytest -q
-```
-
-Last observed result:
-
-```text
-114 passed, 1 warning in 14.12s
-```
-
-Note: full-suite attempts can fail during pytest fixture setup if Windows points pytest at
-an inaccessible temp directory. Rerunning with `TMP` and `TEMP` set to
-`D:\XOLVER\XenAlgo\.tmp` passed.
-
-Run from `_source`:
-
-```powershell
-./.venv/Scripts/python.exe -m pytest Lab/ -q
-```
-
-Last observed result:
-
-```text
-4 passed, 1 warning in 1.91s
-```
-
-CI checkout fix:
-
-- GitHub Actions run `28727549195` failed during checkout because `actions/checkout` tried
-  to initialize `_source` as a submodule from `https://github.com/anishbaral2012/quant-swing-trade.git`
-  and GitHub returned `Repository not found`.
-- `_source` is now treated as an optional local/operator research snapshot, not a required
-  GitHub submodule. CI installs `requirements.lock` and runs the committed repo suite.
-- `tests/test_phase0_scaffold.py` still verifies byte identity against `_source` when the
-  local snapshot is present, and skips that one check when it is absent.
-- A fresh no-submodule clone at `.tmp\ci-sim2` passed the repo suite with
-  `102 passed, 1 skipped, 1 warning in 8.12s`; the skipped test was the optional `_source`
-  byte-identity check.
-
-Targeted Phase 3.1 verification:
-
-```powershell
-./_source/.venv/Scripts/python.exe -m pytest tests/chaos -q
-```
-
-Last observed result:
-
-```text
-9 passed in 1.20s
-```
-
-Targeted Phase 3.2 evidence verification:
-
-```powershell
-./_source/.venv/Scripts/python.exe -m pytest tests/unit/test_phase32_readiness.py -q
-```
-
-Last observed result:
-
-```text
-5 passed, 1 warning in 0.34s
-```
-
-Targeted Phase 3.3 evidence verification:
-
-```powershell
-./_source/.venv/Scripts/python.exe -m pytest tests/unit/test_phase33_readiness.py -q
-```
-
-Last observed result:
-
-```text
-4 passed, 1 warning in 0.46s
-```
-
-Targeted Phase 3.4 evidence verification:
-
-```powershell
-./_source/.venv/Scripts/python.exe -m pytest tests/unit/test_phase34_go_live.py -q
-```
-
-Last observed result:
-
-```text
-5 passed in 0.35s
-```
-
-Targeted Phase 3.5 evidence verification:
-
-```powershell
-./_source/.venv/Scripts/python.exe -m pytest tests/unit/test_phase35_capital_ramp.py -q
-```
-
-Last observed result:
-
-```text
-4 passed in 0.37s
-```
-
-Targeted Phase 4 learning verification:
-
-```powershell
-./_source/.venv/Scripts/python.exe -m pytest tests/unit/test_phase4_learning.py tests/integration/test_phase2_console.py -q
-```
-
-Last observed result:
-
-```text
-11 passed, 1 warning in 1.70s
-```
-
-Targeted research walk-forward verification:
-
-```powershell
-./_source/.venv/Scripts/python.exe -m pytest tests/unit/test_research_walk_forward.py -q
-```
-
-Last observed result:
-
-```text
-3 passed in 0.81s
-```
-
-Targeted Phase 2 verification:
-
-```powershell
-./_source/.venv/Scripts/python.exe -m pytest tests/integration/test_phase2_console.py tests/test_phase0_scaffold.py -q
-```
-
-Last observed result:
-
-```text
-13 passed, 1 warning
-```
-
-Config validation:
-
-```powershell
+git rev-parse HEAD
+Get-FileHash requirements.lock -Algorithm SHA256
 ./_source/.venv/Scripts/python.exe -m xenalgo --profile live
-./_source/.venv/Scripts/python.exe -m xenalgo --profile research
+docker build --pull=false -t xenalgo:b0-b6-rc .
+docker image inspect xenalgo:b0-b6-rc --format '{{.Id}}'
 ```
 
-Both profiles loaded and emitted checksum metadata.
+The release commit and final image digest must be recorded in the deployment evidence before
+Oracle deployment. Never substitute a mutable tag for the recorded digest.
 
-## Known Non-Repo / Operator-Side Work
+## Exact local startup and health commands
 
-Phase 0 task `0.1a` includes Oracle Cloud and Tailscale provisioning. The Oracle paper host,
-Docker image, systemd console service, firewall isolation, and personal-tailnet enrollment
-are now deployed and verified. This proves the secure operator-console host; it does not yet
-start the Phase 3.2 software commissioning week because the deployed service is console-only.
+```powershell
+# Validate both profiles
+./_source/.venv/Scripts/python.exe -m xenalgo --profile research
+./_source/.venv/Scripts/python.exe -m xenalgo --profile live
 
-Current OCI paper host:
+# Prove the image is paper-only and state paths are writable
+docker run --rm xenalgo:b0-b6-rc
+docker run --rm xenalgo:b0-b6-rc python -m xenalgo.paper_daemon --check --root /app
 
-- Instance: `XenAlso`
-- Region: India West / Mumbai (`ap-mumbai-1`)
-- OS: Oracle Linux 9
-- Shape: `VM.Standard.E2.1.Micro`
-- Private IP: `10.0.0.246`
-- Public IP: `80.225.212.3` (ephemeral public IPv4)
-- SSH user: `opc`
+# Private operator console
+./_source/.venv/Scripts/python.exe -m xenalgo.web.server --profile live
+```
 
-Notes:
+The scheduled daemon is composed through `ProductionPaperDaemon` and
+`ScheduledPaperRuntime`. The Oracle service must inject the approved daily-auth, live-data,
+strategy-order, backup, and heartbeat callbacks; the concrete broker remains `PaperBroker`.
+Do not substitute `FyersGateway` in this composition.
 
-- The original A1 Flex attempt failed because the selected Oracle Linux image was not valid
-  for `VM.Standard.A1.Flex`; the instance was created successfully after switching to
-  `VM.Standard.E2.1.Micro`.
-- The public IP is ephemeral, not reserved. Re-check it after stop/start or recreation.
-- SSH command shape:
-  `ssh -i <path-to-downloaded-private-key> opc@80.225.212.3`
+## Non-secret environment manifest
 
-2026-07-11 paper-host recovery and verified deployment:
+Use `deploy/oracle/xenalgo.env.example` and `.env.example`. Required names include:
 
-- The overloaded `XenAlso` VM was force-rebooted from OCI after TCP/22 accepted connections
-  but SSH stalled before the banner.
-- The corrected tracked bundle was recopied to `/opt/xenalgo/app`. A Windows CRLF deployment
-  failure was corrected, and `.gitattributes` now enforces LF for shell scripts and systemd
-  units.
-- The 1 GB E2.1.Micro exhausted its original 512 MB swap during DNF metadata loading. The
-  current host now has two persistent 2 GB swap files in addition to the original swap. The
-  bootstrap provisions a 4 GB persistent swap file before package work on a fresh host.
-- Docker, Tailscale, firewalld, SQLite, the `xenalgo:oracle-paper` image, and the
-  `xenalgo-paper.service` unit were installed successfully.
-- The console token was generated on-host without exposing it. The service is enabled and
-  active, and the console binds to the personal Tailscale address `100.120.219.15:8080`.
-- The VM (`xenalso-vnic`) and Windows verification client (`decoy`) are enrolled in the
-  `subhamjena.j@gmail.com` tailnet. The earlier temporary enrollment in the Xolver tailnet
-  was removed before final verification.
-- Firewalld keeps public `ens3` in the public zone with SSH only and assigns `tailscale0` to
-  the trusted zone. Windows reached the private health endpoint while public port 8080
-  timed out.
-- The Windows-to-VM authenticated paper kill switch completed in 333 ms, appeared as
-  `kill_switch` in risk state, and was then rearmed through the audited endpoint.
-- The deployed image passed 113 tests with one optional `_source` skip. The dedicated host
-  chaos run passed all 9 selected tests. The local checkout subsequently passed 114 tests.
-- Dhan and alert credential fields are populated on-host (shape checked without revealing
-  values), but `live_trading.enabled=false`, `broker.order_api_enabled=false`, and
-  `web.public_postback_enabled=false` remain enforced. No live order path was called.
+- `FYERS_APP_ID`, `FYERS_SECRET_KEY`, `FYERS_REDIRECT_URI`;
+- the approved daily-2FA/auth-code input mechanism;
+- `TAILSCALE_BIND_HOST`;
+- Telegram/Pushover identifiers;
+- `XENALGO_IMAGE_DIGEST`;
+- static-IP identity variables required by the activated Fyers app.
 
-Remaining host-side tasks:
+Values belong in `/etc/xenalgo/xenalgo.env` with least privilege. Never put values in git,
+image layers, logs, evidence, or backups. The token store is `.xenalgo-secrets/fyers_token.sqlite`
+and must be excluded from backups.
 
-- Implement and verify a scheduled, data-only paper daemon that reads live market data,
-  runs the three sleeves, routes proposed orders through the existing risk/execution path,
-  and uses `PaperBroker` only. The current `xenalgo-paper.service` runs the operator console;
-  the existing `PaperDayRunner` is an integration runner, not a production scheduler.
-- Keep the Dhan order API disabled while building and testing that daemon. Any future
-  live-order-capable Dhan gateway remains a separate explicit approval boundary and must be
-  tested with HTTP/WebSocket mocks before any operator-controlled live activation.
-- Once the paper daemon is proven on-host, begin the one-week/five-session Phase 3.2 software commissioning run and
-  collect one evidence row per sleeve per reviewed trading day.
-- Add off-box backups, restore-drill proof, external heartbeat proof, and real-phone alert
-  confirmation as required by the later gates.
-- Keep `web.public_postback_enabled=false` until the isolated webhook endpoint is explicitly
-  deployed with `POSTBACK_HMAC_SECRET` and port exposure is reviewed.
+## State, backup, and evidence paths
 
-Follow `docs/PHASE0_OPERATIONS.md` for the checklist.
+- Paper journal: `Diary/state/order_journal.sqlite`
+- Market data: `Supply/database/market_data.duckdb` (live process read-only)
+- Logs: `Diary/logs/`
+- Session evidence: operator-selected directory under `Diary/`; JSON plus `phase32.csv`
+- Token state: `.xenalgo-secrets/` (excluded from backup)
+- Off-box backup: SQLite online backup plus DuckDB/Parquet export; verify with a disposable
+  restore before commissioning.
 
-## Phase 2 Limitations / Next Engineering Boundary
+## Deploy and rollback
 
-The paper-mode core is implemented and tested locally. The production Dhan REST/WebSocket
-gateway is still intentionally not live-enabled in this checkout; before any real broker
-integration, keep `broker.order_api_enabled=false`, use HTTP-level mocks only, and require an
-explicit operator approval for any change that could touch real orders.
+Follow `docs/DEPLOYMENT_PLAN.md` D0-D5. Deploy only outside NSE market hours. Pin the final
+image by digest, mount dedicated paper state, validate config, start the scheduled daemon and
+private console, then verify heartbeat, replay, reconciliation, evidence creation, and public
+port refusal.
 
-The safe broker contract layer now covers `PaperBroker`. The Dhan gateway side of that
-contract remains intentionally absent until the operator explicitly approves an HTTP-mocked
-DhanGateway implementation; no live Dhan order path exists in this checkout.
+Rollback uses the previously recorded image digest and config checksum. Halt new submissions,
+preserve the append-only journal, reconcile broker truth read-only, restore outside market
+hours, replay, and remain in paper mode. Never infer that a pending order is unfilled.
 
-Phase 2's repository code is implemented. The 2026-07-11 Oracle/Tailscale deployment proved
-the main dashboard control/network boundary:
+## Gate results at handoff
 
-- The Windows client reached the console health endpoint only through the personal tailnet.
-- Public port 8080 timed out while public `ens3` remained SSH-only.
-- The authenticated dashboard kill/rearm route completed in 333 ms over Tailscale and was
-  reflected in persisted risk state plus the audit trail.
-- Snapshot/SSE fill reflection remains locally covered. A real scheduled paper fill cannot
-  be measured on-host until the production paper daemon exists and begins commissioning.
-- Keep the postback endpoint disabled until the HMAC secret and isolated public ingress are
-  reviewed.
+| Gate | Result |
+|---|---|
+| B0 contract/traceability | Implemented; official FYERS decisions recorded |
+| B1 remediation baseline | Verified with full, contract, chaos, research, config, secret, and diff checks |
+| B2 paper daemon | Full scheduled session, restart, no-order, startup-failure, paper-only tests green |
+| B3 adapters | Mock-only auth/data/stream/poll convergence and health tests green |
+| B4 evidence | Five-session commissioning, focused parity, current kill controls implemented |
+| B5 release hardening | Local gate bundle green; final commit/image identity recorded after final rebuild |
+| B6 handoff | This document plus deployment plan and environment examples |
 
-Phase 3.1's repository failure-injection suite and Phase 3.2/3.3/3.4/3.5 evidence
-evaluators are implemented locally. The `docs/BUILD_PLAN.md` wording also says the chaos
-suite runs on the Oracle dev host, Phase 3.2 commissioning runs on live market data, Phase 3.3
-deployment parity runs on the paid live host, Phase 3.4 requires the go-live checklist
-evidence before the 10% live stage, and Phase 3.5 requires two clean live weeks per ramp
-stage; that environment-side execution is still pending until the Oracle/Tailscale paper
-daemon is implemented, the Oracle host completes commissioning, and the paid live host is
-provisioned and operated through the required calendar periods.
+## Known limitations and external gates
 
-## Git / Workspace Notes
+- FYERS daily 2FA is operator/account dependent. The chosen approved mechanism must be
+  provisioned on the host; auth timeout halts safely.
+- Official instrument/restricted-list sources and corporate-action parity must produce clean
+  live artifacts during commissioning. Tests are injected/mock-only.
+- Oracle deployment, five real NSE sessions, paid-host provisioning/parity, alert delivery to
+  the real phone, static-IP/account acceptance, funding, and any live activation are external.
+- The user must explicitly approve the separate D7 live activation. B0-B6 does not authorize it.
 
-The root `D:\XOLVER\XenAlgo` directory is now initialized as the XenAlgo Git repository.
-`_source/` remains a separate local cloned research snapshot in the operator checkout, but
-it is no longer represented as a Git submodule because the upstream snapshot URL is not
-available to GitHub Actions. Do not commit `_source/`, `_source/.venv/`, `.env`,
-`*.duckdb`, `Diary/`, `Supply/`, or secret material.
+## Commissioning evidence template
 
-## Generated Artifacts
-
-Running the promoted research tests from repo root can create transient `Lab/` and `Diary/`
-folders. They are ignored by `.gitignore`; remove them after verification if they appear.
-
-## Next Safe Step
-
-Implement the scheduled, data-only production paper daemon behind the existing startup,
-freshness, risk, journal, governor, reconciliation, and alert boundaries. It must use
-`PaperBroker`, keep `live_trading.enabled=false` and `broker.order_api_enabled=false`, and
-add no code path that can submit a real Dhan order. Verify it locally with mocks and on the
-Oracle host before beginning the one-week software commissioning run. During commissioning, collect the CSV evidence
-described in `docs/PHASE3_2_OPERATIONS.md` and evaluate it with `BurnInReview`. After paid
-live-host migration, collect the post-migration CSV evidence described in
-`docs/PHASE3_3_OPERATIONS.md` and evaluate it with `PostMigrationValidationReview`. Then
-collect the Phase 3.4 go-live checklist evidence described in
-`docs/PHASE3_4_OPERATIONS.md` and evaluate it with `GoLiveChecklistReview`. After the
-operator-approved 10% live activation, collect the staged-ramp evidence described in
-`docs/PHASE3_5_OPERATIONS.md` and evaluate it with `CapitalRampReview` only after the 100%
-stage has completed its clean two-week window. Do not introduce a live Dhan order path
-without a separate, explicit operator request.
+`ProductionPaperDaemon` generates the schema documented in
+`docs/PHASE3_2_OPERATIONS.md`. Five consecutive expected NSE sessions must pass
+`BurnInReview`; synthetic/local records are non-authoritative and cannot satisfy deployment
+or go-live gates.

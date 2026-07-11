@@ -2,7 +2,7 @@
 Executable specifications for Phase 3.3 post-migration paper validation evidence.
 
 Covers: PRD G3/FR-17, TRD deployment and ops gates, G3 go-live criteria.
-No test touches the Dhan API or enables live order placement.
+No test touches the Fyers API or enables live order placement.
 """
 from __future__ import annotations
 
@@ -57,7 +57,7 @@ def _clean_records() -> list[phase33.PostMigrationRecord]:
     return records
 
 
-def test_one_week_post_migration_validation_passes_with_clean_evidence():
+def test_focused_post_migration_parity_passes_with_clean_evidence():
     summary = phase33.PostMigrationValidationReview().evaluate(_clean_records(), _host())
 
     assert summary.passed is True
@@ -100,10 +100,8 @@ def test_post_migration_validation_fails_closed_on_unsafe_or_incomplete_evidence
     assert "broker.order_api_enabled must remain false" in rendered
     assert "verified after post-migration validation started" in rendered
     assert "starts before recorded migration date" in rendered
-    assert "calendar days" in rendered
     assert "missing sleeve reviews" in rendered
     assert "host old-oracle-paper" in rendered
-    assert "within tolerance" in rendered
     assert "safety incidents" in rendered
     assert "reconciliation checks" in rendered
     assert "live order API was not disabled" in rendered

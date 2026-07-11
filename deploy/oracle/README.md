@@ -1,7 +1,7 @@
 # XenAlgo Oracle Paper Host Deployment
 
 This kit deploys XenAlgo to the Oracle Cloud Always Free paper VM in paper mode only.
-It does not enable live trading, does not enable the Dhan order API, and does not open
+It does not enable live trading, does not enable the Fyers order API, and does not open
 the operator console to the public internet.
 
 ## Preconditions
@@ -60,6 +60,8 @@ Expected posture:
 - The console listens on the Tailscale IP and port `8080`.
 - `config/config.live.yaml` keeps `live_trading.enabled: false`.
 - `config/config.live.yaml` keeps `broker.order_api_enabled: false`.
+- The console has no public postback route; live fills use Fyers Order WebSocket plus REST
+  orderbook polling, while commissioning fills remain paper-only.
 
 ## 2026-07-09 Attempt Note
 

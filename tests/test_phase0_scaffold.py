@@ -32,7 +32,6 @@ def test_promoted_research_packages_match_source_bytes():
     for relative in [
         Path("Brain/alpha_engine.py"),
         Path("Brain/backtest_engine.py"),
-        Path("Brain/data_manager.py"),
         Path("Strategies/alpha_027.py"),
         Path("Strategies/alpha_062.py"),
         Path("Strategies/std30.py"),
@@ -64,7 +63,8 @@ def test_config_profiles_load_and_enforce_phase0_safety_defaults():
     assert live.section("live_trading")["enabled"] is False
     assert live.section("live_trading")["mode"] == "paper"
     assert live.section("broker")["order_api_enabled"] is False
-    assert live.section("broker")["dhan_sdk_version"] == "2.0.2"
+    assert live.section("broker")["provider"] == "fyers"
+    assert live.section("broker")["fyers_sdk_version"] == "external-injected"
     assert live.section("governor")["max_orders_per_sec"] == 2
 
 

@@ -2,7 +2,7 @@
 Executable specifications for Phase 3.4 go-live checklist evidence.
 
 Covers: PRD G2/G3/G4/G6, TRD deployment and ops gates, G3 go-live criteria,
-SI-5/SI-10/SI-12. No test touches the Dhan API or places a live order.
+SI-5/SI-10/SI-12. No test touches the Fyers API or places a live order.
 """
 from __future__ import annotations
 
@@ -29,7 +29,8 @@ def _evidence(**overrides):
         static_ip_verified_at=dt.datetime(2026, 8, 15, 8, 0),
         token_refresh_sessions=5,
         backup_restore_drill_at=dt.date(2026, 8, 14),
-        broker_kill_switch_verified_at=dt.datetime(2026, 8, 15, 10, 0),
+        local_kill_switch_verified_at=dt.datetime(2026, 8, 15, 10, 0),
+        session_revocation_verified_at=dt.datetime(2026, 8, 15, 10, 15),
         phone_alerts_confirmed_at=dt.datetime(2026, 8, 15, 10, 30),
         dedicated_account_funded=True,
         operator_approval_id="approval-2026-08-16",
@@ -78,7 +79,8 @@ def test_go_live_checklist_fails_closed_on_missing_or_unsafe_evidence():
             static_ip_verified_at=dt.datetime(2026, 8, 18, 8, 0),
             token_refresh_sessions=4,
             backup_restore_drill_at=dt.date(2026, 8, 18),
-            broker_kill_switch_verified_at=None,
+            local_kill_switch_verified_at=None,
+            session_revocation_verified_at=None,
             phone_alerts_confirmed_at=None,
             dedicated_account_funded=False,
             operator_approval_id="",
@@ -104,7 +106,8 @@ def test_go_live_checklist_fails_closed_on_missing_or_unsafe_evidence():
     assert "static IP was verified after" in rendered
     assert "token-refresh sessions" in rendered
     assert "restore drill" in rendered
-    assert "broker-side kill switch" in rendered
+    assert "local kill-switch" in rendered
+    assert "session-revocation" in rendered
     assert "real-phone alert" in rendered
     assert "dedicated funded account" in rendered
     assert "operator approval" in rendered
@@ -142,13 +145,13 @@ def test_go_live_checklist_csv_loader_reads_operator_evidence():
         "phase31_failure_injection_passed,phase32_burn_in_passed,"
         "phase32_live_host_readiness_passed,phase33_post_migration_passed,"
         "static_ip_verified_at,token_refresh_sessions,backup_restore_drill_at,"
-        "broker_kill_switch_verified_at,phone_alerts_confirmed_at,"
+        "local_kill_switch_verified_at,session_revocation_verified_at,phone_alerts_confirmed_at,"
         "dedicated_account_funded,operator_approval_id,live_trading_enabled,"
         "broker_order_api_enabled,live_trading_mode,capital_fraction,"
         "governor_max_orders_per_sec\n"
         "2026-08-16T08:00:00,aws-mumbai-live-1,sha256:go-live,true,true,true,"
         "true,true,true,true,2026-08-15T08:00:00,5,2026-08-14,"
-        "2026-08-15T10:00:00,2026-08-15T10:30:00,true,approval-1,true,true,"
+        "2026-08-15T10:00:00,2026-08-15T10:15:00,2026-08-15T10:30:00,true,approval-1,true,true,"
         "live,0.10,2\n",
         encoding="utf-8",
     )

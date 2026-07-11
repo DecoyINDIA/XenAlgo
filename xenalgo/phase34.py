@@ -59,7 +59,8 @@ class GoLiveChecklistEvidence:
     static_ip_verified_at: dt.datetime | None
     token_refresh_sessions: int
     backup_restore_drill_at: dt.date | None
-    broker_kill_switch_verified_at: dt.datetime | None
+    local_kill_switch_verified_at: dt.datetime | None
+    session_revocation_verified_at: dt.datetime | None
     phone_alerts_confirmed_at: dt.datetime | None
     dedicated_account_funded: bool
     operator_approval_id: str
@@ -87,8 +88,11 @@ class GoLiveChecklistEvidence:
             static_ip_verified_at=_as_optional_datetime(row.get("static_ip_verified_at")),
             token_refresh_sessions=int(row.get("token_refresh_sessions", "0") or 0),
             backup_restore_drill_at=_as_optional_date(row.get("backup_restore_drill_at")),
-            broker_kill_switch_verified_at=_as_optional_datetime(
-                row.get("broker_kill_switch_verified_at")
+            local_kill_switch_verified_at=_as_optional_datetime(
+                row.get("local_kill_switch_verified_at")
+            ),
+            session_revocation_verified_at=_as_optional_datetime(
+                row.get("session_revocation_verified_at")
             ),
             phone_alerts_confirmed_at=_as_optional_datetime(row.get("phone_alerts_confirmed_at")),
             dedicated_account_funded=_as_bool(row.get("dedicated_account_funded", "false")),
@@ -118,7 +122,7 @@ def load_go_live_checklist_csv(path: str | Path) -> list[GoLiveChecklistEvidence
 class GoLiveChecklistReview:
     """Evaluates the repository-verifiable evidence gate for Phase 3.4.
 
-    This class validates evidence only. It does not call Dhan, mutate config, or enable
+    This class validates evidence only. It does not call Fyers, mutate config, or enable
     order placement.
     """
 
@@ -182,10 +186,14 @@ class GoLiveChecklistReview:
         elif evidence.backup_restore_drill_at > activation_date:
             blockers.append("restore drill is recorded after the go-live activation date")
 
-        if evidence.broker_kill_switch_verified_at is None:
-            blockers.append("broker-side kill switch verification is missing")
-        elif evidence.broker_kill_switch_verified_at > evidence.activated_at:
-            blockers.append("broker-side kill switch was verified after go-live activation")
+        if evidence.local_kill_switch_verified_at is None:
+            blockers.append("local kill-switch control-path verification is missing")
+        elif evidence.local_kill_switch_verified_at > evidence.activated_at:
+            blockers.append("local kill-switch control path was verified after go-live activation")
+        if evidence.session_revocation_verified_at is None:
+            blockers.append("Fyers session-revocation control verification is missing")
+        elif evidence.session_revocation_verified_at > evidence.activated_at:
+            blockers.append("Fyers session revocation was verified after go-live activation")
 
         if evidence.phone_alerts_confirmed_at is None:
             blockers.append("real-phone alert confirmation is missing")

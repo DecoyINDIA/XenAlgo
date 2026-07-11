@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import hashlib
-import hmac
 import json
 import time
 
@@ -69,6 +67,57 @@ def test_console_snapshot_replays_journal_positions(tmp_journal):
     assert snapshot["orders"][0]["state"] == "TRADED"
 
 
+def test_console_snapshot_treats_partial_fills_as_cumulative(tmp_journal):
+    journal = Journal(tmp_journal)
+    fill_listener = FillListener(broker=None, journal=journal)
+    fill_listener.on_fill(
+        Fill(
+            correlation_id="xa-cumulative",
+            broker_order_id="paper-cumulative",
+            symbol="SBIN",
+            side="BUY",
+            filled_qty=4,
+            avg_price=600.0,
+            event_key="paper-cumulative:PART_TRADED:4",
+            state="PART_TRADED",
+        )
+    )
+    fill_listener.on_fill(
+        Fill(
+            correlation_id="xa-cumulative",
+            broker_order_id="paper-cumulative",
+            symbol="SBIN",
+            side="BUY",
+            filled_qty=10,
+            avg_price=601.0,
+            event_key="paper-cumulative:TRADED:10",
+        )
+    )
+    fill_listener.on_fill(
+        Fill(
+            correlation_id="xa-cumulative",
+            broker_order_id="paper-cumulative",
+            symbol="SBIN",
+            side="BUY",
+            filled_qty=10,
+            avg_price=601.0,
+            event_key="paper-cumulative:TRADED:10-duplicate-channel",
+        )
+    )
+
+    snapshot = ConsoleStore(tmp_journal).snapshot()
+
+    assert snapshot["positions"] == [
+        {
+            "symbol": "SBIN",
+            "qty": 10,
+            "avg_price": 601.0,
+            "sleeves": ["unknown"],
+            "updated_utc": snapshot["positions"][0]["updated_utc"],
+        }
+    ]
+
+
 def test_dashboard_snapshot_and_sse_surface_paper_fill(tmp_journal):
     store = _seed_traded_order(tmp_journal)
     client = TestClient(create_app(store, control_token="secret"))
@@ -126,31 +175,11 @@ def test_breaker_rearm_requires_auth_and_is_audited(tmp_journal):
     assert "drawdown_halt" in snapshot["audit"][0]["detail"]
 
 
-def test_postback_endpoint_hmac_validates_and_enqueues_only_audit(tmp_journal):
+def test_postback_endpoint_is_removed_for_fyers_order_ws(tmp_journal):
     store = ConsoleStore(tmp_journal)
-    client = TestClient(create_app(store, control_token="secret", postback_secret="postback-secret"))
-    body = json.dumps(
-        {
-            "correlationId": "xa-20260701-std30-RELIANCE-BUY-1",
-            "orderId": "paper-1",
-            "orderStatus": "TRADED",
-        },
-        sort_keys=True,
-    ).encode("utf-8")
-    signature = hmac.new(b"postback-secret", body, hashlib.sha256).hexdigest()
+    client = TestClient(create_app(store, control_token="secret"))
 
-    assert client.post("/postback", content=body).status_code == 401
-    response = client.post(
-        "/postback",
-        content=body,
-        headers={"X-XenAlgo-Postback-Signature": signature},
-    )
-
-    assert response.status_code == 200
-    assert response.json() == {"ok": True, "enqueued": True}
-    snapshot = store.snapshot()
-    assert snapshot["audit"][0]["action"] == "postback.enqueue"
-    assert snapshot["orders"] == []
+    assert client.post("/postback", content=json.dumps({}).encode("utf-8")).status_code == 404
 
 
 def test_telegram_command_router_status_kill_positions_and_rearm(tmp_journal):
@@ -185,9 +214,22 @@ def test_web_runtime_requires_token_and_rejects_public_wildcard_bind():
             },
         )
     except ValueError as exc:
-        assert "public wildcard" in str(exc)
+        assert "loopback or a Tailscale" in str(exc)
     else:
         raise AssertionError("public wildcard bind should fail closed")
+
+    try:
+        runtime_from_config(
+            config,
+            env={
+                "TAILSCALE_BIND_HOST": "8.8.8.8",
+                "XENALGO_CONSOLE_TOKEN": "secret",
+            },
+        )
+    except ValueError as exc:
+        assert "loopback or a Tailscale" in str(exc)
+    else:
+        raise AssertionError("public IP bind should fail closed")
 
     runtime = runtime_from_config(
         config,

@@ -9,7 +9,7 @@ and the separately approved 10% live stage is active. The required sequence is:
 
 Each stage must run for at least two clean calendar weeks before the next increase. This
 repository includes `xenalgo.phase35` to evaluate supplied evidence. The module does not
-call Dhan, read secrets, mutate config, place orders, cancel orders, or approve capital
+call Fyers, read secrets, mutate config, place orders, cancel orders, or approve capital
 increases.
 
 ## Prerequisite Evidence
@@ -28,7 +28,7 @@ larger fraction fails closed.
 Record one row per sleeve per trading day:
 
 ```csv
-stage,capital_fraction,stage_started_at,stage_ended_at,trading_date,sleeve,live_return,backtest_return,live_host_id,config_checksum,operator_approval_id,governor_max_orders_per_sec,safety_incidents,reconciliation_clean,broker_kill_switch_armed,unexplained_outlier,notes
+stage,capital_fraction,stage_started_at,stage_ended_at,trading_date,sleeve,live_return,backtest_return,live_host_id,config_checksum,operator_approval_id,governor_max_orders_per_sec,safety_incidents,reconciliation_clean,compensating_kill_controls_armed,unexplained_outlier,notes
 10%,0.10,2026-08-16T08:00:00,2026-08-29T18:00:00,2026-08-17,std30,0.0100,0.0110,aws-mumbai-live-1,sha256:<checksum>,approval-10,2,0,true,true,false,clean
 10%,0.10,2026-08-16T08:00:00,2026-08-29T18:00:00,2026-08-17,alpha_027,0.0040,0.0035,aws-mumbai-live-1,sha256:<checksum>,approval-10,2,0,true,true,false,clean
 10%,0.10,2026-08-16T08:00:00,2026-08-29T18:00:00,2026-08-17,alpha_062,-0.0020,-0.0025,aws-mumbai-live-1,sha256:<checksum>,approval-10,2,0,true,true,false,clean
@@ -47,7 +47,7 @@ Pass conditions encoded in `CapitalRampReview`:
 - Every record is from the expected live host.
 - Governor order rate remains at or below 2 orders/sec.
 - At least 90% of sleeve-days are within absolute daily tolerance, default `0.005`.
-- No safety incidents, reconciliation failures, broker-side kill-switch gaps, or
+- No safety incidents, reconciliation failures, compensating kill-control gaps, or
   unexplained outliers are recorded.
 
 Use this as a local evidence check:

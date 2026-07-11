@@ -6,7 +6,7 @@ Phase 3.2 is an evidence gate, not a local-only code milestone. It has two parts
 - Phase 3.2b: paid live-host migration readiness before any live capital is enabled.
 
 This repository now includes `xenalgo.phase32` to evaluate supplied evidence. The module does
-not call Dhan, read secrets, register IPs, deploy hosts, or enable live trading.
+does not call Fyers, read secrets, register IPs, deploy hosts, or enable live trading.
 
 ## Commissioning Evidence
 
@@ -17,10 +17,8 @@ software runs unattended and faithfully executes the already-tested strategy log
 Record one row per sleeve per trading day:
 
 ```csv
-trading_date,sleeve,paper_return,backtest_return,token_refresh_ok,safety_incidents,unexplained_outlier,notes
-2026-07-06,std30,0.0100,0.0110,true,0,false,clean
-2026-07-06,alpha_027,0.0040,0.0035,true,0,false,clean
-2026-07-06,alpha_062,-0.0020,-0.0025,true,0,false,clean
+trading_date,sleeve,paper_return,backtest_return,token_refresh_ok,safety_incidents,reconciliation_clean,session_complete,unresolved_incidents,evidence_checksum,authoritative,unexplained_outlier,notes
+2026-07-06,std30,0.0100,0.0110,true,0,true,true,0,sha256:<checksum>,true,false,clean
 ```
 
 Commissioning pass conditions:
@@ -39,9 +37,9 @@ Commissioning pass conditions:
 - Paper return and backtest expectation are recorded for observation, but weekly profit or
   loss does not determine whether the software commissioning gate passed.
 
-`BurnInReview` currently retains the legacy 28-calendar-day and 18-trading-day defaults.
-Update and re-test that implementation before using it as the authoritative evaluator for
-this revised gate. Until then, keep signed daily evidence and review this checklist manually.
+`BurnInReview` enforces five consecutive expected weekday sessions, all three sleeves,
+successful token refresh, clean reconciliation, complete sessions, no unresolved incidents,
+and checksummed authoritative evidence. Return deviation is observational, not a pass gate.
 
 Use this as a local evidence check:
 
@@ -63,7 +61,7 @@ it belongs in docs.
 Phase 3.2b requires operator-side proof for:
 
 - live host provider selected: AWS Mumbai (`ap-south-1`) or DO Bangalore,
-- primary and secondary static IPs registered with Dhan at least seven days before go-live,
+- the static IP configuration required by the activated Fyers order app is registered and verified before go-live,
 - same Docker image deployed,
 - systemd supervision enabled,
 - nightly backups configured,

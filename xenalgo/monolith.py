@@ -9,7 +9,7 @@ from xenalgo.broker.paper import PaperBroker
 from xenalgo.broker.token import TokenManager
 from xenalgo.execution import ExecutionEngine, Fill, FillListener, Journal
 from xenalgo.execution.reconcile import Reconciler
-from xenalgo.risk import RiskContext, RiskEngine
+from xenalgo.risk import OrderRequest, RiskContext, RiskEngine
 
 
 @dataclass(frozen=True)
@@ -69,11 +69,18 @@ class PaperDayRunner:
         submitted = 0
         filled = 0
         listener = FillListener(self.broker, self.journal)
+        reconciler = Reconciler(self.broker)
 
-        for plan in orders:
-            ctx = RiskContext(
-                portfolio_value=Reconciler(self.broker).portfolio_value(prev_close),
-                positions={},
+        def risk_context(_order: OrderRequest) -> RiskContext:
+            symbols = set(prev_close) | set(self.broker.holdings) | set(self.broker.positions)
+            positions = {
+                symbol: {"qty": listener.book.qty(symbol) or self.broker.holdings.get(symbol, 0)}
+                for symbol in symbols
+                if listener.book.qty(symbol) or self.broker.holdings.get(symbol, 0)
+            }
+            return RiskContext(
+                portfolio_value=reconciler.portfolio_value(prev_close),
+                positions=positions,
                 adv=adv,
                 prev_close=prev_close,
                 cash=self.broker.cash,
@@ -81,19 +88,20 @@ class PaperDayRunner:
                 seen_correlation_ids=set(),
                 breakers={},
             )
-            engine = ExecutionEngine(
-                self.broker,
-                self.journal,
-                risk_engine=self.risk_engine,
-                risk_context=ctx,
-            )
+
+        engine = ExecutionEngine(
+            self.broker,
+            self.journal,
+            risk_engine=self.risk_engine,
+            risk_context_provider=risk_context,
+        )
+
+        for plan in orders:
             result = engine.submit(**plan.__dict__)
             self.alerter.send("order", f"{plan.correlation_id} {result.state}")
             if result.state != "PENDING":
                 continue
             submitted += 1
-            order = self.broker.get_order_by_correlation(plan.correlation_id)
-            order["requested_qty"] = plan.qty
             self.broker.mark_filled(plan.correlation_id)
             filled_order = self.broker.get_order_by_correlation(plan.correlation_id)
             listener.on_fill(
@@ -111,6 +119,6 @@ class PaperDayRunner:
             filled += 1
 
         local = {symbol: listener.book.qty(symbol) for symbol in self.broker.holdings}
-        reconciled = Reconciler(self.broker).reconcile(local).clean
+        reconciled = reconciler.reconcile(local).clean
         self.alerter.send("reconcile", "clean" if reconciled else "drift", critical=not reconciled)
         return PaperDayResult(submitted, filled, reconciled, len(self.alerter.sent))

@@ -26,22 +26,23 @@ class DataManager:
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         os.makedirs(self.data_dir, exist_ok=True)
         
-        self.client_id = config["dhan"]["client_id"]
-        self.access_token = config["dhan"]["access_token"]
-        self.scrip_master_url = config["dhan"]["scrip_master_url"]
-        self.nifty200_url = config["dhan"]["nifty200_url"]
-        self.nifty500_url = config["dhan"]["nifty500_url"]
+        broker_cfg = config.get("fyers", {})
+        self.app_id = broker_cfg.get("app_id", "")
+        self.access_token = broker_cfg.get("access_token", "")
+        self.symbol_master_url = broker_cfg.get("symbol_master_url", "")
+        self.nifty200_url = broker_cfg["nifty200_url"]
+        self.nifty500_url = broker_cfg["nifty500_url"]
         
         # Determine if we should run in synthetic mode
         self.is_synthetic = (
-            self.client_id == "YOUR_DHAN_CLIENT_ID" 
-            or self.access_token == "YOUR_DHAN_ACCESS_TOKEN"
-            or not self.client_id 
+            self.app_id == "YOUR_FYERS_APP_ID"
+            or self.access_token == "YOUR_FYERS_ACCESS_TOKEN"
+            or not self.app_id
             or not self.access_token
         )
         
         if self.is_synthetic:
-            logger.warning("Dhan API credentials not configured. Running in SYNTHETIC DATA MODE.")
+            logger.warning("Fyers API credentials not configured. Running in SYNTHETIC DATA MODE.")
             
         self.conn = duckdb.connect(self.db_path)
 
@@ -118,30 +119,32 @@ class DataManager:
 
     def download_scrip_master(self) -> pd.DataFrame:
         """
-        Downloads the compact scrip master from Dhan to map NSE symbols to security IDs.
+        Downloads the Fyers symbol master when configured.
         """
-        logger.info("Downloading Dhan scrip master...")
-        local_scrip_file = os.path.join(self.data_dir, "api-scrip-master.csv")
+        logger.info("Downloading Fyers symbol master...")
+        local_scrip_file = os.path.join(self.data_dir, "fyers-symbol-master.csv")
         
         # Check if cache is fresh (less than 24 hours old)
         if os.path.exists(local_scrip_file):
             mtime = os.path.getmtime(local_scrip_file)
             if time.time() - mtime < 86400: # 1 day
-                logger.info("Using cached Dhan scrip master.")
+                logger.info("Using cached Fyers symbol master.")
                 return pd.read_csv(local_scrip_file, low_memory=False)
                 
         try:
+            if not self.symbol_master_url:
+                raise RuntimeError("Fyers symbol master URL is not configured")
             # Download file
             headers = {"User-Agent": "Mozilla/5.0"}
-            req = urllib.request.Request(self.scrip_master_url, headers=headers)
+            req = urllib.request.Request(self.symbol_master_url, headers=headers)
             with urllib.request.urlopen(req, timeout=30) as response:
                 content = response.read()
             with open(local_scrip_file, 'wb') as f:
                 f.write(content)
-            logger.info("Dhan scrip master downloaded and cached.")
+            logger.info("Fyers symbol master downloaded and cached.")
             return pd.read_csv(local_scrip_file, low_memory=False)
         except Exception as e:
-            logger.error(f"Failed to download Dhan scrip master: {e}")
+            logger.error(f"Failed to download Fyers symbol master: {e}")
             if os.path.exists(local_scrip_file):
                 logger.info("Using expired cached scrip master as fallback.")
                 return pd.read_csv(local_scrip_file, low_memory=False)
@@ -149,33 +152,24 @@ class DataManager:
 
     def build_security_mapping(self, symbols: List[str]) -> Dict[str, Tuple[str, str]]:
         """
-        Maps symbols to (security_id, instrument_type) using the scrip master.
-        Returns: { 'TCS': ('1333', 'EQUITY'), ... }
+        Maps symbols to (Fyers symbol string, instrument_type).
+        Returns: { 'TCS': ('NSE:TCS-EQ', 'EQUITY'), ... }
         """
         if self.is_synthetic:
             # Mock mapping
-            return {sym: (str(1000 + idx), "EQUITY") for idx, sym in enumerate(symbols)}
+            return {sym: (f"NSE:{sym}-EQ", "EQUITY") for sym in symbols}
             
         try:
             df = self.download_scrip_master()
-            # Filter for NSE segment & Equity type
-            # Standard columns in compact scrip master:
-            # SEM_EXM_EXCH_ID (NSE), SEM_SEGMENT (E for Equity), SEM_TRADING_SYMBOL, SEM_SM_ID, SEM_INSTRUMENT_NAME
-            # Let's clean up columns
             df.columns = [c.strip().upper() for c in df.columns]
-            
-            # Map NSE Equity segment
-            mask = (df['SEM_EXM_EXCH_ID'].astype(str).str.strip().str.upper() == 'NSE') & \
-                   (df['SEM_SEGMENT'].astype(str).str.strip().str.upper() == 'E')
-            
-            nse_df = df[mask]
-            
             mapping = {}
-            for _, row in nse_df.iterrows():
-                symbol = str(row['SEM_TRADING_SYMBOL']).strip()
-                sec_id = str(int(row['SEM_SMST_SECURITY_ID']) if pd.notna(row['SEM_SMST_SECURITY_ID']) else row['SEM_SMST_SECURITY_ID']).strip()
-                inst_name = str(row.get('SEM_INSTRUMENT_NAME', 'EQUITY')).strip()
-                mapping[symbol] = (sec_id, inst_name)
+            symbol_col = "SYMBOL" if "SYMBOL" in df.columns else "SEM_TRADING_SYMBOL"
+            fyers_col = "FYERS_SYMBOL" if "FYERS_SYMBOL" in df.columns else "SYMBOL_TICKER"
+            for _, row in df.iterrows():
+                symbol = str(row.get(symbol_col, "")).replace("-EQ", "").strip().upper()
+                fyers_symbol = str(row.get(fyers_col, "")).strip()
+                if symbol and fyers_symbol.startswith("NSE:"):
+                    mapping[symbol] = (fyers_symbol, "EQUITY")
                 
             # Filter mapping to only include our universe symbols
             universe_mapping = {}
@@ -183,33 +177,32 @@ class DataManager:
                 if sym in mapping:
                     universe_mapping[sym] = mapping[sym]
                 else:
-                    # Keep symbol but mark with a mock ID for safety if not found
-                    universe_mapping[sym] = (f"MOCK_{sym}", "EQUITY")
+                    universe_mapping[sym] = (f"NSE:{sym}-EQ", "EQUITY")
                     
             return universe_mapping
         except Exception as e:
-            logger.error(f"Error building security mapping: {e}. Falling back to mock mapping.")
-            return {sym: (str(1000 + idx), "EQUITY") for idx, sym in enumerate(symbols)}
+            logger.error(f"Error building Fyers symbol mapping: {e}. Falling back to deterministic Fyers symbols.")
+            return {sym: (f"NSE:{sym}-EQ", "EQUITY") for sym in symbols}
 
-    def fetch_dhan_historical(
-        self, security_id: str, exchange_segment: str, instrument: str, from_date: str, to_date: str
+    def fetch_fyers_historical(
+        self, fyers_symbol: str, from_date: str, to_date: str
     ) -> Optional[pd.DataFrame]:
         """
-        Sends a direct HTTP POST request to the Dhan historical charts API.
+        Sends a direct request to the Fyers historical API.
         Implements rate-limiting retries and returns a parsed DataFrame.
         """
-        url = "https://api.dhan.co/v2/charts/historical"
+        url = "https://api-t1.fyers.in/data/history"
         headers = {
-            "client-id": self.client_id,
-            "access-token": self.access_token,
+            "Authorization": f"{self.app_id}:{self.access_token}",
             "Content-Type": "application/json"
         }
         payload = {
-            "securityId": str(security_id),
-            "exchangeSegment": exchange_segment,
-            "instrument": instrument,
-            "fromDate": from_date,
-            "toDate": to_date
+            "symbol": str(fyers_symbol),
+            "resolution": "D",
+            "date_format": "1",
+            "range_from": from_date,
+            "range_to": to_date,
+            "cont_flag": "1",
         }
 
         max_retries = 3
@@ -222,7 +215,7 @@ class DataManager:
 
                 # Check for rate-limiting
                 if response.status_code == 429:
-                    logger.warning(f"Rate limited (429) for security {security_id}. Retrying in {backoff}s...")
+                    logger.warning(f"Rate limited (429) for symbol {fyers_symbol}. Retrying in {backoff}s...")
                     time.sleep(backoff)
                     backoff *= 2.0
                     continue
@@ -230,35 +223,18 @@ class DataManager:
                 response.raise_for_status()
                 res_data = response.json()
 
-                if not res_data or 'open' not in res_data:
-                    # Dhan API might return a container under 'data' or directly
-                    if 'data' in res_data:
-                        res_data = res_data['data']
-                    else:
-                        logger.warning(f"Invalid response format for security {security_id}: {res_data}")
-                        return None
-
-                # Check again if we have the arrays
-                if 'open' not in res_data or len(res_data['open']) == 0:
+                candles = res_data.get("candles") or res_data.get("data", {}).get("candles") or []
+                if not candles:
+                    logger.warning(f"Invalid response format for symbol {fyers_symbol}: {res_data}")
                     return None
 
-                # Parse the arrays: open, high, low, close, volume, timestamp
-                df = pd.DataFrame({
-                    "open": res_data["open"],
-                    "high": res_data["high"],
-                    "low": res_data["low"],
-                    "close": res_data["close"],
-                    "volume": res_data["volume"],
-                    "timestamp": res_data["timestamp"]
-                })
-
-                # Convert timestamps (seconds since 1970)
+                df = pd.DataFrame(candles, columns=["timestamp", "open", "high", "low", "close", "volume"])
                 df['date'] = pd.to_datetime(df['timestamp'], unit='s').dt.date
                 df.drop(columns=['timestamp'], inplace=True, errors='ignore')
                 return df
 
             except Exception as e:
-                logger.error(f"Error calling Dhan API for security {security_id} (Attempt {attempt+1}/{max_retries}): {e}")
+                logger.error(f"Error calling Fyers API for symbol {fyers_symbol} (Attempt {attempt+1}/{max_retries}): {e}")
                 time.sleep(backoff)
                 backoff *= 2.0
 
@@ -267,7 +243,7 @@ class DataManager:
     def generate_synthetic_ohlcv(self, symbol: str, start_date: str, end_date: str) -> pd.DataFrame:
         """
         Generates high-quality synthetic daily OHLCV data using a geometric Brownian motion model.
-        Used as a fallback when credentials aren't provided or the Dhan API fails.
+        Used as a fallback when credentials aren't provided or the Fyers API fails.
         """
         # Parse dates
         start = pd.to_datetime(start_date).date()
@@ -331,7 +307,7 @@ class DataManager:
             "low": np.round(low_prices, 2),
             "close": np.round(close_prices, 2),
             "volume": np.round(volume, 0),
-            "security_id": f"MOCK_{symbol}"
+            "security_id": f"NSE:{symbol}-EQ"
         })
         
         return df
@@ -380,13 +356,13 @@ class DataManager:
                 
             logger.debug(f"Fetching data for {symbol} from {fetch_start} to {end_date}")
             
-            # Fetch data (from Dhan API or Synthetic)
+            # Fetch data (from Fyers API or Synthetic)
             if self.is_synthetic:
                 df = self.generate_synthetic_ohlcv(symbol, fetch_start, end_date)
             else:
                 # Add delay to avoid rate limit (9 requests per second limit; 0.15s is safe)
                 time.sleep(0.15)
-                df = self.fetch_dhan_historical(sec_id, "NSE_EQ", inst_type, fetch_start, end_date)
+                df = self.fetch_fyers_historical(sec_id, fetch_start, end_date)
                 
                 # Fallback to synthetic if API fails
                 if df is None or df.empty:

@@ -49,7 +49,7 @@ def load_config(profile: str = "live", root: str | Path | None = None) -> Runtim
 
 def _validate(profile: str, data: dict[str, Any]) -> None:
     if profile == "research":
-        _require(data, "dhan", "database", "universe", "backtest", "portfolio", "costs", "logging")
+        _require(data, "fyers", "database", "universe", "backtest", "portfolio", "costs", "logging")
         return
 
     _require(
@@ -83,8 +83,10 @@ def _validate(profile: str, data: dict[str, Any]) -> None:
         raise ValueError("governor.max_orders_per_sec must stay at or below 2")
 
     broker = data["broker"]
-    if str(broker.get("dhan_sdk_version")) != "2.0.2":
-        raise ValueError("dhan SDK must remain pinned to 2.0.2")
+    if broker.get("provider") != "fyers":
+        raise ValueError("live broker provider must be fyers")
+    if str(broker.get("fyers_sdk_version")) != "external-injected":
+        raise ValueError("Fyers SDK must remain externally injected until its Python 3.14 deps are installable")
     if broker.get("order_api_enabled") is not False:
         raise ValueError("Phase 0 config must not enable broker order APIs")
 

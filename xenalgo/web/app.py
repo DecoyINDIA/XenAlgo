@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import asyncio
-import hashlib
 import hmac
 import html
 import json
 from pathlib import Path
 from typing import Any
 
-from fastapi import Body, FastAPI, Header, HTTPException, Request
+from fastapi import Body, FastAPI, Header, HTTPException
 from fastapi.responses import HTMLResponse, PlainTextResponse, StreamingResponse
 
 from xenalgo.web.state import ConsoleStore
@@ -18,7 +17,6 @@ def create_app(
     store: ConsoleStore,
     *,
     control_token: str,
-    postback_secret: str | None = None,
     config_root: str | Path | None = None,
 ) -> FastAPI:
     if not control_token:
@@ -123,33 +121,6 @@ def create_app(
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
         return {"ok": True, "proposal_id": proposal_id, "status": "REJECTED"}
-
-    @app.post("/postback")
-    async def postback(
-        request: Request,
-        x_xenalgo_postback_signature: str | None = Header(default=None),
-    ) -> dict[str, Any]:
-        if not postback_secret:
-            raise HTTPException(status_code=503, detail="postback disabled")
-        body = await request.body()
-        expected = hmac.new(
-            postback_secret.encode("utf-8"),
-            body,
-            hashlib.sha256,
-        ).hexdigest()
-        if not x_xenalgo_postback_signature or not hmac.compare_digest(
-            x_xenalgo_postback_signature,
-            expected,
-        ):
-            raise HTTPException(status_code=401, detail="invalid postback signature")
-        try:
-            payload = json.loads(body.decode("utf-8") or "{}")
-        except json.JSONDecodeError as exc:
-            raise HTTPException(status_code=400, detail="invalid json") from exc
-        if not isinstance(payload, dict):
-            raise HTTPException(status_code=400, detail="postback payload must be an object")
-        store.record_postback(payload)
-        return {"ok": True, "enqueued": True}
 
     return app
 

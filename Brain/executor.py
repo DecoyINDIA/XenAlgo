@@ -21,7 +21,6 @@ import pytz
 
 from Brain.alpha_engine import AlphaEngine
 from Brain.position_manager import LivePositionManager
-from Brain.order_manager import LiveOrderManager
 from Brain.market_hours import (
     is_market_open,
     market_status,
@@ -41,7 +40,7 @@ class LiveExecutor:
 
     Two modes:
       - "paper": uses PaperBroker for simulated fills
-      - "live":  uses LiveOrderManager (dhanhq) for real orders
+      - "live":  intentionally disabled; sanctioned live orders must use xenalgo
     """
 
     def __init__(
@@ -55,6 +54,8 @@ class LiveExecutor:
     ):
         self.config = config
         self.mode = mode
+        if mode != "paper":
+            raise RuntimeError("Brain live mode is quarantined; use xenalgo.execution only")
         self.security_map = security_map or {}
         self._daily_panel = daily_panel
 
@@ -77,14 +78,7 @@ class LiveExecutor:
 
         # Broker
         initial_cap = config["backtest"]["initial_capital"]
-        if mode == "paper":
-            self.broker = PaperBroker(initial_cap, patched_config)
-        else:
-            self.broker = LiveOrderManager(
-                config["dhan"]["client_id"],
-                config["dhan"]["access_token"],
-                security_map=self.security_map,
-            )
+        self.broker = PaperBroker(initial_cap, patched_config)
 
         # Position manager (shared across modes)
         self.pos_mgr = LivePositionManager(config)

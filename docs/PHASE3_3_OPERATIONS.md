@@ -6,7 +6,7 @@ and before any live capital is enabled. It confirms that the same verified image
 behave correctly on the new IP and server; it is not a second fixed paper-trading week.
 
 This repository includes `xenalgo.phase33` to evaluate supplied evidence. The module does
-not call Dhan, read secrets, register IPs, deploy hosts, or enable live trading.
+does not call Fyers, read secrets, register IPs, deploy hosts, or enable live trading.
 
 ## Required Host Evidence
 
@@ -46,10 +46,9 @@ Required focused checks:
 - no safety incidents, reconciliation failures, or unexplained outliers are recorded,
 - every record confirms the live order API stayed disabled.
 
-`PostMigrationValidationReview` currently retains the legacy seven-calendar-day/five-session
-defaults. Update and re-test it before treating it as the authoritative evaluator for this
-focused deployment-parity gate. Until then, retain signed check results and perform the
-go-live checklist review manually.
+`PostMigrationValidationReview` now evaluates a focused deployment-parity session. It
+requires all three sleeves and the host controls above, but does not impose another fixed
+duration or strategy-return gate.
 
 Use this as a local evidence check:
 

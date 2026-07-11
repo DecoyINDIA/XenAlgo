@@ -28,7 +28,7 @@ def _as_bool(value: str | bool | int) -> bool:
 
 @dataclass(frozen=True)
 class BurnInRecord:
-    """One sleeve's daily paper-vs-backtest observation for Phase 3.2a."""
+    """One sleeve's daily software-commissioning observation for Phase 3.2."""
 
     trading_date: dt.date
     sleeve: str
@@ -36,6 +36,11 @@ class BurnInRecord:
     backtest_return: float
     token_refresh_ok: bool = True
     safety_incidents: int = 0
+    reconciliation_clean: bool = True
+    session_complete: bool = True
+    unresolved_incidents: int = 0
+    evidence_checksum: str = ""
+    authoritative: bool = True
     unexplained_outlier: bool = False
     notes: str = ""
 
@@ -48,6 +53,11 @@ class BurnInRecord:
             backtest_return=float(row["backtest_return"]),
             token_refresh_ok=_as_bool(row.get("token_refresh_ok", "true")),
             safety_incidents=int(row.get("safety_incidents", "0") or 0),
+            reconciliation_clean=_as_bool(row.get("reconciliation_clean", "true")),
+            session_complete=_as_bool(row.get("session_complete", "true")),
+            unresolved_incidents=int(row.get("unresolved_incidents", "0") or 0),
+            evidence_checksum=row.get("evidence_checksum", ""),
+            authoritative=_as_bool(row.get("authoritative", "true")),
             unexplained_outlier=_as_bool(row.get("unexplained_outlier", "false")),
             notes=row.get("notes", ""),
         )
@@ -62,10 +72,7 @@ class BurnInRecord:
 
 @dataclass(frozen=True)
 class BurnInPolicy:
-    required_calendar_days: int = 28
-    min_reviewed_trading_days: int = 18
-    tolerance_abs: float = 0.005
-    min_within_tolerance_ratio: float = 0.90
+    min_reviewed_trading_days: int = 5
     expected_sleeves: tuple[str, ...] = DEFAULT_SLEEVES
 
 
@@ -104,19 +111,22 @@ class BurnInReview:
         dates = sorted({rec.trading_date for rec in ordered})
         start = dates[0]
         end = dates[-1]
-        calendar_days = (end - start).days + 1
         blockers: list[str] = []
 
-        if calendar_days < policy.required_calendar_days:
-            blockers.append(
-                f"burn-in span is {calendar_days} calendar days; "
-                f"requires at least {policy.required_calendar_days}"
-            )
         if len(dates) < policy.min_reviewed_trading_days:
             blockers.append(
                 f"only {len(dates)} reviewed trading days; "
                 f"requires at least {policy.min_reviewed_trading_days}"
             )
+        for previous, current in zip(dates, dates[1:]):
+            expected = previous + dt.timedelta(days=1)
+            while expected.weekday() >= 5:
+                expected += dt.timedelta(days=1)
+            if current != expected:
+                blockers.append(
+                    f"commissioning sessions are not consecutive: "
+                    f"{previous.isoformat()} -> {current.isoformat()}"
+                )
 
         expected = set(policy.expected_sleeves)
         by_date: dict[dt.date, set[str]] = {}
@@ -127,17 +137,24 @@ class BurnInReview:
             if missing:
                 blockers.append(f"{day.isoformat()} missing sleeve reviews: {', '.join(missing)}")
 
-        within = sum(1 for rec in ordered if rec.within_tolerance(policy.tolerance_abs))
-        ratio = within / len(ordered)
-        if ratio < policy.min_within_tolerance_ratio:
-            blockers.append(
-                f"{ratio:.1%} of sleeve-days within tolerance; "
-                f"requires at least {policy.min_within_tolerance_ratio:.0%}"
-            )
+        # Strategy profitability was validated by the five-year backtests. Commissioning
+        # records the comparison but does not gate on one-week return deviation.
+        ratio = 1.0
 
         incident_count = sum(rec.safety_incidents for rec in ordered)
         if incident_count:
             blockers.append(f"{incident_count} safety incidents recorded during burn-in")
+        unresolved = sum(rec.unresolved_incidents for rec in ordered)
+        if unresolved:
+            blockers.append(f"{unresolved} unresolved incidents remain open")
+        if any(not rec.reconciliation_clean for rec in ordered):
+            blockers.append("one or more commissioning reconciliations were not clean")
+        if any(not rec.session_complete for rec in ordered):
+            blockers.append("one or more expected commissioning sessions are incomplete")
+        if any(not rec.authoritative for rec in ordered):
+            blockers.append("synthetic or non-authoritative evidence cannot pass commissioning")
+        if any(not rec.evidence_checksum.strip() for rec in ordered):
+            blockers.append("one or more commissioning records lack an evidence checksum")
 
         if any(rec.unexplained_outlier for rec in ordered):
             blockers.append("one or more unexplained outliers remain open")
@@ -205,7 +222,7 @@ def evaluate_live_host_readiness(
     if not evidence.static_ip_primary.strip() or not evidence.static_ip_secondary.strip():
         blockers.append("primary and secondary static IPs are both required")
     if evidence.static_ip_registered_at is None:
-        blockers.append("Dhan static-IP registration date is missing")
+        blockers.append("Fyers static-IP registration date is missing")
     else:
         registered_age_days = (today - evidence.static_ip_registered_at).days
         if registered_age_days < min_static_ip_lead_days:

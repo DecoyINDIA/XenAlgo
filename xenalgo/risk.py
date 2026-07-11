@@ -102,7 +102,7 @@ class RiskEngine:
                 decision = RiskDecision.SCALE
                 reasons.append("insufficient cash")
 
-        if qty <= 0:
+        if qty <= 0:  # pragma: no cover - defensive; earlier checks veto zero quantity.
             return RiskDecision.REJECT, 0, "no quantity allowed"
         if decision is RiskDecision.SCALE:
             return decision, qty, ", ".join(reasons)

@@ -16,6 +16,13 @@ Read in this order:
 11. **[RESEARCH_VALIDATION.md](RESEARCH_VALIDATION.md)** — offline walk-forward validation harness for promoted research alphas.
 12. **[FOUNDER_PITCH.md](FOUNDER_PITCH.md)** — layman-friendly founder and investor explanation of the product, architecture, hosting, safety model, verified status, and roadmap.
 
+## Authoritative completion plan
+
+**[END_TO_END_COMPLETION_PLAN.md](END_TO_END_COMPLETION_PLAN.md)** defines the remaining-work sequence, measurable acceptance gates, and completion matrix from the Fyers contract freeze through G3 and G4. Use it to sequence implementation and external proof; local tests cannot substitute for host, operator, broker, or calendar-time evidence.
+
+- **[PHASED_BUILD_PLAN_REMAINING.md](PHASED_BUILD_PLAN_REMAINING.md)** turns the remaining repository work into phases B0-B6 with dependencies, tasks, tests, and exit gates.
+- **[DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md)** defines gates D0-D9 for Oracle paper deployment, commissioning, paid-host migration, explicit activation, rollback/recovery, and the staged capital ramp.
+
 ## Traceability chain
 PRD goal → FR requirement → TRD component → build-plan task → success criterion / safety invariant → test.
 

@@ -55,7 +55,7 @@ def test_duplicate_fill_from_redundant_channels_is_noop(mock_broker, tmp_journal
     fill = execu.Fill("xa-dup-1", "TCS", "BUY", 5, 3000.0,
                       broker_order_id="oid", event_key="oid:TRADED")
     listener.on_fill(fill)          # from WebSocket
-    listener.on_fill(fill)          # same event from Postback webhook
+    listener.on_fill(fill)          # same event from REST fallback
     assert listener.book.qty("TCS") == 5
 
 
@@ -120,7 +120,7 @@ def test_network_partition_records_rejection_not_crash(mock_broker, tmp_journal)
     assert result.state == "REJECTED"
     assert "network partition" in result.reason
     states = [event["state"] for event in execu.Journal(tmp_journal).events()]
-    assert states == ["INTENT", "REJECTED"]
+    assert states == ["INTENT", "SUBMITTED", "REJECTED"]
 
 
 def test_clock_skew_blocks_scheduler_gate():
@@ -134,3 +134,22 @@ def test_clock_skew_blocks_scheduler_gate():
             reference=reference,
             max_skew=dt.timedelta(seconds=30),
         )
+
+
+@pytest.mark.chaos
+def test_one_thousand_restart_replays_are_identical(tmp_journal):
+    """SI-3/SI-4/SI-9: 1,000 restart replays retain one cumulative confirmed fill."""
+    listener = execu.FillListener(object(), execu.Journal(tmp_journal))
+    listener.on_fill(
+        execu.Fill(
+            correlation_id="restart-1000",
+            broker_order_id="paper-1000",
+            symbol="SBIN",
+            side="BUY",
+            filled_qty=10,
+            avg_price=100.0,
+            event_key="paper-1000:TRADED:10",
+        )
+    )
+    for _ in range(1_000):
+        assert execu.PositionBook.from_replay(execu.Journal(tmp_journal)).qty("SBIN") == 10

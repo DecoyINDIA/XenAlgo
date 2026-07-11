@@ -1,9 +1,9 @@
 profile: research
 
-dhan:
-  client_id_env: DHAN_CLIENT_ID
-  access_token_env: DHAN_ACCESS_TOKEN
-  scrip_master_url: https://images.dhan.co/api-data/api-scrip-master.csv
+fyers:
+  app_id_env: FYERS_APP_ID
+  access_token_env: FYERS_ACCESS_TOKEN
+  symbol_master_url: ""
   nifty200_url: https://archives.nseindia.com/content/indices/ind_nifty200list.csv
   nifty500_url: https://archives.nseindia.com/content/indices/ind_nifty500list.csv
 

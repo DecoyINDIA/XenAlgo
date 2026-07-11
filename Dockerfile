@@ -14,6 +14,9 @@ RUN python -m pip install --no-cache-dir --upgrade pip \
 
 COPY . .
 
+RUN mkdir -p /app/Diary/state /app/Diary/logs /app/Supply/database /app/.xenalgo-secrets \
+    && chown -R xenalgo:xenalgo /app/Diary /app/Supply /app/.xenalgo-secrets
+
 USER xenalgo
 
 CMD ["python", "-m", "xenalgo", "--profile", "live"]

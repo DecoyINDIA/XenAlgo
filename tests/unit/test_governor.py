@@ -56,10 +56,19 @@ def test_burst_of_100_stays_under_cap():
 
 def test_daily_cap_enforced():
     g = gov.OrderGovernor(max_per_sec=2, max_per_day=500)
+    g.bucket = gov.TokenBucket(rate_per_sec=500, capacity=500)
     for _ in range(500):
         assert g.allow() is True
     assert g.allow() is False        # 501st blocked
     assert g.remaining_today() == 0
+
+
+def test_order_governor_consults_token_bucket():
+    g = gov.OrderGovernor(max_per_sec=2, max_per_day=500)
+    assert g.allow() is True
+    assert g.allow() is True
+    assert g.allow() is False
+    assert g.remaining_today() == 498
 
 
 def test_well_below_sebi_threshold():

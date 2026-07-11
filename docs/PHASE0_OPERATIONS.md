@@ -137,7 +137,7 @@ Before retrying:
 2. Recopy the repository bundle so the fixed `deploy/oracle/bootstrap_oracle_linux9.sh`
    time-guard comparison is present on the VM.
 3. Rerun the bootstrap and poll `/tmp/xenalgo-bootstrap.log`.
-4. Keep the deployment paper-only; do not enable Dhan order APIs or public dashboard ingress.
+4. Keep the deployment paper-only; do not enable Fyers order APIs or public dashboard ingress.
 
 ### 2026-07-11 recovery and deployment result
 
@@ -159,4 +159,4 @@ Before retrying:
   public port 8080 timed out, and the authenticated paper kill/rearm path completed in
   333 ms with `kill_switch` visible in risk state before audited rearm.
 - `live_trading.enabled=false`, `broker.order_api_enabled=false`, and
-  `web.public_postback_enabled=false` remain unchanged.
+  the Tailscale-only bind guard remains unchanged.

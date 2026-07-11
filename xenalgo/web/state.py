@@ -256,20 +256,6 @@ class ConsoleStore:
                 now=now,
             )
 
-    def record_postback(self, payload: dict[str, Any], actor: str = "dhan-postback") -> None:
-        safe_payload = {
-            "correlation_id": payload.get("correlationId") or payload.get("correlation_id"),
-            "order_id": payload.get("orderId") or payload.get("order_id"),
-            "status": payload.get("orderStatus") or payload.get("status"),
-        }
-        with self._connect() as con:
-            self._audit(
-                con,
-                actor,
-                "postback.enqueue",
-                json.dumps(safe_payload, sort_keys=True),
-            )
-
     def config_summary(self, profile: str = "live", root: str | Path | None = None) -> dict[str, Any]:
         config = load_config(profile, root)
         live = config.data.get("live_trading", {})
@@ -300,13 +286,14 @@ class ConsoleStore:
         rows = con.execute(
             """
             SELECT event_id, correlation_id, ts_utc, sleeve, symbol, side,
-                   filled_qty, avg_fill_price, raw_json
+                   broker_order_id, filled_qty, avg_fill_price, raw_json
             FROM order_events
-            WHERE state='TRADED' AND filled_qty > 0
+            WHERE state IN ('PART_TRADED', 'TRADED') AND filled_qty > 0
             ORDER BY event_id ASC
             """
         ).fetchall()
         seen: set[str] = set()
+        cumulative_qty_by_order: dict[str, int] = {}
         positions: dict[str, dict[str, Any]] = {}
         for row in rows:
             raw = json.loads(row["raw_json"] or "{}")
@@ -314,7 +301,11 @@ class ConsoleStore:
             if event_key in seen:
                 continue
             seen.add(event_key)
-            qty = int(row["filled_qty"])
+            order_key = row["broker_order_id"] or row["correlation_id"]
+            cumulative_qty = int(row["filled_qty"])
+            previous_qty = cumulative_qty_by_order.get(order_key, 0)
+            qty = max(cumulative_qty - previous_qty, 0)
+            cumulative_qty_by_order[order_key] = max(previous_qty, cumulative_qty)
             sign = 1 if str(row["side"]).upper() == "BUY" else -1
             symbol = str(row["symbol"])
             current = positions.setdefault(
