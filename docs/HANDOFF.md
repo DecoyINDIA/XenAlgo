@@ -1,7 +1,7 @@
 # XenAlgo Handoff
 
-**Last updated:** 2026-07-09
-**Current phase:** Phase 4 repository-local learning scaffolding implemented on top of the existing paper/live journal; the Oracle paper VM is recorded and SSH was briefly restored on 2026-07-09, but the paper-host bootstrap wedged before Docker/Tailscale/systemd completed, so deployed-host proof, four-week paper burn-in, live-host migration, one-week live-host paper validation, operator-approved 10% live activation, the real staged capital ramp, external AI-provider selection, and reviewed live proposals are still pending operator/external gates.
+**Last updated:** 2026-07-11
+**Current phase:** Phase 4 repository-local learning scaffolding implemented on top of the existing paper/live journal. On 2026-07-11 the Oracle paper VM was recovered and Docker, Tailscale, firewalld, the paper image, and the enabled systemd console service were installed. The console is healthy on the operator's personal Tailscale network, host tests plus the chaos gate are green, public port 8080 is refused, and the Windows-to-VM G2 kill/rearm proof completed in 333 ms. The four-week paper burn-in, live-host migration, one-week live-host paper validation, operator-approved 10% live activation, the real staged capital ramp, external AI-provider selection, and reviewed live proposals are still pending operator/external gates.
 **Working directory:** `D:\XOLVER\XenAlgo`
 
 ## Safety Posture
@@ -439,9 +439,10 @@ Both profiles loaded and emitted checksum metadata.
 
 ## Known Non-Repo / Operator-Side Work
 
-Phase 0 task `0.1a` includes Oracle Cloud and Tailscale provisioning. The repo now contains
-the Docker artifact and an operations runbook. OCI instance creation was completed from the
-operator's account on 2026-07-06, but host setup and deployed-app proof are still pending.
+Phase 0 task `0.1a` includes Oracle Cloud and Tailscale provisioning. The Oracle paper host,
+Docker image, systemd console service, firewall isolation, and personal-tailnet enrollment
+are now deployed and verified. This proves the secure operator-console host; it does not yet
+start the calendar-time Phase 3.2 paper burn-in because the deployed service is console-only.
 
 Current OCI paper host:
 
@@ -462,41 +463,47 @@ Notes:
 - SSH command shape:
   `ssh -i <path-to-downloaded-private-key> opc@80.225.212.3`
 
-2026-07-09 paper-host deployment attempt:
+2026-07-11 paper-host recovery and verified deployment:
 
-- OCI showed `XenAlso` running in `ap-mumbai-1` with public IP `80.225.212.3`, private IP
-  `10.0.0.246`, no VNIC network security group, and the subnet using the default security
-  list.
-- Local SSH initially timed out, then port 22 became reachable after inspecting the subnet
-  security list. A stale local host-key entry and loose ACLs on the downloaded private key
-  blocked authentication; the working session used a locked-down temporary key copy under
-  `.tmp/` and a temporary known-hosts file. Do not commit either file.
-- The current working tree was packaged and copied to `/opt/xenalgo/app` on the VM. The VM
-  copy was checked before bootstrap and still had `live_trading.enabled: false` and
-  `broker.order_api_enabled: false`.
-- The operator explicitly overrode the market-hours deployment hold because no Dhan API keys
-  or funded capital were configured. No live Dhan order path was called or enabled.
-- `sudo bash deploy/oracle/bootstrap_oracle_linux9.sh` was started at about `08:50:50 IST`.
-  It entered `dnf install -y dnf-plugins-core firewalld sqlite`, then the micro VM became
-  overloaded. Later checks showed TCP/22 open but SSH timing out during banner exchange.
-- Last confirmed incomplete state: Docker not installed, Tailscale not installed,
-  `/etc/systemd/system/xenalgo-paper.service` not installed, and the paper console not
-  running.
-- A bootstrap-script bug was found from the log (`0850: value too great for base`) and fixed
-  in the repo by forcing base-10 comparisons for the IST time guard. The VM may still have
-  the pre-fix script until the app bundle is recopied after instance recovery.
+- The overloaded `XenAlso` VM was force-rebooted from OCI after TCP/22 accepted connections
+  but SSH stalled before the banner.
+- The corrected tracked bundle was recopied to `/opt/xenalgo/app`. A Windows CRLF deployment
+  failure was corrected, and `.gitattributes` now enforces LF for shell scripts and systemd
+  units.
+- The 1 GB E2.1.Micro exhausted its original 512 MB swap during DNF metadata loading. The
+  current host now has two persistent 2 GB swap files in addition to the original swap. The
+  bootstrap provisions a 4 GB persistent swap file before package work on a fresh host.
+- Docker, Tailscale, firewalld, SQLite, the `xenalgo:oracle-paper` image, and the
+  `xenalgo-paper.service` unit were installed successfully.
+- The console token was generated on-host without exposing it. The service is enabled and
+  active, and the console binds to the personal Tailscale address `100.120.219.15:8080`.
+- The VM (`xenalso-vnic`) and Windows verification client (`decoy`) are enrolled in the
+  `subhamjena.j@gmail.com` tailnet. The earlier temporary enrollment in the Xolver tailnet
+  was removed before final verification.
+- Firewalld keeps public `ens3` in the public zone with SSH only and assigns `tailscale0` to
+  the trusted zone. Windows reached the private health endpoint while public port 8080
+  timed out.
+- The Windows-to-VM authenticated paper kill switch completed in 333 ms, appeared as
+  `kill_switch` in risk state, and was then rearmed through the audited endpoint.
+- The deployed image passed 113 tests with one optional `_source` skip. The dedicated host
+  chaos run passed all 9 selected tests. The local checkout subsequently passed 114 tests.
+- Dhan and alert credential fields are populated on-host (shape checked without revealing
+  values), but `live_trading.enabled=false`, `broker.order_api_enabled=false`, and
+  `web.public_postback_enabled=false` remain enforced. No live order path was called.
 
 Remaining host-side tasks:
 
-- Recover the OCI VM first. If SSH continues to connect at TCP level but time out before the
-  SSH banner, use the OCI console to reboot `XenAlso`, then reconnect.
-- Recopy the updated deployment bundle so the fixed bootstrap guard is present on the VM.
-- Install Docker and Tailscale.
-- Close inbound ports except SSH.
-- Confirm the app image validates with `.env` on the host.
-- Set `XENALGO_CONSOLE_TOKEN` on the host before running the console.
-- Set `TAILSCALE_BIND_HOST` to the host's Tailscale IP/interface address before exposing the
-  dashboard beyond loopback.
+- Implement and verify a scheduled, data-only paper daemon that reads live market data,
+  runs the three sleeves, routes proposed orders through the existing risk/execution path,
+  and uses `PaperBroker` only. The current `xenalgo-paper.service` runs the operator console;
+  the existing `PaperDayRunner` is an integration runner, not a production scheduler.
+- Keep the Dhan order API disabled while building and testing that daemon. Any future
+  live-order-capable Dhan gateway remains a separate explicit approval boundary and must be
+  tested with HTTP/WebSocket mocks before any operator-controlled live activation.
+- Once the paper daemon is proven on-host, begin the real four-week Phase 3.2 burn-in and
+  collect one evidence row per sleeve per reviewed trading day.
+- Add off-box backups, restore-drill proof, external heartbeat proof, and real-phone alert
+  confirmation as required by the later gates.
 - Keep `web.public_postback_enabled=false` until the isolated webhook endpoint is explicitly
   deployed with `POSTBACK_HMAC_SECRET` and port exposure is reviewed.
 
@@ -513,14 +520,15 @@ The safe broker contract layer now covers `PaperBroker`. The Dhan gateway side o
 contract remains intentionally absent until the operator explicitly approves an HTTP-mocked
 DhanGateway implementation; no live Dhan order path exists in this checkout.
 
-Phase 2's repository code is implemented, but G2's network assertions still require
-environment-side proof on the Oracle/Tailscale host:
+Phase 2's repository code is implemented. The 2026-07-11 Oracle/Tailscale deployment proved
+the main dashboard control/network boundary:
 
-- Dashboard fill reflection is covered locally through the SSE/snapshot path; verify
-  <=3 seconds on the deployed paper host once Docker/Tailscale setup is complete.
-- Dashboard kill switch is covered locally and blocks submission in under 1 second; repeat
-  the timed check from phone/laptop over Tailscale.
-- Prove off-tailnet refusal with a port scan once the host exists.
+- The Windows client reached the console health endpoint only through the personal tailnet.
+- Public port 8080 timed out while public `ens3` remained SSH-only.
+- The authenticated dashboard kill/rearm route completed in 333 ms over Tailscale and was
+  reflected in persisted risk state plus the audit trail.
+- Snapshot/SSE fill reflection remains locally covered. A real scheduled paper fill cannot
+  be measured on-host until the production paper daemon exists and begins the burn-in.
 - Keep the postback endpoint disabled until the HMAC secret and isolated public ingress are
   reviewed.
 
@@ -530,7 +538,8 @@ suite runs on the Oracle dev host, Phase 3.2 burn-in runs on live market data, P
 paper validation runs on the paid live host, Phase 3.4 requires the go-live checklist
 evidence before the 10% live stage, and Phase 3.5 requires two clean live weeks per ramp
 stage; that environment-side execution is still pending until the Oracle/Tailscale paper
-host and paid live host are provisioned and operated through the required calendar periods.
+daemon is implemented, the Oracle host completes its burn-in, and the paid live host is
+provisioned and operated through the required calendar periods.
 
 ## Git / Workspace Notes
 
@@ -547,15 +556,13 @@ folders. They are ignored by `.gitignore`; remove them after verification if the
 
 ## Next Safe Step
 
-Recover or reboot the Oracle `XenAlso` VM, verify SSH responds past banner exchange, recopy
-the updated `deploy/oracle/` bundle, and rerun the paper-host bootstrap only with
-`live_trading.enabled=false` and `broker.order_api_enabled=false`. Then install/approve
-Tailscale, set `XENALGO_CONSOLE_TOKEN` and `TAILSCALE_BIND_HOST`, start
-`xenalgo-paper.service`, and capture G2 network evidence. Then run the now-complete Phase
-3.1 chaos suite on that host and attach the host evidence before starting the 4-week paper
-burn-in. During burn-in, collect the CSV evidence described in `docs/PHASE3_2_OPERATIONS.md`
-and evaluate it with `BurnInReview`. After paid live-host migration, collect the
-post-migration CSV evidence described in
+Implement the scheduled, data-only production paper daemon behind the existing startup,
+freshness, risk, journal, governor, reconciliation, and alert boundaries. It must use
+`PaperBroker`, keep `live_trading.enabled=false` and `broker.order_api_enabled=false`, and
+add no code path that can submit a real Dhan order. Verify it locally with mocks and on the
+Oracle host before beginning the four-week burn-in. During burn-in, collect the CSV evidence
+described in `docs/PHASE3_2_OPERATIONS.md` and evaluate it with `BurnInReview`. After paid
+live-host migration, collect the post-migration CSV evidence described in
 `docs/PHASE3_3_OPERATIONS.md` and evaluate it with `PostMigrationValidationReview`. Then
 collect the Phase 3.4 go-live checklist evidence described in
 `docs/PHASE3_4_OPERATIONS.md` and evaluate it with `GoLiveChecklistReview`. After the

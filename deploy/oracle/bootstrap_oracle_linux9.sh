@@ -6,6 +6,8 @@ IMAGE_TAG="${IMAGE_TAG:-xenalgo:oracle-paper}"
 ENV_DIR="/etc/xenalgo"
 DATA_DIR="/var/lib/xenalgo"
 BACKUP_DIR="/var/backups/xenalgo"
+SWAP_FILE="${SWAP_FILE:-/swapfile-xenalgo}"
+SWAP_SIZE="${SWAP_SIZE:-4G}"
 
 if [[ "$(id -u)" -ne 0 ]]; then
   echo "Run as root with sudo." >&2
@@ -22,6 +24,18 @@ day_ist="$(TZ=Asia/Kolkata date +%u)"
 if (( 10#${day_ist} <= 5 && 10#${hour_ist} >= 900 && 10#${hour_ist} <= 1530 )); then
   echo "Refusing deploy during NSE market hours (09:00-15:30 IST)." >&2
   exit 1
+fi
+
+# The Always Free E2.1.Micro shape has 1 GB RAM. DNF metadata refreshes and the
+# first Docker build can exceed that, so provision persistent swap before either.
+if [[ ! -f "${SWAP_FILE}" ]]; then
+  fallocate -l "${SWAP_SIZE}" "${SWAP_FILE}"
+  chmod 600 "${SWAP_FILE}"
+  mkswap "${SWAP_FILE}"
+fi
+swapon "${SWAP_FILE}" 2>/dev/null || true
+if ! grep -qF "${SWAP_FILE} none swap sw 0 0" /etc/fstab; then
+  echo "${SWAP_FILE} none swap sw 0 0" >> /etc/fstab
 fi
 
 dnf install -y dnf-plugins-core firewalld sqlite
@@ -42,6 +56,7 @@ fi
 systemctl enable --now tailscaled
 
 firewall-cmd --permanent --add-service=ssh
+firewall-cmd --permanent --zone=trusted --add-interface=tailscale0
 firewall-cmd --permanent --remove-service=http || true
 firewall-cmd --permanent --remove-service=https || true
 firewall-cmd --reload

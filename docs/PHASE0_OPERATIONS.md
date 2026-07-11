@@ -138,3 +138,25 @@ Before retrying:
    time-guard comparison is present on the VM.
 3. Rerun the bootstrap and poll `/tmp/xenalgo-bootstrap.log`.
 4. Keep the deployment paper-only; do not enable Dhan order APIs or public dashboard ingress.
+
+### 2026-07-11 recovery and deployment result
+
+- The wedged VM was force-rebooted from OCI because TCP/22 accepted connections but SSH
+  timed out before the banner.
+- The first corrected retry exposed CRLF line endings in the archived shell script; the
+  repository now enforces LF for shell scripts and systemd units through `.gitattributes`.
+- The 1 GB E2.1.Micro exhausted its original 512 MB swap during DNF metadata loading. Two
+  persistent 2 GB swap files were added on the current host. The bootstrap now provisions
+  a 4 GB persistent swap file before package installation on a fresh host.
+- Docker, Tailscale, firewalld, the `xenalgo:oracle-paper` image, and
+  `xenalgo-paper.service` were installed successfully. The service is enabled and binds to
+  the VM's personal-tailnet address `100.120.219.15:8080`. The VM is `xenalso-vnic` and the
+  Windows verification client is `decoy` in the `subhamjena.j@gmail.com` tailnet.
+- Host verification passed with 113 tests passing and one optional `_source` skip. The
+  dedicated chaos run passed all 9 selected tests. The firewall exposes only SSH.
+- The `tailscale0` interface is assigned to firewalld's trusted zone while public `ens3`
+  remains in the public zone with SSH only. Windows reached the private health endpoint,
+  public port 8080 timed out, and the authenticated paper kill/rearm path completed in
+  333 ms with `kill_switch` visible in risk state before audited rearm.
+- `live_trading.enabled=false`, `broker.order_api_enabled=false`, and
+  `web.public_postback_enabled=false` remain unchanged.

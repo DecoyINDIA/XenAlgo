@@ -14,6 +14,7 @@ Read in this order:
 9. **[PHASE3_4_OPERATIONS.md](PHASE3_4_OPERATIONS.md)** — go-live checklist evidence runbook for the 10% live-capital stage.
 10. **[PHASE3_5_OPERATIONS.md](PHASE3_5_OPERATIONS.md)** — staged capital-ramp evidence runbook.
 11. **[RESEARCH_VALIDATION.md](RESEARCH_VALIDATION.md)** — offline walk-forward validation harness for promoted research alphas.
+12. **[FOUNDER_PITCH.md](FOUNDER_PITCH.md)** — layman-friendly founder and investor explanation of the product, architecture, hosting, safety model, verified status, and roadmap.
 
 ## Traceability chain
 PRD goal → FR requirement → TRD component → build-plan task → success criterion / safety invariant → test.
