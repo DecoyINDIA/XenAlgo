@@ -24,7 +24,17 @@ modified, or cancelled. Live-order flags remain false.
 
 ## Release identity
 
-Create the immutable identity from the final committed checkout:
+The completed B0-B6 engineering release is identified by:
+
+| Artifact | Verified identity |
+|---|---|
+| Git commit | `b8c1913ab7d4ed1391188a809f64c5364e041d98` |
+| Local Docker image | `sha256:54970a52679bb0e740c5729af0404e50cae13ec82009255197d9f3f25e57b906` |
+| Dependency lock SHA-256 | `D75F46483E8C6387B821035F04C530B8EC18FFE49174976E0C1472AB0F5AAE0D` |
+| Live config SHA-256 | `8020b612358e6da269c1964211bb07b524b27450afee35b1b7130a69be407500` |
+| Evidence schema | `phase32-session-v2` |
+
+Reproduce those identities from the committed checkout with:
 
 ```powershell
 git rev-parse HEAD
@@ -34,8 +44,10 @@ docker build --pull=false -t xenalgo:b0-b6-rc .
 docker image inspect xenalgo:b0-b6-rc --format '{{.Id}}'
 ```
 
-The release commit and final image digest must be recorded in the deployment evidence before
-Oracle deployment. Never substitute a mutable tag for the recorded digest.
+The local image has not been published to a registry, so it has an image ID rather than a
+registry `RepoDigest`. Before Oracle deployment, publish it to the approved registry, record
+its immutable registry digest, and verify it was built from the commit above. Never deploy
+from a mutable tag alone.
 
 ## Exact local startup and health commands
 
@@ -98,12 +110,26 @@ hours, replay, and remain in paper mode. Never infer that a pending order is unf
 | Gate | Result |
 |---|---|
 | B0 contract/traceability | Implemented; official FYERS decisions recorded |
-| B1 remediation baseline | Verified with full, contract, chaos, research, config, secret, and diff checks |
-| B2 paper daemon | Full scheduled session, restart, no-order, startup-failure, paper-only tests green |
-| B3 adapters | Mock-only auth/data/stream/poll convergence and health tests green |
+| B1 remediation baseline | Verified with full, contract, chaos, research, config, secret, dependency, diff, and backup/restore checks |
+| B2 paper daemon | Full scheduled session, restart, no-order, startup-failure, paper-only, and evidence-generation tests green |
+| B3 adapters | Mock-only auth/data/stream/poll convergence, cumulative-fill, redaction, and health tests green |
 | B4 evidence | Five-session commissioning, focused parity, current kill controls implemented |
-| B5 release hardening | Local gate bundle green; final commit/image identity recorded after final rebuild |
+| B5 release hardening | 158 tests passed; 90.54% overall coverage; 100% risk/execution coverage; 10 chaos and 4 research tests passed; Docker build and two smoke commands passed |
 | B6 handoff | This document plus deployment plan and environment examples |
+
+The test run emitted a known Starlette/httpx deprecation warning and non-fatal SQLite
+`ResourceWarning` messages under coverage. There were no test failures. These warnings are
+not commissioning evidence and should be cleaned up in a later maintenance change.
+
+## Engineering release repository state
+
+- Branch: `main`
+- Engineering release commit: `b8c1913ab7d4ed1391188a809f64c5364e041d98`
+- The documentation-record commit follows the engineering release and does not change runtime code.
+- Push status: not pushed by the B0-B6 implementation task
+- Real broker activity: none
+- `live_trading.enabled`: `false`
+- `broker.order_api_enabled`: `false`
 
 ## Known limitations and external gates
 
@@ -113,6 +139,8 @@ hours, replay, and remain in paper mode. Never infer that a pending order is unf
   live artifacts during commissioning. Tests are injected/mock-only.
 - Oracle deployment, five real NSE sessions, paid-host provisioning/parity, alert delivery to
   the real phone, static-IP/account acceptance, funding, and any live activation are external.
+- The current Docker image exists only in the local Docker engine; registry publication and
+  immutable registry-digest verification remain deployment actions.
 - The user must explicitly approve the separate D7 live activation. B0-B6 does not authorize it.
 
 ## Commissioning evidence template
