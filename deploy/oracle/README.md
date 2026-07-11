@@ -43,6 +43,9 @@ tailscale ip -4
 sudo systemctl enable --now xenalgo-paper.service
 sudo systemctl status xenalgo-paper.service --no-pager
 journalctl -u xenalgo-paper.service -n 100 --no-pager
+sudo systemctl status xenalgo-backup.timer --no-pager
+sudo systemctl start xenalgo-backup.service
+sudo deploy/oracle/collect_readiness.sh
 ```
 
 ## Safety Checks
@@ -62,6 +65,14 @@ Expected posture:
 - `config/config.live.yaml` keeps `broker.order_api_enabled: false`.
 - The console has no public postback route; live fills use Fyers Order WebSocket plus REST
   orderbook polling, while commissioning fills remain paper-only.
+- The 02:00 IST timer backs up only `/var/lib/xenalgo`; `/etc/xenalgo` and the token store
+  remain outside backup scope. Copy verified backup sets to the approved off-box target.
+
+Validate private JSON evidence from the repository checkout with:
+
+```bash
+python -m xenalgo.deployment_cli D1 /private/path/d1-host.json
+```
 
 ## 2026-07-09 Attempt Note
 

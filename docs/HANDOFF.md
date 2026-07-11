@@ -1,5 +1,7 @@
 # XenAlgo B0-B6 Engineering Handoff
 
+> Deployment execution status is maintained in [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md).
+
 **Prepared:** 2026-07-12
 **Boundary:** Repository engineering and local release proof only. No Fyers order was placed,
 modified, or cancelled. Live-order flags remain false.

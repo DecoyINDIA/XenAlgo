@@ -1,0 +1,8 @@
+[Unit]
+Description=XenAlgo non-secret state backup
+
+[Service]
+Type=oneshot
+ExecStart=/opt/xenalgo/app/deploy/oracle/backup_state.sh
+User=root
+UMask=0077

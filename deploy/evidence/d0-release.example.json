@@ -1,0 +1,21 @@
+{
+  "broker_order_api_enabled": false,
+  "chaos_passed": false,
+  "ci_passed": false,
+  "clean_worktree": false,
+  "commit": "",
+  "config_checksum": "",
+  "contract_passed": false,
+  "coverage_passed": false,
+  "dependency_checksum": "",
+  "evidence_schema_version": "deployment-v1",
+  "full_suite_passed": false,
+  "image_digest": "",
+  "image_ref": "",
+  "live_trading_enabled": false,
+  "operator_oracle_paper_approval_id": "",
+  "research_passed": false,
+  "rollback_config_checksum": "",
+  "rollback_image_digest": "",
+  "secret_scan_passed": false
+}

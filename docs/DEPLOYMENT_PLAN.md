@@ -318,6 +318,22 @@ Restore acceptance: schema loads, journal integrity passes, replay equals derive
 | D8 Capital ramp | External | At least two clean weeks per stage. |
 | D9 G3 handoff | Pending | 100% stage completed cleanly. |
 
+### Executable evidence map
+
+The gate policy is executable without granting deployment or broker authority:
+
+- `xenalgo.deployment`: D0 release, D1 host, D2 paper deployment, SQLite
+  backup/restore integrity, paper-config validation, and D9 handoff completeness.
+- `xenalgo.phase32`: D3 five-session commissioning and D4 live-host readiness.
+- `xenalgo.phase33`: D5 focused paid-host parity.
+- `xenalgo.phase34`: D6 pre-activation review and D7 activation evidence.
+- `xenalgo.phase35`: D8 staged capital ramp.
+- `deploy/evidence/`: fail-closed, non-secret templates and storage rules.
+
+An evaluator pass means the supplied evidence satisfies policy; it never performs a
+deployment, changes configuration, calls Fyers, or substitutes synthetic records for
+external evidence.
+
 ## 15. D9 - G3 Operations Handoff
 
 G3 completes only after the 100% stage finishes its clean evidence window.

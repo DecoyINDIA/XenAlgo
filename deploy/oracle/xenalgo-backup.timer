@@ -1,0 +1,10 @@
+[Unit]
+Description=Nightly XenAlgo backup at 02:00 IST
+
+[Timer]
+OnCalendar=*-*-* 02:00:00 Asia/Kolkata
+Persistent=true
+Unit=xenalgo-backup.service
+
+[Install]
+WantedBy=timers.target
