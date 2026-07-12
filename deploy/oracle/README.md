@@ -44,6 +44,7 @@ sudo systemctl enable --now xenalgo-paper.service
 sudo systemctl status xenalgo-paper.service --no-pager
 journalctl -u xenalgo-paper.service -n 100 --no-pager
 sudo systemctl status xenalgo-backup.timer --no-pager
+sudo systemctl status xenalgo-health.timer --no-pager
 sudo systemctl start xenalgo-backup.service
 sudo deploy/oracle/collect_readiness.sh
 ```
@@ -67,6 +68,9 @@ Expected posture:
   orderbook polling, while commissioning fills remain paper-only.
 - The 02:00 IST timer backs up only `/var/lib/xenalgo`; `/etc/xenalgo` and the token store
   remain outside backup scope. Copy verified backup sets to the approved off-box target.
+- The one-minute health timer checks Docker, Tailscale, firewalld, the paper service, NTP,
+  disk, memory, and the tailnet-only health endpoint. Set `XENALGO_HEARTBEAT_URL` only to an
+  operator-approved external heartbeat endpoint.
 
 Validate private JSON evidence from the repository checkout with:
 

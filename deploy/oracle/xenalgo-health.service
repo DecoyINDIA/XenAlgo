@@ -1,0 +1,10 @@
+[Unit]
+Description=XenAlgo host and paper-service health check
+After=xenalgo-paper.service tailscaled.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/xenalgo/xenalgo.env
+ExecStart=/usr/local/sbin/xenalgo-host-health
+User=root
+UMask=0077

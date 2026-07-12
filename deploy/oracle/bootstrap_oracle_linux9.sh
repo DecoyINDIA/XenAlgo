@@ -79,11 +79,15 @@ docker build -t "${IMAGE_TAG}" "${APP_DIR}"
 docker run --rm "${IMAGE_TAG}" python -m xenalgo --profile live
 
 install -m 644 "${APP_DIR}/deploy/oracle/xenalgo-paper.service" /etc/systemd/system/xenalgo-paper.service
-install -m 755 "${APP_DIR}/deploy/oracle/backup_state.sh" "${APP_DIR}/deploy/oracle/collect_readiness.sh"
+chmod 755 "${APP_DIR}/deploy/oracle/backup_state.sh" "${APP_DIR}/deploy/oracle/collect_readiness.sh"
+install -m 755 "${APP_DIR}/deploy/oracle/host_health_check.sh" /usr/local/sbin/xenalgo-host-health
 install -m 644 "${APP_DIR}/deploy/oracle/xenalgo-backup.service" /etc/systemd/system/xenalgo-backup.service
 install -m 644 "${APP_DIR}/deploy/oracle/xenalgo-backup.timer" /etc/systemd/system/xenalgo-backup.timer
+install -m 644 "${APP_DIR}/deploy/oracle/xenalgo-health.service" /etc/systemd/system/xenalgo-health.service
+install -m 644 "${APP_DIR}/deploy/oracle/xenalgo-health.timer" /etc/systemd/system/xenalgo-health.timer
 systemctl daemon-reload
 systemctl enable --now xenalgo-backup.timer
+systemctl enable --now xenalgo-health.timer
 
 echo "Bootstrap complete."
 echo "Next: run 'sudo tailscale up', set TAILSCALE_BIND_HOST and XENALGO_CONSOLE_TOKEN in ${ENV_DIR}/xenalgo.env, then start xenalgo-paper.service."

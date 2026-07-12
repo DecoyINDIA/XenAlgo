@@ -10,9 +10,9 @@
 
 | Gate | Status | Evidence or next required event |
 |---|---|---|
-| D0 release acceptance | Awaiting operator/release evidence | Local gates pass. A committed clean release, immutable approved digest, rollback identity, CI result, and Oracle-paper approval are still required. |
-| D1 Oracle readiness | Awaiting host evidence | Bootstrap, backup timer, readiness collector, and fail-closed evaluator are ready. Host firewall, Tailscale, NTP, monitoring, heartbeat, phone-alert, and off-box-backup proof remain. |
-| D2 Oracle paper deployment | Awaiting deployment | Evaluator covers identity continuity, preflight, restart/replay, kill timing, alert smoke, restore, recovery, duplicates, and zero real broker calls. |
+| D0 release acceptance | Complete for Oracle paper | Release `bbdb5ff`, green CI run `29164737124`, exact candidate and rollback identities, and operator paper-deployment approval are recorded privately. The host-control fix following deployment requires a superseding release candidate. |
+| D1 Oracle readiness | Partial on host | Oracle Linux 9.7 in Mumbai, NTP, Docker, Tailscale-only console/SSH, public port refusal, local monitoring, backup timer, and verified off-box pull are proven. External heartbeat and real-phone alert delivery remain missing. |
+| D2 Oracle paper deployment | Partial on host | Exact `bbdb5ff` image deployed. Kill blocked in 28 ms, restart recovered in 8.744 s, journal/restore integrity passed, and no duplicate intent/order appeared. Fyers credentials, runnable scheduled daemon preflight, heartbeat, and synthetic alert delivery remain missing. |
 | D3 five-session commissioning | Calendar-bound | Requires five consecutive expected NSE sessions on Oracle; synthetic evidence is rejected. |
 | D4 paid-host provisioning | Operator/external | Provider, account/capital, current broker network requirements, host, alerts, and restore must be selected and proven. |
 | D5 paid-host parity | External host-bound | Exact commissioned image/config must pass focused parity in paper/read-only mode. |
@@ -33,8 +33,8 @@
 - Tracked secret-assignment pattern scan: no populated secret assignment found.
 - `git diff --check`: passed.
 
-These are repository-local proofs, not Oracle readiness, commissioning, paid-host parity,
-broker readiness, operator approval, or live-capital proof.
+These local proofs are supplemented by private host evidence under `Diary/deployment/`.
+They are not commissioning, paid-host parity, broker readiness, or live-capital proof.
 
 ## Operator sequence
 
