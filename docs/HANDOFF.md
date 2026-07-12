@@ -1,6 +1,8 @@
 # XenAlgo B0-B6 Engineering Handoff
 
 > Deployment execution status is maintained in [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md).
+> Missing credentials and remaining operator evidence are listed without values in
+> [DEPLOYMENT_OPERATOR_INPUTS.md](DEPLOYMENT_OPERATOR_INPUTS.md).
 
 **Prepared:** 2026-07-12
 **Boundary:** Repository engineering and local release proof only. No Fyers order was placed,

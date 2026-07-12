@@ -5,6 +5,10 @@
 **Build prerequisite:** [PHASED_BUILD_PLAN_REMAINING.md](PHASED_BUILD_PLAN_REMAINING.md) B6 must pass.  
 **Safety boundary:** Deployment through paid-host parity remains paper/read-only. Enabling a real Fyers order path requires the separate D7 operator approval gate.
 
+Current non-secret status and operator-owned inputs are maintained in
+[DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) and
+[DEPLOYMENT_OPERATOR_INPUTS.md](DEPLOYMENT_OPERATOR_INPUTS.md).
+
 ## 1. Environment Progression
 
 | Environment | Purpose | Broker capability | State store |

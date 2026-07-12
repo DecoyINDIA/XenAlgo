@@ -4,6 +4,8 @@
 
 **Governing plan:** [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md)
 
+**Operator inputs:** [DEPLOYMENT_OPERATOR_INPUTS.md](DEPLOYMENT_OPERATOR_INPUTS.md)
+
 **Safety state:** paper mode; `live_trading.enabled=false`; `broker.order_api_enabled=false`.
 
 ## Current gate ledger

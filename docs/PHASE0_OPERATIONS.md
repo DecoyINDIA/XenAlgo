@@ -12,35 +12,33 @@ Created 2026-07-06 in OCI India West (Mumbai):
 
 | Field | Value |
 |---|---|
-| Instance name | `XenAlso` |
+| Instance identity | Recorded in private D1 evidence |
 | OS image | Oracle Linux 9 |
 | Shape | `VM.Standard.E2.1.Micro` |
-| VCN | `XenaAlso VCN` |
-| Public subnet | `XenAlso Public Subnet` |
-| Private IP | `10.0.0.246` |
-| Public IP | `80.225.212.3` (ephemeral public IPv4) |
+| Network identity | Recorded in private D1 evidence |
+| Public inbound access | Disabled after Tailscale verification |
 | SSH user | `opc` |
 
 The first creation attempt used `VM.Standard.A1.Flex` with the selected Oracle Linux image
 and failed with `Shape VM.Standard.A1.Flex is not valid for image ...`. The working
 configuration above uses the compatible Always Free micro shape. If the host is stopped or
-recreated, re-check the public IP before using SSH because the current IP is ephemeral.
+recreated, recover its identity through Oracle Cloud and the operator's tailnet.
 
 SSH from Windows PowerShell:
 
 ```powershell
-ssh -i <path-to-downloaded-private-key> opc@80.225.212.3
+ssh -i <path-to-downloaded-private-key> opc@<tailscale-host-ip>
 ```
 
 ### Required OCI hardening
 
 1. Confirm the downloaded private key is stored outside the repo, for example under
    `%USERPROFILE%\.ssh\`.
-2. Keep the cloud security list closed except SSH from the operator's known source IP.
+2. Keep the cloud security list and host firewall closed to public inbound access.
 3. Do not open the FastAPI dashboard publicly; expose it over Tailscale only.
 4. Install Docker and Tailscale on the host.
 5. Bring Tailscale up with the operator's tailnet approval flow.
-6. Confirm no public inbound ports are open except SSH.
+6. Confirm no public inbound ports, including SSH, are open.
 7. Record the Tailscale IP/interface in the operator-only host notes before running the
    console.
 
@@ -150,12 +148,13 @@ Before retrying:
   a 4 GB persistent swap file before package installation on a fresh host.
 - Docker, Tailscale, firewalld, the `xenalgo:oracle-paper` image, and
   `xenalgo-paper.service` were installed successfully. The service is enabled and binds to
-  the VM's personal-tailnet address `100.120.219.15:8080`. The VM is `xenalso-vnic` and the
-  Windows verification client is `decoy` in the `subhamjena.j@gmail.com` tailnet.
+  the VM's private tailnet address on port `8080`. Host and operator identities remain in
+  private deployment evidence rather than tracked documentation.
 - Host verification passed with 113 tests passing and one optional `_source` skip. The
-  dedicated chaos run passed all 9 selected tests. The firewall exposes only SSH.
+  dedicated chaos run passed all 9 selected tests. The current hardened firewall exposes
+  neither SSH nor application ports publicly.
 - The `tailscale0` interface is assigned to firewalld's trusted zone while public `ens3`
-  remains in the public zone with SSH only. Windows reached the private health endpoint,
+  remains in the public zone without inbound services. Windows reached the private health endpoint,
   public port 8080 timed out, and the authenticated paper kill/rearm path completed in
   333 ms with `kill_switch` visible in risk state before audited rearm.
 - `live_trading.enabled=false`, `broker.order_api_enabled=false`, and

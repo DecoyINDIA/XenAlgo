@@ -229,16 +229,16 @@ Founder’s Windows laptop
         |
         | encrypted Tailscale network
         v
-Personal tailnet owned by subhamjena.j@gmail.com
+Operator-owned personal tailnet
         |
         v
-Oracle VM: xenalso-vnic (100.120.219.15)
+Oracle paper VM (private tailnet address)
         |
         v
 XenAlgo console on port 8080
 ```
 
-The server’s public network interface remains in a restricted firewall zone with SSH only.
+The server’s public network interface refuses SSH and application access.
 The private `tailscale0` interface has access to the console. We verified that the laptop
 could reach the private health endpoint while the public IP could not reach port 8080.
 

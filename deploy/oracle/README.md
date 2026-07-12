@@ -11,13 +11,15 @@ the operator console to the public internet.
 - Tailscale auth handled by the operator in a browser or device approval flow.
 - A host-local `/etc/xenalgo/xenalgo.env` with real secret values. Never commit it.
 
-The current documented paper host is:
+The paper host uses an ephemeral public address, but public SSH is disabled after readiness
+hardening. Discover its current Tailscale address from the operator's tailnet, then connect:
 
 ```powershell
-ssh -i <path-to-downloaded-private-key> opc@80.225.212.3
+ssh -i <path-to-downloaded-private-key> opc@<tailscale-host-ip>
 ```
 
-If SSH times out, re-check the ephemeral OCI public IP and the OCI security list.
+If Tailscale SSH times out, verify both peers in the tailnet and use the Oracle console only
+for recovery. Do not reopen public SSH as a routine workaround.
 If TCP/22 is open but SSH times out during banner exchange, the micro VM may be overloaded by
 package installation. Recover or reboot the instance from OCI, then reconnect and inspect
 `/tmp/xenalgo-bootstrap.log` before retrying.
@@ -60,7 +62,8 @@ sudo ss -ltnp
 Expected posture:
 
 - `python -m xenalgo --profile live` prints config checksum metadata.
-- SSH is the only public inbound service.
+- No SSH or application service is reachable through the public interface.
+- SSH and the console are reachable only through Tailscale.
 - The console listens on the Tailscale IP and port `8080`.
 - `config/config.live.yaml` keeps `live_trading.enabled: false`.
 - `config/config.live.yaml` keeps `broker.order_api_enabled: false`.
