@@ -10,9 +10,9 @@
 
 | Gate | Status | Evidence or next required event |
 |---|---|---|
-| D0 release acceptance | Complete for Oracle paper | Release `bbdb5ff`, green CI run `29164737124`, exact candidate and rollback identities, and operator paper-deployment approval are recorded privately. The host-control fix following deployment requires a superseding release candidate. |
+| D0 release acceptance | Complete for Oracle paper | The current release has green CI, exact candidate/rollback identities, and recorded operator paper-deployment approval. Private evidence is updated on every superseding release. |
 | D1 Oracle readiness | Partial on host | Oracle Linux 9.7 in Mumbai, NTP, Docker, Tailscale-only console/SSH, public port refusal, local monitoring, backup timer, and verified off-box pull are proven. External heartbeat and real-phone alert delivery remain missing. |
-| D2 Oracle paper deployment | Partial on host | Exact `bbdb5ff` image deployed. Kill blocked in 28 ms, restart recovered in 8.744 s, journal/restore integrity passed, and no duplicate intent/order appeared. Fyers credentials, runnable scheduled daemon preflight, heartbeat, and synthetic alert delivery remain missing. |
+| D2 Oracle paper deployment | Partial on host | The exact approved image is deployed. Latest kill proof was 43 ms and restart recovery was 11.024 s; journal/restore integrity passed with no duplicate intent/order. Fyers credentials, runnable scheduled daemon preflight, heartbeat, and synthetic alert delivery remain missing. |
 | D3 five-session commissioning | Calendar-bound | Requires five consecutive expected NSE sessions on Oracle; synthetic evidence is rejected. |
 | D4 paid-host provisioning | Operator/external | Provider, account/capital, current broker network requirements, host, alerts, and restore must be selected and proven. |
 | D5 paid-host parity | External host-bound | Exact commissioned image/config must pass focused parity in paper/read-only mode. |
