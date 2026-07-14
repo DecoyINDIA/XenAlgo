@@ -1,6 +1,6 @@
 # Deployment Operator Inputs and Remaining Gates
 
-**Recorded:** 2026-07-12
+**Recorded:** 2026-07-14
 
 **Purpose:** Durable, non-secret handoff for completing D1-D8 on the permanent Oracle host.
 This document records names, procedures, and acceptance evidence only. Never add actual
@@ -20,8 +20,8 @@ credentials, tokens, phone identifiers, account numbers, IP addresses, or approv
   controls are now complete: Fyers authentication, startup and 08:55 IST scheduled
   preflight, read-only completed-bar validation, and synthetic application-event delivery
   through Healthchecks all pass with the concrete paper gateway and zero order-API calls.
-  The gate remains fail-closed until the superseding image receives immutable D0 release
-  acceptance and the D0/D2 image identities match.
+  The merged immutable release is now accepted, the D0/D2 image identities match, and both
+  executable gate evaluators pass.
 
 The exact host address, image digest, checksums, approval identifier, and gate JSON remain in
 the gitignored `Diary/deployment/` evidence directory.
@@ -38,8 +38,8 @@ Required Fyers values:
 | `FYERS_APP_ID` | Approved Fyers API application identity | Configured; redacted host proof passed |
 | `FYERS_SECRET_KEY` | Application secret | Configured; redacted host proof passed |
 | `FYERS_REDIRECT_URI` | Exact registered OAuth redirect URI | Configured; redacted host proof passed |
-| `FYERS_PIN` | Operator-owned daily authentication input | Missing |
-| `FYERS_TOTP_SECRET` | Operator-owned TOTP seed | Missing |
+| `FYERS_PIN` | Operator-owned daily authentication input | Configured; never logged or committed |
+| `FYERS_TOTP_SECRET` | Operator-owned TOTP seed | Configured; redacted authentication proof passed |
 | `XENALGO_STATIC_IP_PRIMARY` | Broker/network identity if required by the approved contract | Missing |
 | `XENALGO_STATIC_IP_SECONDARY` | Secondary network identity if required | Missing |
 
@@ -107,12 +107,10 @@ Host-runtime evidence collected 2026-07-14:
 - The synthetic `application_event` POST was accepted by the existing Healthchecks channel.
 - Both preflight records state `live_order_api_calls=0`.
 
-Remaining D2 blocker: rebuild exact pushed commit
-`b0d7d1cbeec111ca6633ba817f1482dc95a41205` after the market-hours lock, accept that
-immutable image through D0, and update the private D0/D2 image identities. Draft PR #1 and
-both GitHub CI runs are green, but source/CI acceptance is not deployed-image proof. Do not
-reuse the pre-commit image digest or update D0 before the exact-commit rebuild, preflight,
-rollback identity, secret scan, and operator Oracle-paper evidence are recorded.
+The exact merge commit `f0e6bcaaf7d38f8aa4b61ad1bce73841796632c7` was rebuilt and
+deployed after the market-hours lock. Its isolated candidate preflight and systemd startup
+preflight passed every check, a rollback image and fresh non-secret backup were retained,
+and the private D0/D2 identity evidence now passes both evaluators.
 
 Already proven on the deployed image: immutable identity, paper config, public-port refusal,
 Tailscale access, health/SSE, backup, kill/rearm audit, sub-second kill timing, restart within
@@ -135,5 +133,5 @@ period never substitute for these gates.
 
 ## Current operator action
 
-After 15:30 IST, rebuild and deploy the exact superseding commit, update private D0/D2 image
-evidence, and rerun both evaluators. Do not enable either live-order flag.
+Begin D3 collection for five consecutive expected NSE sessions. Do not enable either
+live-order flag; D4-D6 remain separate later gates.

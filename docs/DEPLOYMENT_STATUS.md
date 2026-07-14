@@ -12,9 +12,9 @@
 
 | Gate | Status | Evidence or next required event |
 |---|---|---|
-| D0 release acceptance | Superseding source accepted; image pending | Commit `b0d7d1cbeec111ca6633ba817f1482dc95a41205` is pushed on `agent/superseding-d0-release`; draft PR #1 targets `main`, both GitHub CI runs passed, local coverage gates passed, and operator approval for the superseding Oracle-paper release is recorded. D0 remains fail-closed until this exact commit is rebuilt after the market-hours lock and its immutable image/rollback identities are written to private evidence. |
+| D0 release acceptance | Complete | PR #1 is merged. Exact merge commit `f0e6bcaaf7d38f8aa4b61ad1bce73841796632c7` was built and promoted off-market after an isolated paper-only preflight. Its immutable image and rollback identities are recorded in private evidence; the D0 evaluator passes. |
 | D1 Oracle readiness | Complete | Oracle Linux 9.7 in Mumbai, NTP, Docker, Tailscale-only console/SSH, public port refusal, monitoring, backup timer, verified off-box pull, a one-minute external heartbeat, and a missed-heartbeat Telegram delivery to the operator are proven. |
-| D2 Oracle paper deployment | Runtime controls complete; release identity pending | Fyers authentication is valid in the owner-only token volume. The paper service now runs a fail-closed preflight at startup and from an enabled 08:55 IST systemd timer. The first scheduled run passed authentication, calendar, config, journal replay, completed-bar Fyers data, controls, reconciliation, concrete `PaperBroker`, and synthetic Healthchecks application-event delivery with zero order-API calls. Kill/restart/restore evidence remains green. The new image must still pass a superseding D0 immutable-release acceptance before D2 can honestly pass its image-identity check. |
+| D2 Oracle paper deployment | Complete | The exact D0 image is running on Oracle. Fyers authentication, startup and 08:55 IST scheduled preflight, calendar, journal replay, completed-bar data, controls, reconciliation, concrete `PaperBroker`, synthetic Healthchecks application-event delivery, health, kill/restart/restore, backup, and image/config identity checks pass with zero order-API calls. The D2 evaluator passes. |
 | D3 five-session commissioning | Calendar-bound | Requires five consecutive expected NSE sessions on Oracle; synthetic evidence is rejected. |
 | D4 Oracle production readiness | External host-bound | Exact commissioned image/config must pass focused same-host parity in paper/read-only mode. Oracle remains the permanent host. |
 | D5 final go-live review | Operator/external | Requires D3/D4 plus all checklist evidence; pre-activation flags remain false. |
@@ -24,9 +24,8 @@
 
 ## Verified local release checks
 
-- Superseding release commit: `b0d7d1cbeec111ca6633ba817f1482dc95a41205`.
-- Draft review: [PR #1](https://github.com/DecoyINDIA/XenAlgo/pull/1), branch
-  `agent/superseding-d0-release`, targeting `main`.
+- Approved release commit: `f0e6bcaaf7d38f8aa4b61ad1bce73841796632c7`.
+- Review: [PR #1](https://github.com/DecoyINDIA/XenAlgo/pull/1), merged to `main`.
 - GitHub CI: both push-triggered and pull-request-triggered runs passed.
 
 - Root suite: 172 passed.
@@ -44,13 +43,6 @@ They are not commissioning, Oracle production-readiness, broker readiness, or li
 
 ## Operator sequence
 
-1. After the 15:30 IST deployment lock clears, rebuild the Oracle image from exact commit
-   `b0d7d1cbeec111ca6633ba817f1482dc95a41205`.
-2. Run the paper-only preflight against that image, preserve a rollback image, and record
-   the immutable image identity in private D0 evidence.
-3. Redeploy through the guarded systemd path; verify the service, 08:55 timer, heartbeat,
-   health/SSE, and zero real order calls.
-4. Update private D2 identity evidence and require both D0 and D2 evaluators to pass.
-5. Collect five consecutive authoritative D3 sessions.
-6. Validate D4 on Oracle, then conduct the D5 review.
-7. Stop for a separate explicit D6 approval. D7/D8 advance only from observed evidence.
+1. Collect five consecutive authoritative D3 sessions from the exact commissioned image.
+2. Validate D4 on Oracle, then conduct the D5 review.
+3. Stop for a separate explicit D6 approval. D7/D8 advance only from observed evidence.
