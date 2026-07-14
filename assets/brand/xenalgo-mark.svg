@@ -1,0 +1,14 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="XenAlgo">
+  <rect width="256" height="256" rx="60" fill="#0A0A0F"/>
+
+  <!-- monolithic X, rounded terminals, single stepped cut in ascending arm -->
+  <g stroke-linecap="round" fill="none">
+    <!-- descending arm: one continuous quiet stroke -->
+    <path d="M80 76 L176 180" stroke="#3F3F51" stroke-width="26"/>
+    <!-- ascending arm: broken by a step — the algo execution -->
+    <path d="M80 180 L118 139" stroke="#FAFAFA" stroke-width="26"/>
+    <path d="M141 114 L176 76" stroke="#FAFAFA" stroke-width="26"/>
+    <!-- the step: short horizontal tick bridging the break -->
+    <path d="M118 126 L141 126" stroke="#7C86FF" stroke-width="26"/>
+  </g>
+</svg>

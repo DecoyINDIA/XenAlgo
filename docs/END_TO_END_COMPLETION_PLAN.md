@@ -1,13 +1,13 @@
 # XenAlgo End-to-End Completion Plan
 
 **Approved planning baseline:** 2026-07-11  
-**Scope:** Contract freeze through paper commissioning, paid-host migration, live capital ramp, and operational learning.  
+**Scope:** Contract freeze through Oracle paper commissioning, same-host live readiness, live capital ramp, and operational learning.
 **Safety boundary:** This plan does not authorize a real Fyers order call or enable live trading. Live activation remains a separate, explicit operator decision.
 
 Execution documents:
 
 - [PHASED_BUILD_PLAN_REMAINING.md](PHASED_BUILD_PLAN_REMAINING.md) converts W0-W5 into engineering phases B0-B6 with task-level exit gates.
-- [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) converts W6-W10 into deployment gates D0-D9 covering Oracle commissioning, paid-host parity, activation, rollback, recovery, and the capital ramp.
+- [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) converts W6-W10 into deployment gates D0-D8 covering permanent Oracle hosting, commissioning, activation, rollback, recovery, and the capital ramp.
 
 ## 1. Definition of Complete
 
@@ -41,7 +41,7 @@ Oracle paper deployment
       |
 Five-session commissioning
       |
-Paid live-host migration
+Oracle production-readiness validation
       |
 Deployment-parity checks
       |
@@ -169,7 +169,7 @@ Required changes:
 Acceptance:
 
 - Phase 3.2 passes exactly the governing five-session requirement and fails on a missing or unresolved session.
-- Phase 3.3 measures migrated-host controls rather than elapsed time.
+- Phase 3.3 measures same-host production controls rather than elapsed time.
 - Phase 3.4 cannot pass without every preceding gate and explicit operator approval.
 - Phase 3.5 enforces stage order, minimum duration, clean reconciliation, approval, checksum continuity, and non-overlap.
 - Synthetic local evidence cannot mark an external gate complete.
@@ -219,7 +219,7 @@ An SI breach invalidates the gate; commissioning restarts after remediation and 
 
 ### W8 - Paid live-host preparation and parity
 
-The operator selects AWS Mumbai or DigitalOcean Bangalore, provisions the paid host, confirms current Fyers network requirements, deploys the commissioned image, configures supervision/security/backups/alerts, and keeps live order placement disabled.
+The operator retains Oracle Cloud Always Free as the permanent host, confirms current Fyers network requirements, validates the commissioned image in the same-host production startup path, configures supervision/security/backups/alerts, isolates paper/parity/live state, and keeps live order placement disabled.
 
 Acceptance:
 
@@ -234,7 +234,7 @@ Acceptance:
 
 This is a separate operator-authorized, off-market action. It is not implied by completing any earlier workstream.
 
-Required evidence: G0-G2, Phase 3.1, Oracle commissioning, paid-host parity, at least five authentication sessions, backup/restore, real-phone alerts, approved kill controls, dedicated funded account, final risk/sleeve decisions, <=2 OPS governor, no more than 10% initial allocation, recorded checksums, and explicit operator approval.
+Required evidence: G0-G2, Phase 3.1, Oracle commissioning, same-host production-readiness validation, at least five authentication sessions, off-box backup/restore, real-phone alerts, approved kill controls, dedicated funded account, final risk/sleeve decisions, <=2 OPS governor, no more than 10% initial allocation, recorded checksums, and explicit operator approval.
 
 Acceptance: activation occurs off-market; only the reviewed gateway is enabled; the startup gate independently rechecks prerequisites; the first live order is produced by the scheduler rather than manually forced; every fill reconciles; any discrepancy halts further submission.
 
@@ -303,7 +303,7 @@ Legend: **Complete** = repository/host evidence exists; **Partial** = implementa
 | G0 | Foundation, pinned build, clean CI | Partial while remediation is uncommitted. |
 | G1 | Autonomous guarded paper pipeline | Partial; production scheduled daemon is missing. |
 | G2 | Secure observation and kill controls | Partial; host-side fill timing awaits the daemon. |
-| G3 | Commissioned, migrated, approved, and live at 100% after the ramp | Pending. |
+| G3 | Commissioned, production-validated, approved, and live at 100% after the ramp | Pending. |
 | G4 | Real reviewed proposals with mandatory human approval | Partial; scaffolding exists, operational proof does not. |
 
 ## 6. Immediate Execution Order

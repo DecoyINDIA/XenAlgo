@@ -95,7 +95,7 @@ sqlite3 /var/lib/xenalgo/Diary/state/order_journal.sqlite ".backup '/var/backups
 
 ## App Image
 
-Build the same image for Oracle dev/paper and the future paid live VPS:
+Build the reproducible image for the permanent Oracle paper/live host:
 
 ```bash
 docker build -t xenalgo:phase0 .

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
+import json
 import os
 import sqlite3
+import urllib.request
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -95,6 +98,57 @@ class TokenManager:
 class FyersSession(Protocol):
     def set_token(self, auth_code: str) -> None: ...
     def generate_token(self) -> dict: ...
+
+
+class FyersAuthCodeSession:
+    """Exchange a documented Fyers OAuth auth code without importing the SDK."""
+
+    TOKEN_URL = "https://api-t1.fyers.in/api/v3/validate-authcode"
+
+    def __init__(
+        self,
+        app_id: str,
+        secret_key: str,
+        *,
+        post: Callable[[str, dict, float], dict] | None = None,
+        timeout_seconds: float = 30.0,
+    ) -> None:
+        self.app_id = app_id
+        self.secret_key = secret_key
+        self.post = post or self._post_json
+        self.timeout_seconds = float(timeout_seconds)
+        self.auth_code = ""
+
+    def set_token(self, auth_code: str) -> None:
+        self.auth_code = auth_code
+
+    def generate_token(self) -> dict:
+        if not self.auth_code:
+            raise TradingBlocked("Fyers auth code is missing")
+        app_id_hash = hashlib.sha256(f"{self.app_id}:{self.secret_key}".encode()).hexdigest()
+        return self.post(
+            self.TOKEN_URL,
+            {
+                "grant_type": "authorization_code",
+                "appIdHash": app_id_hash,
+                "code": self.auth_code,
+            },
+            self.timeout_seconds,
+        )
+
+    @staticmethod
+    def _post_json(url: str, payload: dict, timeout: float) -> dict:
+        request = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            result = json.loads(response.read().decode("utf-8"))
+        if not isinstance(result, dict):
+            raise TradingBlocked("Fyers token exchange returned an invalid response")
+        return result
 
 
 class FyersOAuthProvider:

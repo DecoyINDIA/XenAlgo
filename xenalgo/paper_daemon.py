@@ -45,6 +45,15 @@ class StartupStatus:
 
 
 @dataclass(frozen=True)
+class HostPreflightReport:
+    checks: dict[str, bool]
+
+    @property
+    def passed(self) -> bool:
+        return all(self.checks.values())
+
+
+@dataclass(frozen=True)
 class SessionEvidence:
     schema_version: str
     session_id: str
@@ -383,6 +392,34 @@ class ScheduledPaperRuntime:
             self.run_job(name, trading_date)
         assert self.last_evidence is not None
         return self.last_evidence
+
+
+def run_host_preflight(
+    daemon: ProductionPaperDaemon,
+    *,
+    trading_date: dt.date,
+    panel: dict,
+) -> HostPreflightReport:
+    """Run D2's combined fail-closed paper preflight without submitting an order."""
+    status = daemon.startup(trading_date=trading_date, panel=panel)
+    before = daemon.deps.alerts.failures
+    daemon.deps.alerts.send(
+        "application_event",
+        f"synthetic D2 preflight {trading_date.isoformat()}",
+        critical=False,
+    )
+    checks = {
+        "authentication": status.auth,
+        "calendar": status.calendar,
+        "config": status.config,
+        "journal_replay": status.replay,
+        "data": status.data,
+        "controls": status.controls,
+        "reconciliation": status.reconciliation,
+        "paper_gateway": type(daemon.deps.broker) is PaperBroker,
+        "synthetic_alert": daemon.deps.alerts.failures == before,
+    }
+    return HostPreflightReport(checks)
 
 
 def build_paper_dependencies(root: str | Path | None = None) -> PaperDependencies:

@@ -16,7 +16,7 @@ produce a scheduled host-side fill. Phase 3.2, Phase 3.3, Phase 3.4, and Phase 3
 but the real gates still require operator-supplied host, calendar-time, live-activation,
 and staged-ramp proof. Full
 G3 go-live remains blocked by
-external/operator gates: Oracle-host proof, one-week software commissioning, live-host migration,
+external/operator gates: Oracle-host proof, one-week software commissioning, same-host production readiness,
 static-IP registration, backup/restore drills, live-host deployment-parity validation,
 live kill-switch proof, funded account setup, operator-approved 10% activation, and staged
 capital ramp.
@@ -68,7 +68,7 @@ checked for India-region host selection, static-IP lead time, Docker/systemd/bac
 heartbeat, Oracle warm-staging retention, and live-order toggles remaining disabled. Passing
 these local checks is necessary evidence hygiene, not a substitute for the external gate.
 
-Phase 3.3 evidence is intended to cover focused deployment parity on the paid host: image and
+Phase 3.3 evidence is intended to cover focused production-readiness parity on the permanent Oracle host: image and
 config checksum identity, host-id consistency, static-IP startup verification, token refresh,
 three-sleeve paper execution, clean reconciliation, alerts, restart recovery, kill-switch
 behaviour, no safety incidents, and live-order toggles remaining disabled. The current

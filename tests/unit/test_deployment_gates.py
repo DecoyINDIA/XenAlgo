@@ -1,11 +1,11 @@
-"""Offline executable specifications for deployment gates D0-D2 and D9."""
+"""Offline executable specifications for deployment gates D0-D2 and D8."""
 from __future__ import annotations
 
 import sqlite3
 
 from xenalgo.deployment import (
     HostReadinessEvidence, OperationsHandoffEvidence, PaperDeploymentEvidence,
-    ReleaseEvidence, evaluate_d0, evaluate_d1, evaluate_d2, evaluate_d9,
+    ReleaseEvidence, evaluate_d0, evaluate_d1, evaluate_d2, evaluate_d8,
     sqlite_backup, verify_paper_config, verify_sqlite_restore,
 )
 
@@ -52,10 +52,10 @@ def test_paper_config_and_sqlite_backup_restore(tmp_path):
         assert db.execute("select event from order_events").fetchone() == ("INTENT",)
 
 
-def test_d9_requires_every_operations_handoff_component():
+def test_d8_requires_every_operations_handoff_component():
     evidence = OperationsHandoffEvidence(*([True] * 10))
-    assert evaluate_d9(evidence).passed
-    assert not evaluate_d9(dataclasses_replace(evidence, hundred_percent_stage_completed=False)).passed
+    assert evaluate_d8(evidence).passed
+    assert not evaluate_d8(dataclasses_replace(evidence, hundred_percent_stage_completed=False)).passed
 
 
 def dataclasses_replace(value, **changes):

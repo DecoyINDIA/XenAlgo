@@ -2,7 +2,7 @@
 
 **Recorded:** 2026-07-12
 
-**Purpose:** Durable, non-secret handoff for completing D1-D9 after the Oracle paper release.
+**Purpose:** Durable, non-secret handoff for completing D1-D8 on the permanent Oracle host.
 This document records names, procedures, and acceptance evidence only. Never add actual
 credentials, tokens, phone identifiers, account numbers, IP addresses, or approval secrets.
 
@@ -15,8 +15,13 @@ credentials, tokens, phone identifiers, account numbers, IP addresses, or approv
 - `live_trading.enabled=false` and `broker.order_api_enabled=false` remain mandatory.
 - Kill blocking, restart recovery, journal integrity, and disposable restore are proven
   within D2 limits.
-- D1 and D2 remain fail-closed because heartbeat, real-phone alerts, Fyers authentication,
-  and the scheduled live-data paper runtime are not yet proven.
+- D1 is complete: Healthchecks receives the one-minute host heartbeat and a controlled
+  missed-heartbeat event delivered to the operator through Telegram. D2's host-runtime
+  controls are now complete: Fyers authentication, startup and 08:55 IST scheduled
+  preflight, read-only completed-bar validation, and synthetic application-event delivery
+  through Healthchecks all pass with the concrete paper gateway and zero order-API calls.
+  The gate remains fail-closed until the superseding image receives immutable D0 release
+  acceptance and the D0/D2 image identities match.
 
 The exact host address, image digest, checksums, approval identifier, and gate JSON remain in
 the gitignored `Diary/deployment/` evidence directory.
@@ -30,9 +35,9 @@ Required Fyers values:
 
 | Variable | Purpose | Current evidence |
 |---|---|---|
-| `FYERS_APP_ID` | Approved Fyers API application identity | Missing |
-| `FYERS_SECRET_KEY` | Application secret | Missing |
-| `FYERS_REDIRECT_URI` | Exact registered OAuth redirect URI | Missing |
+| `FYERS_APP_ID` | Approved Fyers API application identity | Configured; redacted host proof passed |
+| `FYERS_SECRET_KEY` | Application secret | Configured; redacted host proof passed |
+| `FYERS_REDIRECT_URI` | Exact registered OAuth redirect URI | Configured; redacted host proof passed |
 | `FYERS_PIN` | Operator-owned daily authentication input | Missing |
 | `FYERS_TOTP_SECRET` | Operator-owned TOTP seed | Missing |
 | `XENALGO_STATIC_IP_PRIMARY` | Broker/network identity if required by the approved contract | Missing |
@@ -42,8 +47,8 @@ Required operations values:
 
 | Variable | Purpose | Current evidence |
 |---|---|---|
-| `XENALGO_HEARTBEAT_URL` | Operator-owned external heartbeat endpoint | Missing |
-| `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` | Real-phone alert channel | Missing |
+| `XENALGO_HEARTBEAT_URL` | Operator-owned external heartbeat endpoint | Configured on Oracle; ping and missed-ping alert proven. |
+| `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` | Optional direct application-event channel; Healthchecks already owns the proven Telegram integration | Direct credentials not provisioned; Healthchecks event path is active |
 | `PUSHOVER_TOKEN` and `PUSHOVER_USER_KEY` | Independent critical phone channel | Missing |
 
 At least the approved alert design in the deployment plan must be proven on the real phone.
@@ -71,12 +76,11 @@ Do not mark D1/D2 passed merely because a variable is non-empty; record an obser
 5. Restart through the normal systemd startup gate only after configuration validation.
 6. Confirm the image/config identities still match D0 and both live flags remain false.
 
-## Evidence required to close D1
+## D1 completion evidence
 
-- External heartbeat receives repeated one-minute health pings.
-- A critical test reaches the operator's real phone.
-- The independent/fallback alert behavior required by the approved operations policy is
-  recorded.
+- Healthchecks received the Oracle one-minute health ping.
+- The controlled missed-heartbeat drill delivered a Telegram alert to the operator's phone.
+- Oracle health timer recovery completed successfully after the drill.
 - Private D1 JSON passes `python -m xenalgo.deployment_cli D1 <private-json>`.
 
 Already proven: Oracle Linux/region/host identity, NTP, Docker, systemd, Tailscale health,
@@ -94,27 +98,42 @@ guard, nightly non-secret backup, disposable restore, and scheduled off-box pull
 - Heartbeat remains observable through restart and induced recovery.
 - Private D2 JSON passes `python -m xenalgo.deployment_cli D2 <private-json>`.
 
+Host-runtime evidence collected 2026-07-14:
+
+- Owner-only Fyers token store: integrity `ok`, mode `0600`, currently valid.
+- Read-only Fyers History API returned the latest completed trading-day candle.
+- `xenalgo-paper.service` startup preflight passed all checks before the console started.
+- `xenalgo-paper-preflight.timer` is enabled and its first 08:55 IST execution exited 0.
+- The synthetic `application_event` POST was accepted by the existing Healthchecks channel.
+- Both preflight records state `live_order_api_calls=0`.
+
+Remaining D2 blocker: rebuild exact pushed commit
+`b0d7d1cbeec111ca6633ba817f1482dc95a41205` after the market-hours lock, accept that
+immutable image through D0, and update the private D0/D2 image identities. Draft PR #1 and
+both GitHub CI runs are green, but source/CI acceptance is not deployed-image proof. Do not
+reuse the pre-commit image digest or update D0 before the exact-commit rebuild, preflight,
+rollback identity, secret scan, and operator Oracle-paper evidence are recorded.
+
 Already proven on the deployed image: immutable identity, paper config, public-port refusal,
 Tailscale access, health/SSE, backup, kill/rearm audit, sub-second kill timing, restart within
 60 seconds, zero duplicate intents/orders, zero real broker calls, SQLite integrity, and
 disposable replay.
 
-## D3-D9 non-compressible sequence
+## D3-D8 non-compressible sequence
 
 | Gate | Earliest legitimate completion evidence |
 |---|---|
 | D3 | Five consecutive expected NSE sessions after D1/D2 pass; any fix restarts the sequence. |
-| D4 | Operator-selected paid India host/account/capital and verified broker/network controls. |
-| D5 | Exact commissioned image/config passes paid-host paper/read-only parity. |
-| D6 | Final checklist passes with restore, alerts, kill controls, checksums, and rehearsals. |
-| D7 | Separate post-D6 activation record for no more than 10%; no forced test order. |
-| D8 | Four sequential stages, each at least two calendar weeks and ten reviewed sessions. |
-| D9 | The 100% stage completes cleanly and the full operations package is handed over. |
+| D4 | Exact commissioned image/config passes same-Oracle-host paper/read-only production-readiness validation, including broker/network controls. |
+| D5 | Final checklist passes with restore, alerts, kill controls, checksums, and rehearsals. |
+| D6 | Separate post-D5 activation record for no more than 10%; no forced test order. |
+| D7 | Four sequential stages, each at least two calendar weeks and ten reviewed sessions. |
+| D8 | The 100% stage completes cleanly and the full operations package is handed over. |
 
 Synthetic evidence, local tests, early approvals, or waiting less than the specified elapsed
 period never substitute for these gates.
 
 ## Current operator action
 
-Provision the missing host-local Fyers, heartbeat, and phone-alert values using the procedure
-above, then run and retain redacted auth/alert evidence. Do not enable either live-order flag.
+After 15:30 IST, rebuild and deploy the exact superseding commit, update private D0/D2 image
+evidence, and rerun both evaluators. Do not enable either live-order flag.

@@ -268,7 +268,7 @@ package work so the same failure is less likely on a fresh host.
 ### Real-money hosting
 
 The plan does not rely on a free VM once real capital is involved. Before live trading, the
-same Docker image will move to a paid India-region VPS, such as AWS Mumbai or DigitalOcean
+same Docker image will remain on the secured Oracle Cloud Always Free host, with dedicated
 Bangalore.
 
 The live host requires reserved primary and secondary public IPs registered with Dhan at
@@ -385,12 +385,11 @@ Remaining milestones include:
 2. Run one commissioning week covering at least five consecutive NSE trading sessions on live market data.
 3. Review whether each session completed scheduling, data, signals, risk, paper fills, reconciliation, journaling, alerts and restart recovery correctly.
 4. Configure off-box backups, external heartbeat and restore-drill evidence.
-5. Choose and provision the paid India-region live host.
-6. Register static IPs with Dhan and wait the required lead time.
-7. Run focused deployment-parity and startup checks on the paid host using the same image and config checksum.
-8. Complete the go-live checklist and receive explicit operator approval.
-9. Start with no more than 10% of allocated capital.
-10. Move through 25%, 50% and 100% only after at least two clean weeks at every stage.
+5. Confirm current broker network requirements for the permanent Oracle host and allow any required lead time.
+6. Run focused production-readiness and startup checks on Oracle using the same image and config checksum.
+7. Complete the go-live checklist and receive explicit operator approval.
+8. Start with no more than 10% of allocated capital.
+9. Move through 25%, 50% and 100% only after at least two clean weeks at every stage.
 
 There is intentionally no production live-order Dhan gateway enabled today.
 
@@ -408,10 +407,11 @@ data freshness, signals, risk decisions, confirmed paper fills, reconciliation, 
 restart recovery, safety incidents and unexplained software outliers. Weekly returns are
 recorded but do not pass or fail the bot.
 
-### Stage 3: Move to production infrastructure
+### Stage 3: Prove production readiness on Oracle
 
-Deploy the same container to a paid India-region VPS, configure reserved IPs, backups,
-heartbeat monitoring and restore procedures, and run another paper-validation week.
+Keep the same container on Oracle Cloud Always Free, preserve the approved host/network
+identity, configure off-box backups, heartbeat monitoring and restore procedures, and run
+focused same-host paper/read-only production checks.
 
 ### Stage 4: Introduce capital gradually
 
@@ -441,7 +441,7 @@ behaviour. The software may recommend changes; the founder remains the final app
 >
 > We are deliberately not presenting it as live-ready today. The next milestone is the
 > scheduled production paper daemon, followed by a one-week live-market software commissioning run covering at least five NSE sessions. Real
-> capital moves only after a paid-host migration, static-IP registration, backup and restore
+> capital moves only after same-host production-readiness validation, required network registration, backup and restore
 > proof, another paper-validation week, and an explicit go-live review. Capital then enters
 > in controlled stages from 10% to 100%.
 >

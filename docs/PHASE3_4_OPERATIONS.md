@@ -4,7 +4,7 @@ Phase 3.4 is the go-live checklist gate for the first live-capital stage. It hap
 after Phase 3.1, Phase 3.2, and Phase 3.3 evidence has passed. The allowed initial blast
 radius is 10% capital. Anything larger belongs to Phase 3.5 staged ramp.
 
-This repository includes `xenalgo.phase34` to evaluate supplied evidence. The module does
+This repository includes `xenalgo.phase34` to evaluate supplied evidence. The module
 does not call Fyers, read secrets, mutate config, or place/modify/cancel live orders.
 
 ## Required Evidence
@@ -13,13 +13,13 @@ Record one non-secret checklist row:
 
 ```csv
 activated_at,live_host_id,config_checksum,phase0_foundation_passed,phase1_execution_core_passed,phase2_console_passed,phase31_failure_injection_passed,phase32_burn_in_passed,phase32_live_host_readiness_passed,phase33_post_migration_passed,static_ip_verified_at,token_refresh_sessions,backup_restore_drill_at,local_kill_switch_verified_at,session_revocation_verified_at,phone_alerts_confirmed_at,dedicated_account_funded,operator_approval_id,live_trading_enabled,broker_order_api_enabled,live_trading_mode,capital_fraction,governor_max_orders_per_sec
-2026-08-16T08:00:00,aws-mumbai-live-1,sha256:<checksum>,true,true,true,true,true,true,true,2026-08-15T08:00:00,5,2026-08-14,2026-08-15T10:00:00,2026-08-15T10:15:00,2026-08-15T10:30:00,true,approval-2026-08-16,true,true,live,0.10,2
+2026-08-16T08:00:00,oracle-mumbai-live-1,sha256:<checksum>,true,true,true,true,true,true,true,2026-08-15T08:00:00,5,2026-08-14,2026-08-15T10:00:00,2026-08-15T10:15:00,2026-08-15T10:30:00,true,approval-2026-08-16,true,true,live,0.10,2
 ```
 
 Pass conditions encoded in `GoLiveChecklistReview`:
 
 - G0, G1, G2, Phase 3.1, Phase 3.2 burn-in, Phase 3.2 live-host readiness, and Phase 3.3
-  post-migration evidence have all passed.
+  same-host production-readiness evidence have all passed.
 - Live host id and go-live config checksum are recorded.
 - Static IP startup verification happened before activation.
 - At least 5 token-refresh sessions are evidenced.

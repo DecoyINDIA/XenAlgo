@@ -27,7 +27,10 @@ def _as_bool(value: str | bool | int) -> bool:
 
 @dataclass(frozen=True)
 class PostMigrationRecord:
-    """One sleeve's paper-vs-backtest observation on the paid live host."""
+    """One sleeve's paper-vs-backtest observation on the permanent Oracle host.
+
+    The historical class name is retained for evidence-file compatibility.
+    """
 
     validation_date: dt.date
     host_id: str
@@ -67,7 +70,7 @@ class PostMigrationRecord:
 
 @dataclass(frozen=True)
 class PostMigrationHostEvidence:
-    """Operator-supplied live-host facts required before Phase 3.3 validation."""
+    """Operator-supplied permanent-Oracle-host facts required before validation."""
 
     host_id: str
     provider: str
@@ -112,7 +115,7 @@ def load_post_migration_csv(path: str | Path) -> list[PostMigrationRecord]:
 
 
 class PostMigrationValidationReview:
-    """Evaluates the repository-verifiable evidence gate for Phase 3.3."""
+    """Evaluates the same-host production-readiness gate for Phase 3.3."""
 
     def __init__(self, policy: PostMigrationPolicy | None = None) -> None:
         self.policy = policy or PostMigrationPolicy()
@@ -125,7 +128,7 @@ class PostMigrationValidationReview:
         ordered = sorted(records, key=lambda rec: (rec.validation_date, rec.sleeve))
         blockers = self._host_blockers(host)
         if not ordered:
-            blockers.append("no post-migration paper validation records supplied")
+            blockers.append("no production-readiness paper validation records supplied")
             return PostMigrationValidationSummary(None, None, 0, 0, 0.0, 0, tuple(blockers))
 
         policy = self.policy
@@ -136,9 +139,9 @@ class PostMigrationValidationReview:
         if host.static_ip_verified_at is None:
             blockers.append("static IP startup verification date is missing")
         elif host.static_ip_verified_at > start:
-            blockers.append("static IP was verified after post-migration validation started")
+            blockers.append("network identity was verified after production-readiness validation started")
         if start < host.migrated_at:
-            blockers.append("post-migration validation starts before recorded migration date")
+            blockers.append("production-readiness validation starts before the recorded readiness baseline date")
 
         if len(dates) < policy.min_reviewed_trading_days:
             blockers.append(
@@ -203,10 +206,12 @@ class PostMigrationValidationReview:
             blockers.append("live host id is missing")
         if not host.provider.strip():
             blockers.append("live host provider is missing")
+        elif "oracle" not in host.provider.lower():
+            blockers.append("permanent host provider must be Oracle Cloud")
         if not host.region.strip():
             blockers.append("live host region is missing")
-        if not any(token in host.region.lower() for token in ("ap-south-1", "mumbai", "blr", "bangalore")):
-            blockers.append("live host is not evidenced in the approved India-region set")
+        if not any(token in host.region.lower() for token in ("mumbai", "hyderabad")):
+            blockers.append("Oracle host is not evidenced in the approved India region")
         if not host.docker_image_ref.strip():
             blockers.append("portable Docker image reference is missing")
         if not host.config_checksum.strip():

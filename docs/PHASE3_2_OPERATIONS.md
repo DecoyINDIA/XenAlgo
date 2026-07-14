@@ -3,7 +3,7 @@
 Phase 3.2 is an evidence gate, not a local-only code milestone. It has two parts:
 
 - Phase 3.2a: one software commissioning week covering at least five consecutive NSE trading sessions in paper mode on live market data.
-- Phase 3.2b: paid live-host migration readiness before any live capital is enabled.
+- Phase 3.2b: permanent Oracle-host readiness before any live capital is enabled.
 
 This repository now includes `xenalgo.phase32` to evaluate supplied evidence. The module does
 does not call Fyers, read secrets, register IPs, deploy hosts, or enable live trading.
@@ -60,7 +60,7 @@ it belongs in docs.
 
 Phase 3.2b requires operator-side proof for:
 
-- live host provider selected: AWS Mumbai (`ap-south-1`) or DO Bangalore,
+- permanent Oracle Cloud Always Free host identity and region recorded,
 - the static IP configuration required by the activated Fyers order app is registered and verified before go-live,
 - same Docker image deployed,
 - systemd supervision enabled,

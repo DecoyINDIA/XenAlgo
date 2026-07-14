@@ -1,5 +1,5 @@
 """
-Executable specifications for Phase 3.3 post-migration paper validation evidence.
+Executable specifications for Phase 3.3 same-host production-readiness evidence.
 
 Covers: PRD G3/FR-17, TRD deployment and ops gates, G3 go-live criteria.
 No test touches the Fyers API or enables live order placement.
@@ -16,9 +16,9 @@ phase33 = pytest.importorskip("xenalgo.phase33")
 
 def _host(**overrides):
     values = dict(
-        host_id="aws-mumbai-live-1",
-        provider="aws",
-        region="ap-south-1",
+        host_id="oracle-mumbai-live-1",
+        provider="oracle",
+        region="mumbai",
         migrated_at=dt.date(2026, 8, 1),
         static_ip_verified_at=dt.date(2026, 8, 1),
         docker_image_ref="xenalgo:phase33",
@@ -45,7 +45,7 @@ def _clean_records() -> list[phase33.PostMigrationRecord]:
             records.append(
                 phase33.PostMigrationRecord(
                     validation_date=day,
-                    host_id="aws-mumbai-live-1",
+                    host_id="oracle-mumbai-live-1",
                     sleeve=sleeve,
                     paper_return=0.010,
                     backtest_return=0.011,
@@ -57,7 +57,7 @@ def _clean_records() -> list[phase33.PostMigrationRecord]:
     return records
 
 
-def test_focused_post_migration_parity_passes_with_clean_evidence():
+def test_focused_same_host_parity_passes_with_clean_evidence():
     summary = phase33.PostMigrationValidationReview().evaluate(_clean_records(), _host())
 
     assert summary.passed is True
@@ -67,7 +67,7 @@ def test_focused_post_migration_parity_passes_with_clean_evidence():
     assert summary.token_refresh_sessions == 6
 
 
-def test_post_migration_validation_fails_closed_on_unsafe_or_incomplete_evidence():
+def test_production_readiness_validation_fails_closed_on_unsafe_or_incomplete_evidence():
     records = [
         phase33.PostMigrationRecord(
             validation_date=dt.date(2026, 8, 2),
@@ -83,7 +83,9 @@ def test_post_migration_validation_fails_closed_on_unsafe_or_incomplete_evidence
         )
     ]
     host = _host(
-        host_id="aws-mumbai-live-1",
+        host_id="oracle-mumbai-live-1",
+        provider="aws",
+        region="ap-south-1",
         migrated_at=dt.date(2026, 8, 3),
         static_ip_verified_at=dt.date(2026, 8, 4),
         phase32_live_host_readiness_passed=False,
@@ -96,10 +98,12 @@ def test_post_migration_validation_fails_closed_on_unsafe_or_incomplete_evidence
     assert summary.passed is False
     rendered = " | ".join(summary.blockers)
     assert "Phase 3.2 live-host readiness" in rendered
+    assert "permanent host provider must be Oracle Cloud" in rendered
+    assert "approved India region" in rendered
     assert "live_trading.enabled must remain false" in rendered
     assert "broker.order_api_enabled must remain false" in rendered
-    assert "verified after post-migration validation started" in rendered
-    assert "starts before recorded migration date" in rendered
+    assert "verified after production-readiness validation started" in rendered
+    assert "starts before the recorded readiness baseline date" in rendered
     assert "missing sleeve reviews" in rendered
     assert "host old-oracle-paper" in rendered
     assert "safety incidents" in rendered
@@ -129,7 +133,7 @@ def test_post_migration_csv_loader_reads_operator_evidence():
     assert records[0].within_tolerance(0.005) is True
 
 
-def test_post_migration_host_evidence_requires_live_host_ops_controls():
+def test_oracle_host_evidence_requires_production_ops_controls():
     summary = phase33.PostMigrationValidationReview().evaluate(
         _clean_records(),
         _host(
@@ -146,7 +150,7 @@ def test_post_migration_host_evidence_requires_live_host_ops_controls():
     assert summary.passed is False
     rendered = " | ".join(summary.blockers)
     assert "provider is missing" in rendered
-    assert "approved India-region" in rendered
+    assert "approved India region" in rendered
     assert "Docker image reference is missing" in rendered
     assert "config checksum is missing" in rendered
     assert "systemd supervision is not enabled" in rendered
