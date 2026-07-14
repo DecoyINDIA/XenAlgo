@@ -3,7 +3,7 @@
 **Baseline:** 2026-07-11  
 **Parent plan:** [END_TO_END_COMPLETION_PLAN.md](END_TO_END_COMPLETION_PLAN.md)  
 **Build prerequisite:** [PHASED_BUILD_PLAN_REMAINING.md](PHASED_BUILD_PLAN_REMAINING.md) B6 must pass.  
-**Safety boundary:** Deployment through paid-host parity remains paper/read-only. Enabling a real Fyers order path requires the separate D7 operator approval gate.
+**Safety boundary:** Oracle is the permanent host. Commissioning and production-readiness validation remain paper/read-only. Enabling a real Fyers order path requires the separate D6 operator approval gate.
 
 Current non-secret status and operator-owned inputs are maintained in
 [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) and
@@ -15,8 +15,8 @@ Current non-secret status and operator-owned inputs are maintained in
 |---|---|---|---|
 | Local/CI | Unit, contract, integration, chaos, packaging | Mocks and `PaperBroker` only | Disposable |
 | Oracle paper | Live-data software commissioning | `PaperBroker`; real order placement disabled | Dedicated paper DB |
-| Paid-host parity | Migration/startup proof | Paper/read-only broker observation | Dedicated parity DB |
-| Paid-host live | Staged real capital | Reviewed Fyers gateway after D7 approval | Dedicated live DB |
+| Oracle pre-live | Same-host mode-transition/startup proof | Paper/read-only broker observation | Dedicated parity DB |
+| Oracle live | Staged real capital | Reviewed Fyers gateway after D6 approval | Dedicated live DB |
 
 Paper and live databases must never share a path. Tokens and `.env` files remain outside the repository and backup scope.
 
@@ -31,17 +31,15 @@ D2 Oracle paper deployment
         |
 D3 Five-session commissioning
         |
-D4 Paid-host provisioning
+D4 Oracle production-readiness validation
         |
-D5 Paid-host deployment parity
+D5 Final go-live review
         |
-D6 Final go-live review
+D6 Explicit 10% activation
         |
-D7 Explicit 10% activation
+D7 10% -> 25% -> 50% -> 100%
         |
-D8 10% -> 25% -> 50% -> 100%
-        |
-D9 G3 operations handoff
+D8 G3 operations handoff
 ```
 
 ## 3. D0 - Release Acceptance
@@ -150,36 +148,10 @@ Commissioning runs for at least five consecutive NSE trading sessions on live ma
 
 Any SI breach, missing session, unexplained evidence gap, or unresolved incident invalidates D3. Fixes require a new release candidate and a fresh commissioning sequence.
 
-## 7. D4 - Paid Live-Host Provisioning
+## 7. D4 - Oracle Production-Readiness Validation
 
-### Operator decisions
-
-- Select AWS Mumbai or DigitalOcean Bangalore.
-- Select the dedicated Fyers account and allocated capital.
-- Confirm current Fyers network/static-IP requirements using official sources.
-- Confirm sleeve weights, risk thresholds, and compensating kill controls.
-
-### Host controls
-
-- Reserved network identity where required.
-- Tailscale-only console; no public application ports.
-- systemd, Docker, NTP, heartbeat, monitoring, and log retention.
-- Dedicated paper/parity and live state paths.
-- Off-box backup and a tested restore process.
-- Secret/token isolation and least privilege.
-- Oracle retained as warm paper/staging infrastructure.
-
-### Acceptance
-
-- Provider, region, host ID, network identity, and provisioning date recorded.
-- Broker-side account/network prerequisites accepted where applicable.
-- Backup and restore drill succeeds.
-- Real-phone heartbeat/critical alert succeeds.
-- Live flags remain false.
-
-## 8. D5 - Paid-Host Deployment Parity
-
-Deploy the exact commissioned image and configuration in paper/read-only mode.
+Keep the exact commissioned image on the permanent Oracle host and validate the production
+startup path in paper/read-only mode. Paper/parity and live databases must remain separate.
 
 ### Required parity checks
 
@@ -192,7 +164,10 @@ Deploy the exact commissioned image and configuration in paper/read-only mode.
 - Periodic/post-execution reconciliation.
 - Alerting, dashboard latency, heartbeat, and EOD evidence.
 - Restart recovery and kill/rearm timing.
-- Backup/restore on the paid host.
+- Backup/restore on the Oracle host, including verified off-box recovery.
+- Current Fyers account/network prerequisites confirmed from official sources.
+- Dedicated account, allocated capital, sleeve weights, risk thresholds, and compensating
+  kill controls recorded without secrets.
 
 ### Acceptance
 
@@ -202,15 +177,15 @@ Deploy the exact commissioned image and configuration in paper/read-only mode.
 - `PostMigrationValidationReview` passes focused parity evidence.
 - No live order is placed and both live flags remain false.
 
-## 9. D6 - Final Go-Live Review
+## 8. D5 - Final Go-Live Review
 
 All items are mandatory:
 
 - G0, G1, G2, and Phase 3.1 are green.
-- D3 commissioning and D5 deployment parity pass.
+- D3 commissioning and D4 production-readiness validation pass.
 - Authentication proven over at least five sessions.
 - Account/network startup verification is complete.
-- Backup and paid-host restore drill are complete.
+- Backup and Oracle off-box restore drill are complete.
 - Kill controls and real-phone alerts are proven.
 - Dedicated account is funded only with allocated capital.
 - Initial stage is no more than 10%.
@@ -222,9 +197,9 @@ All items are mandatory:
 
 ### Acceptance
 
-`GoLiveChecklistReview` passes in pre-activation mode and the operator records explicit approval for D7. Passing D6 does not itself enable live trading.
+`GoLiveChecklistReview` passes in pre-activation mode and the operator records explicit approval for D6. Passing D5 does not itself enable live trading.
 
-## 10. D7 - Explicit 10% Activation
+## 9. D6 - Explicit 10% Activation
 
 ### Change controls
 
@@ -246,7 +221,7 @@ All items are mandatory:
 - Alerts are delivered.
 - Any ambiguity or drift immediately halts further submission.
 
-## 11. D8 - Staged Capital Ramp
+## 10. D7 - Staged Capital Ramp
 
 | Stage | Minimum clean evidence | Promotion authority |
 |---|---|---|
@@ -270,7 +245,7 @@ All items are mandatory:
 
 Any safety incident halts operation and promotion. The stage clock resumes or restarts only after documented review; it never advances automatically.
 
-## 12. Rollback and Incident Plan
+## 11. Rollback and Incident Plan
 
 ### Automatic halt conditions
 
@@ -296,7 +271,7 @@ Any safety incident halts operation and promotion. The stage clock resumes or re
 
 Rollback never assumes a pending/submitted order is unfilled. Broker truth and confirmed fills govern position state.
 
-## 13. Backup and Recovery Plan
+## 12. Backup and Recovery Plan
 
 - Nightly SQLite backup and DuckDB/Parquet export to approved off-box storage.
 - Token and secret paths excluded.
@@ -307,7 +282,7 @@ Rollback never assumes a pending/submitted order is unfilled. Broker truth and c
 
 Restore acceptance: schema loads, journal integrity passes, replay equals derived state, configuration identity is known, and the service starts in disabled/paper mode before any live re-authorization.
 
-## 14. Deployment Completion Matrix
+## 13. Deployment Completion Matrix
 
 | Gate | Status on 2026-07-11 | Completion evidence |
 |---|---|---|
@@ -315,30 +290,29 @@ Restore acceptance: schema loads, journal integrity passes, replay equals derive
 | D1 Oracle readiness | Partial | Existing console/Tailscale proof plus daemon controls. |
 | D2 Oracle paper deploy | Pending | Daemon smoke/restart/restore proof. |
 | D3 Five-session commissioning | External | Five consecutive reviewed NSE sessions. |
-| D4 Paid host | External | Operator selection and provisioning. |
-| D5 Paid-host parity | External | Focused migrated-host evidence. |
-| D6 Final review | External | Complete go-live checklist. |
-| D7 10% activation | External | Separate explicit operator approval. |
-| D8 Capital ramp | External | At least two clean weeks per stage. |
-| D9 G3 handoff | Pending | 100% stage completed cleanly. |
+| D4 Oracle production readiness | External | Focused same-host paper/read-only evidence. |
+| D5 Final review | External | Complete go-live checklist. |
+| D6 10% activation | External | Separate explicit operator approval. |
+| D7 Capital ramp | External | At least two clean weeks per stage. |
+| D8 G3 handoff | Pending | 100% stage completed cleanly. |
 
 ### Executable evidence map
 
 The gate policy is executable without granting deployment or broker authority:
 
 - `xenalgo.deployment`: D0 release, D1 host, D2 paper deployment, SQLite
-  backup/restore integrity, paper-config validation, and D9 handoff completeness.
-- `xenalgo.phase32`: D3 five-session commissioning and D4 live-host readiness.
-- `xenalgo.phase33`: D5 focused paid-host parity.
-- `xenalgo.phase34`: D6 pre-activation review and D7 activation evidence.
-- `xenalgo.phase35`: D8 staged capital ramp.
+  backup/restore integrity, paper-config validation, and D8 handoff completeness.
+- `xenalgo.phase32`: D3 five-session commissioning and permanent-host readiness.
+- `xenalgo.phase33`: D4 focused same-host production-readiness validation.
+- `xenalgo.phase34`: D5 pre-activation review and D6 activation evidence.
+- `xenalgo.phase35`: D7 staged capital ramp.
 - `deploy/evidence/`: fail-closed, non-secret templates and storage rules.
 
 An evaluator pass means the supplied evidence satisfies policy; it never performs a
 deployment, changes configuration, calls Fyers, or substitutes synthetic records for
 external evidence.
 
-## 15. D9 - G3 Operations Handoff
+## 14. D8 - G3 Operations Handoff
 
 G3 completes only after the 100% stage finishes its clean evidence window.
 
@@ -353,4 +327,4 @@ The final operations package contains:
 - Next restore-drill and review dates.
 - Known risks and Phase 4/G4 operating boundary.
 
-G3 does not remove any guardrail or approval requirement. Subsequent live deployments repeat D0, D5-equivalent parity checks, and the appropriate operator change approval.
+G3 does not remove any guardrail or approval requirement. Subsequent live deployments repeat D0, D4-equivalent production-readiness checks, and the appropriate operator change approval.

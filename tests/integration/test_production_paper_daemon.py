@@ -2,11 +2,14 @@
 from __future__ import annotations
 
 import datetime as dt
+import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import pandas as pd
 import pytest
 
+from xenalgo.alerts import HeartbeatEventAlerter, InMemoryAlerter, OperatorAlerter
 from xenalgo.broker.governor import OrderGovernor
 from xenalgo.broker.paper import PaperBroker
 from xenalgo.broker.token import Token, TokenManager
@@ -19,9 +22,16 @@ from xenalgo.paper_daemon import (
     ProductionPaperDaemon,
     ScheduledPaperRuntime,
     StartupBlocked,
+    run_host_preflight,
 )
 from xenalgo.risk import RiskEngine
 from xenalgo.scheduler import MarketCalendar, RebalancePlan
+from xenalgo.host_preflight import (
+    build_alert_adapter_from_env,
+    fetch_validation_panel,
+    latest_completed_trading_day,
+    main as host_preflight_main,
+)
 
 
 def _deps(tmp_path: Path, broker: PaperBroker | None = None) -> PaperDependencies:
@@ -141,3 +151,173 @@ def test_clock_controlled_runtime_executes_all_jobs_once(tmp_path):
     assert result.submitted == result.filled == 1
     assert len(runtime.completed) == 8
     assert calls == {"backup": 1, "heartbeat": 1}
+
+
+def test_host_preflight_proves_auth_startup_and_synthetic_alert(tmp_path):
+    day = dt.date(2026, 7, 13)
+    deps = _deps(tmp_path)
+    report = run_host_preflight(
+        ProductionPaperDaemon(deps, evidence_dir=tmp_path / "evidence"),
+        trading_date=day,
+        panel=_panel(day),
+    )
+
+    assert report.passed
+    assert report.checks == {
+        "authentication": True,
+        "calendar": True,
+        "config": True,
+        "journal_replay": True,
+        "data": True,
+        "controls": True,
+        "reconciliation": True,
+        "paper_gateway": True,
+        "synthetic_alert": True,
+    }
+    assert deps.alerts.alerter.sent[-1].kind == "application_event"
+
+
+def test_host_preflight_fails_if_alert_delivery_raises(tmp_path):
+    class BrokenAlerter:
+        def send(self, *_args, **_kwargs):
+            raise RuntimeError("delivery failed")
+
+    day = dt.date(2026, 7, 13)
+    deps = _deps(tmp_path)
+    deps.alerts.alerter = BrokenAlerter()
+    report = run_host_preflight(
+        ProductionPaperDaemon(deps, evidence_dir=tmp_path / "evidence"),
+        trading_date=day,
+        panel=_panel(day),
+    )
+
+    assert not report.passed
+    assert report.checks["synthetic_alert"] is False
+
+
+def test_operator_alerter_delivers_application_event_to_telegram():
+    calls = []
+    alerter = OperatorAlerter(
+        telegram_token="bot-redacted",
+        telegram_chat_id="chat-redacted",
+        post=lambda url, payload, timeout: calls.append((url, payload, timeout)),
+    )
+
+    alerter.send("application_event", "synthetic D2 preflight")
+
+    assert len(calls) == 1
+    assert calls[0][0].endswith("/botbot-redacted/sendMessage")
+    assert calls[0][1] == {"chat_id": "chat-redacted", "text": "[application_event] synthetic D2 preflight"}
+
+
+def test_latest_completed_trading_day_is_previous_session_before_close():
+    assert latest_completed_trading_day(
+        dt.datetime(2026, 7, 14, 3, 0, tzinfo=dt.UTC)
+    ) == dt.date(2026, 7, 13)
+    assert latest_completed_trading_day(
+        dt.datetime(2026, 7, 13, 2, 0, tzinfo=dt.UTC)
+    ) == dt.date(2026, 7, 10)
+
+
+def test_read_only_fyers_history_is_converted_to_a_validation_panel():
+    class Response:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {
+                "s": "ok",
+                "candles": [
+                    [1783900800, 100, 101, 99, 100, 1_000_000],
+                    [1783987200, 101, 102, 100, 101, 1_100_000],
+                ],
+            }
+
+    calls = []
+    panel = fetch_validation_panel(
+        app_id="app-redacted",
+        access_token="token-redacted",
+        expected_day=dt.date(2026, 7, 14),
+        get=lambda *args, **kwargs: calls.append((args, kwargs)) or Response(),
+    )
+
+    assert list(panel["close"]["SBIN"]) == [100.0, 101.0]
+    assert calls[0][0] == ("https://api-t1.fyers.in/data/history",)
+    assert calls[0][1]["headers"]["Authorization"] == "app-redacted:token-redacted"
+
+
+def test_healthchecks_event_adapter_posts_redacted_application_event(monkeypatch):
+    seen = {}
+
+    class Response:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+    monkeypatch.setattr(
+        "urllib.request.urlopen",
+        lambda request, timeout: seen.update(request=request, timeout=timeout) or Response(),
+    )
+    HeartbeatEventAlerter(heartbeat_url="https://example.invalid/redacted").send(
+        "application_event", "synthetic D2 preflight"
+    )
+
+    assert seen["request"].data == b"[application_event] synthetic D2 preflight"
+
+
+def test_host_preflight_alert_adapter_prefers_direct_telegram(monkeypatch):
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "bot-redacted")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "chat-redacted")
+    adapter, channel = build_alert_adapter_from_env()
+    assert isinstance(adapter, OperatorAlerter)
+    assert channel == "telegram"
+
+    monkeypatch.delenv("TELEGRAM_BOT_TOKEN")
+    monkeypatch.delenv("TELEGRAM_CHAT_ID")
+    monkeypatch.setenv("XENALGO_HEARTBEAT_URL", "https://example.invalid/redacted")
+    adapter, channel = build_alert_adapter_from_env()
+    assert isinstance(adapter, HeartbeatEventAlerter)
+    assert channel == "healthchecks"
+
+
+def test_host_preflight_main_reports_only_redacted_results(monkeypatch, capsys, tmp_path):
+    day = dt.date(2026, 7, 13)
+    deps = SimpleNamespace(
+        token_manager=SimpleNamespace(
+            ensure_valid=lambda: SimpleNamespace(value="access-token-redacted")
+        ),
+        calendar=MarketCalendar(),
+        alerts=None,
+    )
+    adapter = InMemoryAlerter()
+    monkeypatch.setenv("XENALGO_ROOT", str(tmp_path))
+    monkeypatch.setenv("FYERS_APP_ID", "app-redacted")
+    monkeypatch.setattr("xenalgo.host_preflight.build_paper_dependencies", lambda _root: deps)
+    monkeypatch.setattr(
+        "xenalgo.host_preflight.build_alert_adapter_from_env",
+        lambda: (adapter, "memory-test"),
+    )
+    monkeypatch.setattr("xenalgo.host_preflight.latest_completed_trading_day", lambda *_: day)
+    monkeypatch.setattr("xenalgo.host_preflight.fetch_validation_panel", lambda **_: _panel(day))
+    monkeypatch.setattr("xenalgo.host_preflight.ProductionPaperDaemon", lambda *_args, **_kwargs: object())
+    monkeypatch.setattr(
+        "xenalgo.host_preflight.run_host_preflight",
+        lambda *_args, **_kwargs: SimpleNamespace(
+            passed=True, checks={"authentication": True, "synthetic_alert": True}
+        ),
+    )
+
+    assert host_preflight_main() == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload == {
+        "alert_channel": "memory-test",
+        "checks": {"authentication": True, "synthetic_alert": True},
+        "live_order_api_calls": 0,
+        "passed": True,
+        "trading_date": "2026-07-13",
+    }
+    assert deps.alerts.alerter is adapter

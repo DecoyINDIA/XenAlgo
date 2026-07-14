@@ -1,0 +1,11 @@
+[Unit]
+Description=Run XenAlgo paper-only preflight before the startup gate
+
+[Timer]
+OnCalendar=Mon..Fri *-*-* 08:55:00 Asia/Kolkata
+Persistent=true
+AccuracySec=1min
+Unit=xenalgo-paper-preflight.service
+
+[Install]
+WantedBy=timers.target

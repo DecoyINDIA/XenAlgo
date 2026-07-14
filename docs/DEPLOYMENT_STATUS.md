@@ -1,6 +1,6 @@
 # XenAlgo Deployment Status
 
-**Recorded:** 2026-07-12
+**Recorded:** 2026-07-14
 
 **Governing plan:** [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md)
 
@@ -13,20 +13,19 @@
 | Gate | Status | Evidence or next required event |
 |---|---|---|
 | D0 release acceptance | Complete for Oracle paper | The current release has green CI, exact candidate/rollback identities, and recorded operator paper-deployment approval. Private evidence is updated on every superseding release. |
-| D1 Oracle readiness | Partial on host | Oracle Linux 9.7 in Mumbai, NTP, Docker, Tailscale-only console/SSH, public port refusal, local monitoring, backup timer, and verified off-box pull are proven. External heartbeat and real-phone alert delivery remain missing. |
-| D2 Oracle paper deployment | Partial on host | The exact approved image is deployed. Kill blocking and restart recovery are within the one-second and 60-second limits; journal/restore integrity passed with no duplicate intent/order. Fyers credentials, runnable scheduled daemon preflight, heartbeat, and synthetic alert delivery remain missing. |
+| D1 Oracle readiness | Complete | Oracle Linux 9.7 in Mumbai, NTP, Docker, Tailscale-only console/SSH, public port refusal, monitoring, backup timer, verified off-box pull, a one-minute external heartbeat, and a missed-heartbeat Telegram delivery to the operator are proven. |
+| D2 Oracle paper deployment | Runtime controls complete; release identity pending | Fyers authentication is valid in the owner-only token volume. The paper service now runs a fail-closed preflight at startup and from an enabled 08:55 IST systemd timer. The first scheduled run passed authentication, calendar, config, journal replay, completed-bar Fyers data, controls, reconciliation, concrete `PaperBroker`, and synthetic Healthchecks application-event delivery with zero order-API calls. Kill/restart/restore evidence remains green. The new image must still pass a superseding D0 immutable-release acceptance before D2 can honestly pass its image-identity check. |
 | D3 five-session commissioning | Calendar-bound | Requires five consecutive expected NSE sessions on Oracle; synthetic evidence is rejected. |
-| D4 paid-host provisioning | Operator/external | Provider, account/capital, current broker network requirements, host, alerts, and restore must be selected and proven. |
-| D5 paid-host parity | External host-bound | Exact commissioned image/config must pass focused parity in paper/read-only mode. |
-| D6 final go-live review | Operator/external | Requires D3/D5 plus all checklist evidence; pre-activation flags remain false. |
-| D7 explicit 10% activation | Separate approval required | No approval supplied. This work does not authorize or perform activation. |
-| D8 staged ramp | Elapsed-time/real-capital bound | Four explicit stages, each at least two calendar weeks and ten reviewed sessions. |
-| D9 G3 handoff | Dependent on D8 | Handoff completeness gate is ready; it cannot pass before the 100% clean window finishes. |
+| D4 Oracle production readiness | External host-bound | Exact commissioned image/config must pass focused same-host parity in paper/read-only mode. Oracle remains the permanent host. |
+| D5 final go-live review | Operator/external | Requires D3/D4 plus all checklist evidence; pre-activation flags remain false. |
+| D6 explicit 10% activation | Separate approval required | No approval supplied. This work does not authorize or perform activation. |
+| D7 staged ramp | Elapsed-time/real-capital bound | Four explicit stages, each at least two calendar weeks and ten reviewed sessions. |
+| D8 G3 handoff | Dependent on D7 | Handoff completeness gate is ready; it cannot pass before the 100% clean window finishes. |
 
 ## Verified local release checks
 
-- Root suite: 163 passed.
-- XenAlgo coverage: 90.24% (required minimum 90%).
+- Root suite: 172 passed.
+- XenAlgo coverage: 90.07% (required minimum 90%).
 - `xenalgo.risk` plus `xenalgo.execution`: 100%.
 - Research suite: 4 passed.
 - Research and live configuration validation: passed; live checksum
@@ -36,7 +35,7 @@
 - `git diff --check`: passed.
 
 These local proofs are supplemented by private host evidence under `Diary/deployment/`.
-They are not commissioning, paid-host parity, broker readiness, or live-capital proof.
+They are not commissioning, Oracle production-readiness, broker readiness, or live-capital proof.
 
 ## Operator sequence
 
@@ -46,5 +45,5 @@ They are not commissioning, paid-host parity, broker readiness, or live-capital 
    and validate D1 evidence.
 4. Execute D2 paper smoke/restart/restore checks without any real order call.
 5. Collect five consecutive authoritative D3 sessions.
-6. Provision and validate D4/D5, then conduct D6 review.
-7. Stop for a separate explicit D7 approval. D8/D9 advance only from observed evidence.
+6. Validate D4 on Oracle, then conduct the D5 review.
+7. Stop for a separate explicit D6 approval. D7/D8 advance only from observed evidence.

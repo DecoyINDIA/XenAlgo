@@ -1,0 +1,11 @@
+[Unit]
+Description=XenAlgo scheduled paper-only startup preflight
+Wants=network-online.target docker.service tailscaled.service
+After=network-online.target docker.service tailscaled.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/xenalgo/xenalgo.env
+ExecStart=/usr/bin/docker run --rm --user xenalgo --env-file /etc/xenalgo/xenalgo.env --network host -v /var/lib/xenalgo/Diary:/app/Diary -v /var/lib/xenalgo/Supply:/app/Supply -v xenalgo-secrets:/app/.xenalgo-secrets xenalgo:oracle-paper python -m xenalgo.host_preflight
+User=root
+UMask=0077

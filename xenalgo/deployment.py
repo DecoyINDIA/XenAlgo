@@ -1,4 +1,4 @@
-"""Fail-closed deployment evidence gates for XenAlgo D0-D9.
+"""Fail-closed deployment evidence gates for XenAlgo D0-D8.
 
 This module only validates local/operator-supplied evidence.  It never calls a broker,
 changes live flags, deploys a host, or authorizes capital.
@@ -218,7 +218,7 @@ def evaluate_d2(evidence: PaperDeploymentEvidence) -> GateReport:
 
 @dataclasses.dataclass(frozen=True)
 class OperationsHandoffEvidence:
-    d0_through_d8_passed: bool
+    d0_through_d7_passed: bool
     hundred_percent_stage_completed: bool
     release_and_checksums: bool
     commissioning_parity_activation_ramp_evidence: bool
@@ -230,9 +230,9 @@ class OperationsHandoffEvidence:
     known_risks_and_phase4_boundary: bool
 
 
-def evaluate_d9(evidence: OperationsHandoffEvidence) -> GateReport:
+def evaluate_d8(evidence: OperationsHandoffEvidence) -> GateReport:
     blockers = [message for message, passed in {
-        "D0-D8 are not all evidenced as passed": evidence.d0_through_d8_passed,
+        "D0-D7 are not all evidenced as passed": evidence.d0_through_d7_passed,
         "100% stage clean window is incomplete": evidence.hundred_percent_stage_completed,
         "release/checksum package is incomplete": evidence.release_and_checksums,
         "commissioning/parity/activation/ramp evidence is incomplete": evidence.commissioning_parity_activation_ramp_evidence,
@@ -243,7 +243,7 @@ def evaluate_d9(evidence: OperationsHandoffEvidence) -> GateReport:
         "next restore/review dates are missing": evidence.next_review_dates,
         "known risks/Phase 4 boundary is missing": evidence.known_risks_and_phase4_boundary,
     }.items() if not passed]
-    return GateReport("D9", tuple(blockers))
+    return GateReport("D8", tuple(blockers))
 
 
 def verify_paper_config(path: str | Path) -> GateReport:

@@ -6,8 +6,8 @@ After=network-online.target docker.service tailscaled.service
 [Service]
 Type=simple
 EnvironmentFile=/etc/xenalgo/xenalgo.env
-ExecStartPre=/usr/bin/docker run --rm --env-file /etc/xenalgo/xenalgo.env --network host -v /var/lib/xenalgo/Diary:/app/Diary -v /var/lib/xenalgo/Supply:/app/Supply xenalgo:oracle-paper python -m xenalgo --profile live
-ExecStart=/usr/bin/docker run --rm --name xenalgo-paper --env-file /etc/xenalgo/xenalgo.env --network host -v /var/lib/xenalgo/Diary:/app/Diary -v /var/lib/xenalgo/Supply:/app/Supply xenalgo:oracle-paper python -m xenalgo.web.server --profile live
+ExecStartPre=/usr/bin/docker run --rm --user xenalgo --env-file /etc/xenalgo/xenalgo.env --network host -v /var/lib/xenalgo/Diary:/app/Diary -v /var/lib/xenalgo/Supply:/app/Supply -v xenalgo-secrets:/app/.xenalgo-secrets xenalgo:oracle-paper python -m xenalgo.host_preflight
+ExecStart=/usr/bin/docker run --rm --name xenalgo-paper --user xenalgo --env-file /etc/xenalgo/xenalgo.env --network host -v /var/lib/xenalgo/Diary:/app/Diary -v /var/lib/xenalgo/Supply:/app/Supply -v xenalgo-secrets:/app/.xenalgo-secrets xenalgo:oracle-paper python -m xenalgo.web.server --profile live
 ExecStop=/usr/bin/docker stop xenalgo-paper
 Restart=on-failure
 RestartSec=10

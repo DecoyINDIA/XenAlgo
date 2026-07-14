@@ -100,8 +100,8 @@ and must be excluded from backups.
 
 ## Deploy and rollback
 
-Follow `docs/DEPLOYMENT_PLAN.md` D0-D5. Deploy only outside NSE market hours. Pin the final
-image by digest, mount dedicated paper state, validate config, start the scheduled daemon and
+Follow `docs/DEPLOYMENT_PLAN.md` D0-D4. Operate only outside NSE market hours for deployment
+changes. Pin the final image by digest, mount dedicated paper state, validate config, start the scheduled daemon and
 private console, then verify heartbeat, replay, reconciliation, evidence creation, and public
 port refusal.
 
@@ -118,7 +118,7 @@ hours, replay, and remain in paper mode. Never infer that a pending order is unf
 | B2 paper daemon | Full scheduled session, restart, no-order, startup-failure, paper-only, and evidence-generation tests green |
 | B3 adapters | Mock-only auth/data/stream/poll convergence, cumulative-fill, redaction, and health tests green |
 | B4 evidence | Five-session commissioning, focused parity, current kill controls implemented |
-| B5 release hardening | 158 tests passed; 90.54% overall coverage; 100% risk/execution coverage; 10 chaos and 4 research tests passed; Docker build and two smoke commands passed |
+| B5 release hardening | 172 tests passed; 90.07% overall coverage; 100% risk/execution coverage; 10 chaos and 4 research tests passed; Docker build and host paper-preflight smoke passed |
 | B6 handoff | This document plus deployment plan and environment examples |
 
 The test run emitted a known Starlette/httpx deprecation warning and non-fatal SQLite
@@ -141,11 +141,11 @@ not commissioning evidence and should be cleaned up in a later maintenance chang
   provisioned on the host; auth timeout halts safely.
 - Official instrument/restricted-list sources and corporate-action parity must produce clean
   live artifacts during commissioning. Tests are injected/mock-only.
-- Oracle deployment, five real NSE sessions, paid-host provisioning/parity, alert delivery to
+- Oracle deployment, five real NSE sessions, same-host production-readiness validation, alert delivery to
   the real phone, static-IP/account acceptance, funding, and any live activation are external.
 - The current Docker image exists only in the local Docker engine; registry publication and
   immutable registry-digest verification remain deployment actions.
-- The user must explicitly approve the separate D7 live activation. B0-B6 does not authorize it.
+- The user must explicitly approve the separate D6 live activation. B0-B6 does not authorize it.
 
 ## Commissioning evidence template
 
