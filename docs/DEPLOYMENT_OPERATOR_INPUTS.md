@@ -107,9 +107,12 @@ Host-runtime evidence collected 2026-07-14:
 - The synthetic `application_event` POST was accepted by the existing Healthchecks channel.
 - Both preflight records state `live_order_api_calls=0`.
 
-Remaining D2 blocker: accept the superseding image through D0 and update the private D0
-image identity. Do not copy the new image digest into D0 without the required clean release,
-CI, checksum, secret-scan, rollback, and operator paper-deployment evidence.
+Remaining D2 blocker: rebuild exact pushed commit
+`b0d7d1cbeec111ca6633ba817f1482dc95a41205` after the market-hours lock, accept that
+immutable image through D0, and update the private D0/D2 image identities. Draft PR #1 and
+both GitHub CI runs are green, but source/CI acceptance is not deployed-image proof. Do not
+reuse the pre-commit image digest or update D0 before the exact-commit rebuild, preflight,
+rollback identity, secret scan, and operator Oracle-paper evidence are recorded.
 
 Already proven on the deployed image: immutable identity, paper config, public-port refusal,
 Tailscale access, health/SSE, backup, kill/rearm audit, sub-second kill timing, restart within
@@ -132,5 +135,5 @@ period never substitute for these gates.
 
 ## Current operator action
 
-Create the superseding immutable release for the already verified D2 candidate, update D0
-private evidence, and rerun the D2 evaluator. Do not enable either live-order flag.
+After 15:30 IST, rebuild and deploy the exact superseding commit, update private D0/D2 image
+evidence, and rerun both evaluators. Do not enable either live-order flag.

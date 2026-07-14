@@ -127,10 +127,13 @@ not commissioning evidence and should be cleaned up in a later maintenance chang
 
 ## Engineering release repository state
 
-- Branch: `main`
-- Engineering release commit: `b8c1913ab7d4ed1391188a809f64c5364e041d98`
-- The documentation-record commit follows the engineering release and does not change runtime code.
-- Push status: not pushed by the B0-B6 implementation task
+- Branch: `agent/superseding-d0-release`
+- Superseding release commit: `b0d7d1cbeec111ca6633ba817f1482dc95a41205`
+- Draft PR: [#1](https://github.com/DecoyINDIA/XenAlgo/pull/1) targeting `main`
+- Push status: branch pushed; both GitHub CI runs passed
+- Release boundary: the exact commit still requires an off-market Oracle image rebuild,
+  paper-only preflight, rollback identity, and private D0/D2 evidence update. The currently
+  running pre-commit candidate must not be represented as the immutable commit-built image.
 - Real broker activity: none
 - `live_trading.enabled`: `false`
 - `broker.order_api_enabled`: `false`

@@ -284,11 +284,11 @@ Restore acceptance: schema loads, journal integrity passes, replay equals derive
 
 ## 13. Deployment Completion Matrix
 
-| Gate | Status on 2026-07-11 | Completion evidence |
+| Gate | Status on 2026-07-14 | Completion evidence |
 |---|---|---|
-| D0 Release acceptance | Pending | B6 handoff and immutable release candidate. |
-| D1 Oracle readiness | Partial | Existing console/Tailscale proof plus daemon controls. |
-| D2 Oracle paper deploy | Pending | Daemon smoke/restart/restore proof. |
+| D0 Release acceptance | Superseding source accepted; image pending | Commit `b0d7d1c` is pushed in draft PR #1 and both CI runs pass; exact-commit Oracle image and rollback identities remain pending after the market-hours lock. |
+| D1 Oracle readiness | Complete | Tailscale-only access, monitoring, heartbeat/phone alert, off-box backup, restore, NTP, permissions, and market-hours guard are proven. |
+| D2 Oracle paper deploy | Runtime controls complete; identity pending | Authentication, startup and scheduled preflight, read-only completed-bar data, synthetic event delivery, restart/kill/restore, and zero real order calls are proven; exact D0/D2 image identity must be refreshed from the commit-built image. |
 | D3 Five-session commissioning | External | Five consecutive reviewed NSE sessions. |
 | D4 Oracle production readiness | External | Focused same-host paper/read-only evidence. |
 | D5 Final review | External | Complete go-live checklist. |
