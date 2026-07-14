@@ -1,20 +1,20 @@
 # Phase 3.3 Operations Runbook
 
-Phase 3.3 is the final deployment-parity gate on the paid live host. It happens after
-Phase 3.2a software commissioning and Phase 3.2b live-host migration readiness are complete,
+Phase 3.3 is the final production-readiness gate on the permanent Oracle host. It happens after
+Phase 3.2a software commissioning and Phase 3.2b permanent Oracle-host readiness are complete,
 and before any live capital is enabled. It confirms that the same verified image and config
-behave correctly on the new IP and server; it is not a second fixed paper-trading week.
+behave correctly through the production startup path; it is not a second fixed paper-trading week.
 
-This repository includes `xenalgo.phase33` to evaluate supplied evidence. The module does
-does not call Fyers, read secrets, register IPs, deploy hosts, or enable live trading.
+This repository includes `xenalgo.phase33` to evaluate supplied evidence. The module
+does not call Fyers, read secrets, register network identities, deploy hosts, or enable live trading.
 
 ## Required Host Evidence
 
-Record these non-secret facts for the new live host:
+Record these non-secret facts for the permanent Oracle host:
 
 - stable `host_id`,
-- provider and approved India region (`ap-south-1`, Mumbai, or Bangalore),
-- migration completion date,
+- Oracle provider and approved India region (Mumbai or Hyderabad),
+- production-readiness baseline date (stored in the legacy `migrated_at` field),
 - static-IP startup verification date,
 - Docker image reference,
 - deployed config checksum,
@@ -26,13 +26,13 @@ Phase 3.3 is still paper mode. If either live-order flag is enabled, the evidenc
 
 ## Deployment-Parity Evidence
 
-Record one row per sleeve per trading day on the new live host:
+Record one row per sleeve per trading day on the permanent Oracle host:
 
 ```csv
 validation_date,host_id,sleeve,paper_return,backtest_return,token_refresh_ok,safety_incidents,reconciliation_clean,live_order_api_disabled,unexplained_outlier,notes
-2026-08-03,aws-mumbai-live-1,std30,0.0100,0.0110,true,0,true,true,false,clean
-2026-08-03,aws-mumbai-live-1,alpha_027,0.0040,0.0035,true,0,true,true,false,clean
-2026-08-03,aws-mumbai-live-1,alpha_062,-0.0020,-0.0025,true,0,true,true,false,clean
+2026-08-03,oracle-mumbai-live-1,std30,0.0100,0.0110,true,0,true,true,false,clean
+2026-08-03,oracle-mumbai-live-1,alpha_027,0.0040,0.0035,true,0,true,true,false,clean
+2026-08-03,oracle-mumbai-live-1,alpha_062,-0.0020,-0.0025,true,0,true,true,false,clean
 ```
 
 Required focused checks:
@@ -42,11 +42,11 @@ Required focused checks:
 - static IP was startup-verified before validation started,
 - the deployed Docker image and config checksums match the commissioned artifacts,
 - token refresh, scheduling, data freshness, journal writes, reconciliation, alerts, restart
-  recovery and the kill switch are rechecked on the new host,
+  recovery and the kill switch are rechecked on Oracle,
 - no safety incidents, reconciliation failures, or unexplained outliers are recorded,
 - every record confirms the live order API stayed disabled.
 
-`PostMigrationValidationReview` now evaluates a focused deployment-parity session. It
+`PostMigrationValidationReview` now evaluates a focused same-host production-readiness session. It
 requires all three sleeves and the host controls above, but does not impose another fixed
 duration or strategy-return gate.
 
@@ -62,9 +62,9 @@ from xenalgo.phase33 import (
 )
 
 host = PostMigrationHostEvidence(
-    host_id="aws-mumbai-live-1",
-    provider="aws",
-    region="ap-south-1",
+    host_id="oracle-mumbai-live-1",
+    provider="oracle",
+    region="mumbai",
     migrated_at=dt.date(2026, 8, 1),
     static_ip_verified_at=dt.date(2026, 8, 1),
     docker_image_ref="xenalgo:<image-tag>",

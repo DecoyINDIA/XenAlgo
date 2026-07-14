@@ -1,4 +1,4 @@
-"""Command-line validator for private D0-D2/D9 JSON evidence."""
+"""Command-line validator for private D0-D2/D8 JSON evidence."""
 from __future__ import annotations
 
 import argparse
@@ -8,14 +8,14 @@ from pathlib import Path
 
 from .deployment import (
     HostReadinessEvidence, OperationsHandoffEvidence, PaperDeploymentEvidence,
-    ReleaseEvidence, evaluate_d0, evaluate_d1, evaluate_d2, evaluate_d9,
+    ReleaseEvidence, evaluate_d0, evaluate_d1, evaluate_d2, evaluate_d8,
 )
 
 GATES = {
     "D0": (ReleaseEvidence, evaluate_d0),
     "D1": (HostReadinessEvidence, evaluate_d1),
     "D2": (PaperDeploymentEvidence, evaluate_d2),
-    "D9": (OperationsHandoffEvidence, evaluate_d9),
+    "D8": (OperationsHandoffEvidence, evaluate_d8),
 }
 
 

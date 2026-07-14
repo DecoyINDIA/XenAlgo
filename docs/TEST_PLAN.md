@@ -28,8 +28,8 @@ Safety-critical code is written **test-first**. The unit tests in `tests/unit/` 
 - Current live gateway coverage is mock-only; live-order-capable enablement remains outside the current safe boundary.
 - Phase 3.2 tests validate operator-supplied evidence only. They do not provision hosts,
   register static IPs, call Fyers, or enable live trading.
-- Phase 3.3 tests validate operator-supplied post-migration paper evidence only. They do not
-  operate the paid host, call Fyers, or enable live trading.
+- Phase 3.3 tests validate operator-supplied same-host production-readiness evidence only. They do not
+  operate the Oracle host, call Fyers, or enable live trading.
 - The owner revised the paper gate on 2026-07-11: Phase 3.2 is one software commissioning
   week with at least five consecutive NSE sessions, and Phase 3.3 is focused deployment
   parity. The evaluator implementations and tests encode those current decisions. Strategy

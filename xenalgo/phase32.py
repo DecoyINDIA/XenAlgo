@@ -178,7 +178,7 @@ class BurnInReview:
 
 @dataclass(frozen=True)
 class LiveHostEvidence:
-    """Operator-supplied evidence for Phase 3.2b live-host migration readiness."""
+    """Operator-supplied evidence for Phase 3.2b permanent-host readiness."""
 
     provider: str
     region: str

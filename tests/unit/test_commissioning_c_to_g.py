@@ -259,6 +259,24 @@ def test_fyers_token_provider_blocks_missing_auth_or_access_token(tmp_path):
             provider()
 
 
+def test_fyers_auth_code_session_exchanges_without_exposing_secret():
+    from xenalgo.broker.token import FyersAuthCodeSession
+
+    captured = {}
+
+    def post(url, payload, timeout):
+        captured.update(url=url, payload=payload, timeout=timeout)
+        return {"access_token": "access-redacted"}
+
+    session = FyersAuthCodeSession("app-100", "secret-redacted", post=post)
+    session.set_token("auth-redacted")
+
+    assert session.generate_token() == {"access_token": "access-redacted"}
+    assert captured["payload"]["grant_type"] == "authorization_code"
+    assert captured["payload"]["code"] == "auth-redacted"
+    assert captured["payload"]["appIdHash"] != "secret-redacted"
+
+
 def test_brain_executor_has_no_live_order_route():
     from Brain.executor import LiveExecutor
 

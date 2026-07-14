@@ -31,12 +31,12 @@ The design bias is simple:
 
 ## Current Status
 
-The repository-local build is complete through Phase 3.1 failure-injection coverage, with Phase 3.2, Phase 3.3, Phase 3.4, and Phase 3.5 evidence tooling now added. Phase 1 paper execution, Phase 2 operator console surfaces, the deterministic Phase 3.1 chaos suite, Phase 3.2 commissioning/live-host readiness checks, Phase 3.3 post-migration deployment checks, Phase 3.4 go-live checklist checks, and Phase 3.5 staged capital-ramp checks are implemented and tested locally.
+The repository-local build is complete through Phase 3.1 failure-injection coverage, with Phase 3.2, Phase 3.3, Phase 3.4, and Phase 3.5 evidence tooling now added. Phase 1 paper execution, Phase 2 operator console surfaces, the deterministic Phase 3.1 chaos suite, Phase 3.2 commissioning/permanent-host readiness checks, Phase 3.3 same-host production checks, Phase 3.4 go-live checklist checks, and Phase 3.5 staged capital-ramp checks are implemented and tested locally.
 
 The repository now includes the paper-only production composition, scheduled job owner,
 Fyers live-data/observation adapters, and evaluator-ready commissioning evidence. The
 remaining work is external deployment proof: Oracle installation, five consecutive NSE
-commissioning sessions, paid-host parity, and separately approved staged live activation.
+commissioning sessions, same-Oracle-host production readiness, and separately approved staged live activation.
 Commissioning evaluates the software, not one-week profitability. Live Fyers order placement
 remains disabled and is outside the B0-B6 authorization boundary.
 
@@ -115,7 +115,7 @@ XenAlgo is not ready because it starts. It is ready only when the safety gates p
 - Journal replay matches derived state after crash recovery.
 - Governor never exceeds 2 orders per second.
 - Reconciler halts on injected broker/local drift.
-- One commissioning week with at least five consecutive NSE sessions proving the bot's software flow before live-host migration.
+- One commissioning week with at least five consecutive NSE sessions proving the bot's software flow before same-host production-readiness review.
 - Focused deployment-parity and startup checks on the paid live host before live capital.
 
 The complete acceptance matrix is in [docs/SUCCESS_CRITERIA.md](docs/SUCCESS_CRITERIA.md).

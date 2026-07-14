@@ -1,0 +1,15 @@
+<svg width="720" height="200" viewBox="0 0 720 200" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="XenAlgo">
+  <rect width="720" height="200" fill="#0A0A0F"/>
+
+  <!-- mark: same construction, scaled -->
+  <g transform="translate(48,36)" stroke-linecap="round" fill="none">
+    <path d="M0 0 L96 104" stroke="#3F3F51" stroke-width="26"/>
+    <path d="M0 104 L38 63" stroke="#FAFAFA" stroke-width="26"/>
+    <path d="M61 38 L96 0" stroke="#FAFAFA" stroke-width="26"/>
+    <path d="M38 50 L61 50" stroke="#7C86FF" stroke-width="26"/>
+  </g>
+
+  <!-- wordmark -->
+  <text x="212" y="126" font-family="'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif" font-size="68" font-weight="600" letter-spacing="-2" fill="#FAFAFA">xenalgo</text>
+  <circle cx="484" cy="122" r="7" fill="#7C86FF"/>
+</svg>

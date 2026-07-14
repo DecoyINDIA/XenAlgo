@@ -14,7 +14,7 @@ Planned 2026-07-04. Source base: `_source/` (clone of quant-swing-trade — rese
 
 **Latency truth:** this is a daily-bar swing system. "Fast" = the bot reacts in **seconds** and never misses its execution window — not microseconds. We spend the latency budget on **correctness**: fill confirmation, reconciliation, and pre-trade checks. Colocation-style optimization is irrelevant at this cadence and will not be pursued.
 
-**Broker & hosting (retargeted 2026-07-11; OCI instance started 2026-07-06):** **Fyers** replaces Dhan for execution and market data before live gateway commissioning. Historical OHLCV is exchange truth, so the already validated alphas do not need a strategy re-backtest; Fyers-sourced history must pass the data-parity reconciliation gate for corporate-action adjustment and universe membership. **Oracle Cloud "Always Free"** in Mumbai/Hyderabad is the host for development and paper-trading. The first paper VM is Oracle Linux 9 on `VM.Standard.E2.1.Micro` with an ephemeral public IPv4; an A1 Flex attempt failed against the selected image. Oracle's known account-suspension risk means **live capital moves to a small paid VPS** (~$10-15/mo — AWS ap-south-1 or DO Bangalore) at the Phase 3 go-live transition; see §6.
+**Broker & hosting (retargeted 2026-07-11; hosting decision updated 2026-07-12; OCI instance started 2026-07-06):** **Fyers** replaces Dhan for execution and market data before live gateway commissioning. Historical OHLCV is exchange truth, so the already validated alphas do not need a strategy re-backtest; Fyers-sourced history must pass the data-parity reconciliation gate for corporate-action adjustment and universe membership. **Oracle Cloud "Always Free"** in Mumbai/Hyderabad is the permanent development, paper, and live host. The first VM is Oracle Linux 9 on `VM.Standard.E2.1.Micro` with an ephemeral public IPv4; an A1 Flex attempt failed against the selected image. Oracle availability and account risks are accepted and mitigated as defined in §6.
 
 ---
 
@@ -148,23 +148,21 @@ Lesson from every documented disaster (Knight, Everbright, Mizuho, Flash Crash):
 
 ## 6. Deployment & Ops
 
-**Two-stage hosting (decided 2026-07-05):**
+**Permanent zero-cost hosting (operator decision 2026-07-12):**
 
 | Stage | Host | Cost | Used for |
 |---|---|---|---|
-| **Dev / Paper (Phase 0–3.3)** | **Oracle Cloud "Always Free"** — current paper VM is Oracle Linux 9 on `VM.Standard.E2.1.Micro` in Mumbai; A1 Flex remains a possible future resize only with a compatible ARM image | $0 forever | Build, unit/integration/chaos tests, one-week software commissioning |
-| **Live capital (Phase 3.4+)** | Small paid VPS — AWS ap-south-1 or DO Bangalore, t3.micro/small equivalent | ~$10-15/mo | Real-money execution |
+| **Paper and live** | **Oracle Cloud "Always Free"** — current VM is Oracle Linux 9 on `VM.Standard.E2.1.Micro` in Mumbai; A1 Flex remains a possible zero-cost resize only with a compatible ARM image | $0 indefinitely, subject to Oracle free-tier terms | Build, tests, commissioning, and staged real-money execution |
 
-Rationale: Oracle's free tier is genuine (not a trial) and gives an India-region static IP at zero cost, but carries a documented risk of surprise account suspension — acceptable for development/paper where downtime costs nothing, not acceptable once real capital is live. The migration from Oracle → paid VPS is itself a static-IP change, so it must happen **≥7 days before go-live**, never mid-ramp.
+Rationale: the operator will not pay for infrastructure. Oracle is therefore the permanent host. Its suspension, capacity, and availability risks are accepted explicitly and mitigated with fail-closed startup, external heartbeat, off-box backups, tested restore, stable network identity, and a rule that host loss halts trading rather than triggering an unreviewed move.
 
 | Item | Decision |
 |---|---|
-| Dev/paper host | Oracle Cloud Always Free, current `VM.Standard.E2.1.Micro` in Mumbai |
-| Live host | AWS ap-south-1 (Mumbai) — or DO Bangalore for cost; finalize at Phase-3 start |
-| IP | Current Oracle dev/paper IP is ephemeral and must be re-checked after stop/start; on migration to the live host, use the static-IP arrangement required by the active Fyers app and verify it before activation. |
-| Supervision | systemd (`Restart=on-failure`), journald logs; Docker optional for env pinning (portable across the Oracle→paid-VPS migration) |
+| Paper/live host | Oracle Cloud Always Free, current `VM.Standard.E2.1.Micro` in Mumbai |
+| IP | Preserve and re-check the Oracle network identity after any lifecycle change; satisfy and verify the active Fyers app's current network requirements before activation. |
+| Supervision | systemd (`Restart=on-failure`), journald logs; Docker for reproducible recovery on the same host or a reviewed replacement free-tier host. |
 | Secrets | `.env` outside repo, 0600, never in backups; TOTP secret + client-id only (tokens are ephemeral) |
-| Backups | Nightly SQLite `.backup` + DuckDB→Parquet export → S3/B2; weekly VPS snapshot; monthly restore drill |
+| Backups | Nightly SQLite `.backup` + DuckDB→Parquet export to approved zero-cost off-box storage; Oracle boot-volume backup where available; monthly restore drill |
 | Time | Everything IST-aware (`Asia/Kolkata`), NTP-synced host |
 | Daily rhythm | 08:15 token refresh → 08:30 data sync + calendar/scrip-master check → 09:00 startup gate + reconcile → market-hours monitoring → 15:00–15:20 execution window (rebalance days) → 15:45 EOD sync, journal flush, Telegram summary → 02:00 backups |
 | Data API cost | Fyers market-data/API plan as configured by the operator. |
@@ -195,7 +193,7 @@ Trade-journal analytics feeding a memory layer (evaluate open-source options: Le
 1. **Capital amount & account:** dedicated Fyers account — decision on hold (owner deferred 2026-07-04). Initial allocation for the 10% ramp stage still needed once resolved.
 2. **Sleeve weights:** ⅓/⅓/⅓ or Sharpe-weighted from backtests?
 3. **Breaker thresholds:** daily-loss 2% and drawdown-halt 10% are defaults — confirm risk appetite.
-4. **Live-stage host:** AWS Mumbai (ecosystem) vs DO Bangalore (cost) — finalize ≥7 days before the Oracle→live migration (static-IP lock).
+4. **Permanent host:** Oracle Cloud Always Free remains the paper and live host indefinitely. Preserve its network identity, verify current broker requirements before activation, and keep paper/parity/live state paths isolated.
 
 **Resolved:**
 - ~~Broker choice~~ → **Fyers**, retargeted 2026-07-11 for execution and market data before live commissioning. The prior Dhan decision is superseded.

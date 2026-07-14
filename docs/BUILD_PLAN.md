@@ -13,7 +13,7 @@ Each phase has an explicit **exit gate** — the next phase does not start until
 |---|---|---|
 | 0.1 | Promote `_source/` into XenAlgo layout: keep `Brain/` (research/backtest) and `Strategies/` verbatim; add empty `xenalgo/` package for the live system. | S |
 | 0.2 | Split config: `config.research.yaml` (backtest) vs `config.live.yaml` (execution/risk/sleeves/governor per TRD §5). | S |
-| 0.1a | Provision Oracle Cloud Always Free instance in Mumbai/Hyderabad, attach a public IP, install Tailscale, close all inbound ports except SSH. Current paper VM was created 2026-07-06 as Oracle Linux 9 on `VM.Standard.E2.1.Micro` after the selected image failed on A1 Flex; the `Dockerfile` keeps the app portable to the future paid-VPS host unchanged. | S |
+| 0.1a | Provision Oracle Cloud Always Free instance in Mumbai/Hyderabad, attach a public IP, install Tailscale, close all inbound ports except SSH. Current VM was created 2026-07-06 as Oracle Linux 9 on `VM.Standard.E2.1.Micro` after the selected image failed on A1 Flex; the `Dockerfile` keeps recovery reproducible. | S |
 | 0.3 | Pin runtime dependencies exactly; keep `fyers-apiv3` behind the injected adapter until its supported runtime is compatible with the project environment. Add calendar, scheduler, HTTP, console, and alert dependencies to the lock. | S |
 | 0.4 | Test harness: `tests/` dir, pytest config, move/extend existing `Lab` coverage into repo-local tests; CI runs the committed repo suite on every change. | S |
 | 0.5 | Structured logging + run-id context; `.env.example`; secrets hygiene (.gitignore, 0600). | S |
@@ -71,21 +71,21 @@ Build order is dependency-driven and each sub-step is independently testable:
 |---|---|---|
 | 3.1 | **Failure-injection suite** (full): kill process mid-order, drop WS mid-fill, expire token mid-session, corrupt a candle, rejection storm, reconciliation drift, network partition, clock skew. Runs on the Oracle dev host. | L |
 | 3.2a | **One-week software commissioning** on live market data, still on Oracle Cloud Always Free: at least five consecutive NSE trading sessions proving unattended scheduling, data freshness, three-sleeve signals, risk decisions, paper fills, reconciliation, journaling, alerts, restart recovery, and kill-switch behaviour. Weekly profit is not a pass/fail criterion because the strategies already have five-year backtest evidence. | M |
-| 3.2b | Choose live host (AWS ap-south-1 vs DO Bangalore); provision paid VPS; deploy the same Docker image; register and verify the static IP required by the Fyers order app before activation; systemd; backups + monthly restore drill; heartbeat. Oracle remains warm staging. | M |
-| 3.3 | Run focused paper-mode deployment-parity and startup checks **on the new live host** after migration (new IP, new box) before touching real capital. Repeat any failed commissioning control; another fixed calendar week is not required when the full Oracle commissioning week passed and the same image/config checksum is deployed. | S |
+| 3.2b | Harden Oracle as the permanent host; preserve and verify the network identity required by the Fyers order app before activation; systemd; zero-cost off-box backups + monthly restore drill; heartbeat. | M |
+| 3.3 | Run focused paper/read-only production-readiness and startup checks **on the permanent Oracle host** before touching real capital. Repeat any failed commissioning control; another fixed calendar week is not required when the full Oracle commissioning week passed and the same image/config checksum is retained. | S |
 | 3.4 | Go-live checklist gate (below); enable `live_trading` with **10% capital**. | S |
 | 3.5 | **Staged capital ramp:** 10% → 25% → 50% → 100%, each stage ≥2 clean weeks (no safety incident, deviation within tolerance). | L |
 
 Repository-local Phase 3.2 support now lives in `xenalgo.phase32` and
 `docs/PHASE3_2_OPERATIONS.md`. It evaluates supplied commissioning and live-host evidence, but
-does not replace the required five-session commissioning run, host provisioning, Fyers static-IP
+does not replace the required five-session commissioning run, Oracle hardening, Fyers network
 registration, restore drill, or heartbeat proof.
 
 Repository-local Phase 3.3 support now lives in `xenalgo.phase33` and
-`docs/PHASE3_3_OPERATIONS.md`. It evaluates supplied post-migration paper-validation
-evidence from the paid live host. Its current evaluator retains the legacy one-week
-threshold and must be updated for the focused deployment-parity decision. It does not
-replace new-host operation, static-IP startup proof, checksum verification, or operator
+`docs/PHASE3_3_OPERATIONS.md`. It evaluates supplied same-host production-readiness
+evidence from Oracle. Its current evaluator retains the legacy one-week threshold
+and must be updated for the focused production-readiness decision. It does not
+replace Oracle operation, network startup proof, checksum verification, or operator
 review.
 
 Repository-local Phase 3.4 support now lives in `xenalgo.phase34` and
@@ -99,7 +99,7 @@ Repository-local Phase 3.5 support now lives in `xenalgo.phase35` and
 10% -> 25% -> 50% -> 100% capital, but does not call Fyers, mutate config, advance capital,
 or replace the required two clean live weeks at each stage.
 
-**Go-Live Checklist (all mandatory):** G0–G2 passed · full failure-injection suite green · one commissioning week with ≥5 consecutive reviewed NSE sessions and zero unresolved software/safety failures · post-migration deployment-parity checks on the paid live host green · static IP registered & verified on the live host · token auto-refresh proven over ≥5 sessions · backups + restore drill done on the live host · kill switch verified live · dedicated funded account · alerts confirmed on real phone.
+**Go-Live Checklist (all mandatory):** G0–G2 passed · full failure-injection suite green · one commissioning week with ≥5 consecutive reviewed NSE sessions and zero unresolved software/safety failures · same-host Oracle production-readiness checks green · required network identity registered and verified · token auto-refresh proven over ≥5 sessions · off-box backups + restore drill done · kill switch verified live · dedicated funded account · alerts confirmed on real phone.
 
 **Exit Gate G3:** Live at 100% capital, ≥2 clean weeks per stage, zero safety incidents, live-vs-backtest deviation within tolerance.
 

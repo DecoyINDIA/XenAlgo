@@ -1,0 +1,9 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="XenAlgo">
+  <rect width="64" height="64" rx="15" fill="#0A0A0F"/>
+  <g stroke-linecap="round" fill="none">
+    <path d="M20 19 L44 45" stroke="#3F3F51" stroke-width="6.5"/>
+    <path d="M20 45 L29.5 34.75" stroke="#FAFAFA" stroke-width="6.5"/>
+    <path d="M35.25 28.5 L44 19" stroke="#FAFAFA" stroke-width="6.5"/>
+    <path d="M29.5 31.5 L35.25 31.5" stroke="#7C86FF" stroke-width="6.5"/>
+  </g>
+</svg>
