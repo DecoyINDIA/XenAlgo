@@ -223,16 +223,7 @@ class Journal:
             ).fetchone()
         return row is not None
 
-    def mark_applied(self, event_key: str, correlation_id: str) -> bool:
-        try:
-            with self._connect() as con:
-                con.execute(
-                    "INSERT INTO applied_events(event_key, correlation_id, applied_utc) VALUES (?, ?, ?)",
-                    (event_key, correlation_id, dt.datetime.now(dt.UTC).isoformat()),
-                )
-            return True
-        except sqlite3.IntegrityError:
-            return False
+
 
     def apply_fill_atomic(
         self,
