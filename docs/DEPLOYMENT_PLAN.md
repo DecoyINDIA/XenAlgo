@@ -286,7 +286,7 @@ Restore acceptance: schema loads, journal integrity passes, replay equals derive
 
 | Gate | Status on 2026-07-14 | Completion evidence |
 |---|---|---|
-| D0 Release acceptance | Complete | PR #1 is merged; exact merge commit `f0e6bca` was built and promoted off-market after paper-only preflight. Immutable image and rollback identities are recorded and the D0 evaluator passes. |
+| D0 Release acceptance | Complete | PR #1 is merged; exact merge commit `30cb28e` was built and promoted off-market after paper-only preflight. Immutable image and rollback identities are recorded and the D0 evaluator passes. |
 | D1 Oracle readiness | Complete | Tailscale-only access, monitoring, heartbeat/phone alert, off-box backup, restore, NTP, permissions, and market-hours guard are proven. |
 | D2 Oracle paper deploy | Complete | The exact D0 image is running. Authentication, startup and scheduled preflight, read-only completed-bar data, synthetic event delivery, restart/kill/restore, matching image/config identity, and zero real order calls are proven; the D2 evaluator passes. |
 | D3 Five-session commissioning | External | Five consecutive reviewed NSE sessions. |

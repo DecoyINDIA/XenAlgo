@@ -107,7 +107,7 @@ Host-runtime evidence collected 2026-07-14:
 - The synthetic `application_event` POST was accepted by the existing Healthchecks channel.
 - Both preflight records state `live_order_api_calls=0`.
 
-The exact merge commit `f0e6bcaaf7d38f8aa4b61ad1bce73841796632c7` was rebuilt and
+The exact merge commit `30cb28ecc664ffcc447f2dbd4780bd99221835d0` was rebuilt and
 deployed after the market-hours lock. Its isolated candidate preflight and systemd startup
 preflight passed every check, a rollback image and fresh non-secret backup were retained,
 and the private D0/D2 identity evidence now passes both evaluators.
