@@ -32,10 +32,10 @@ The completed B0-B6 engineering release is identified by:
 
 | Artifact | Verified identity |
 |---|---|
-| Git commit | `b8c1913ab7d4ed1391188a809f64c5364e041d98` |
+| Git commit | `30cb28ecc664ffcc447f2dbd4780bd99221835d0` |
 | Local Docker image | `sha256:54970a52679bb0e740c5729af0404e50cae13ec82009255197d9f3f25e57b906` |
 | Dependency lock SHA-256 | `D75F46483E8C6387B821035F04C530B8EC18FFE49174976E0C1472AB0F5AAE0D` |
-| Live config SHA-256 | `8020b612358e6da269c1964211bb07b524b27450afee35b1b7130a69be407500` |
+| Live config SHA-256 | `7957140AC8A7E9B408FE7486283F6E725D57B1FF46EA30369977C769E163D62E` |
 | Evidence schema | `phase32-session-v2` |
 
 Reproduce those identities from the committed checkout with:
@@ -128,7 +128,7 @@ not commissioning evidence and should be cleaned up in a later maintenance chang
 ## Engineering release repository state
 
 - Branch: `main`
-- Approved release commit: `f0e6bcaaf7d38f8aa4b61ad1bce73841796632c7`
+- Approved release commit: `30cb28ecc664ffcc447f2dbd4780bd99221835d0`
 - PR: [#1](https://github.com/DecoyINDIA/XenAlgo/pull/1), merged; GitHub CI passed
 - Release boundary: the exact merge commit was built and promoted off-market on Oracle.
   Candidate, startup, and scheduled paper preflights pass with zero order-API calls; the
