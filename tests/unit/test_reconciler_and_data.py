@@ -139,3 +139,27 @@ def test_history_validation_rejects_duplicate_and_invalid_ohlc():
         data.validate_history_frame(
             pd.DataFrame([row]), start=_dt.date(2026, 7, 1), end=_dt.date(2026, 7, 1)
         )
+
+
+def test_data_sanity_decoupled_from_order_collar():
+    idx = pd.to_datetime(["2026-07-01", "2026-07-02"])
+    # SBIN moves from 100 to 110 (10% change).
+    # 10% change is less than sanity_move_pct (25%), but greater than price_collar_pct (3%).
+    panel = {
+        "close": pd.DataFrame({"SBIN": [100.0, 110.0]}, index=idx)
+    }
+    # Should pass when sanity_move_pct is 0.25
+    data.assert_latest_prices_sane(panel, sanity_move_pct=0.25)
+    
+    # Should fail if we check against 3%
+    with pytest.raises(data.CorruptDataError, match="corrupt close"):
+        data.assert_latest_prices_sane(panel, sanity_move_pct=0.03)
+
+    # SBIN moves from 100 to 130 (30% change).
+    panel_large = {
+        "close": pd.DataFrame({"SBIN": [100.0, 130.0]}, index=idx)
+    }
+    # Should fail when sanity_move_pct is 0.25
+    with pytest.raises(data.CorruptDataError, match="corrupt close"):
+        data.assert_latest_prices_sane(panel_large, sanity_move_pct=0.25)
+

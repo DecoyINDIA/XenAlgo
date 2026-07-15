@@ -75,3 +75,26 @@ def test_well_below_sebi_threshold():
     # Design invariant: configured rate must be < 10 OPS by a wide margin.
     g = gov.OrderGovernor(max_per_sec=2, max_per_day=500)
     assert g.max_per_sec <= 2 < 10
+
+
+def test_order_governor_day_boundary_reset():
+    import datetime as dt
+    current_date = dt.date(2026, 7, 1)
+    
+    def fake_date():
+        return current_date
+
+    g = gov.OrderGovernor(max_per_sec=2, max_per_day=3, date_provider=fake_date)
+    g.bucket = gov.TokenBucket(rate_per_sec=10, capacity=10)
+    
+    assert g.allow() is True
+    assert g.allow() is True
+    assert g.allow() is True
+    assert g.allow() is False
+    assert g.remaining_today() == 0
+    
+    current_date = dt.date(2026, 7, 2)
+    assert g.remaining_today() == 3
+    assert g.allow() is True
+    assert g.remaining_today() == 2
+

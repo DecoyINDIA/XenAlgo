@@ -93,7 +93,7 @@ def test_corrupt_candle_blocks_trading_before_order(mock_broker):
     }
 
     with pytest.raises(data.CorruptDataError):
-        data.assert_latest_prices_sane(panel, collar_pct=0.03)
+        data.assert_latest_prices_sane(panel, sanity_move_pct=0.03)
     assert mock_broker._orders == {}
 
 

@@ -74,3 +74,26 @@ def test_no_deploy_during_market_hours():
     guard = ops.DeployGuard()
     assert guard.deploy_allowed(_dt.datetime(2026, 7, 1, 12, 0, tzinfo=IST)) is False
     assert guard.deploy_allowed(_dt.datetime(2026, 7, 1, 18, 0, tzinfo=IST)) is True
+
+
+def test_market_calendar_from_overrides_file(tmp_path):
+    overrides_file = tmp_path / "nse_overrides.yaml"
+    overrides_file.write_text(
+        "holidays:\n"
+        "  - '2026-07-01'\n"
+        "special_sessions:\n"
+        "  - '2026-07-04'\n"
+    )
+    
+    cal = sched.MarketCalendar.from_overrides_file(overrides_file)
+    
+    # 2026-07-01 is Wednesday but overridden as a holiday
+    assert cal.is_trading_day(_dt.date(2026, 7, 1)) is False
+    
+    # 2026-07-04 is Saturday but overridden as a special session
+    assert cal.is_trading_day(_dt.date(2026, 7, 4)) is True
+    
+    # Non-existent file defaults to standard calendar
+    cal_empty = sched.MarketCalendar.from_overrides_file(tmp_path / "missing.yaml")
+    assert cal_empty.is_trading_day(_dt.date(2026, 7, 1)) is True
+

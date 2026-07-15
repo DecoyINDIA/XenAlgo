@@ -2,7 +2,7 @@
 
 This file is the contract for any AI agent (Claude Code, Cursor, etc.) working in this
 repository. Read it fully before editing. **XenAlgo trades real money on the NSE via the
-Dhan broker API.** A bug here is not a failing test — it is a financial loss. Behave
+Fyers broker API.** A bug here is not a failing test — it is a financial loss. Behave
 accordingly: conservative, verified, reversible.
 
 ---
@@ -10,7 +10,7 @@ accordingly: conservative, verified, reversible.
 ## 0. The Prime Directives (never violate)
 
 1. **Never place, modify, or cancel a real order from a dev/test context.** No agent action
-   may call the live Dhan order API. Tests use `MockBroker`/`PaperBroker` only. There is no
+   may call the live Fyers order API. Tests use `MockBroker`/`PaperBroker` only. There is no
    "quick live check."
 2. **The RiskEngine is a pure veto layer. Never let strategy or execution code bypass it.**
    Every order flows through `RiskEngine.check()`. Do not add a code path that skips it.
@@ -26,7 +26,7 @@ accordingly: conservative, verified, reversible.
    in code, logs, tests, or commits. Access tokens are ephemeral and never persisted to git
    or backups.
 7. **Do not "improve" the three strategies** (`std30`, `alpha_027`, `alpha_062`) or the
-   `Brain/` research engine unless explicitly asked. Their edge is validated on real Dhan
+   `Brain/` research engine unless explicitly asked. Their edge is validated on real Fyers
    data; silent changes invalidate that.
 8. **When unsure about anything touching orders, risk, money, or compliance — stop and ask.**
    Do not guess in this domain.
@@ -35,7 +35,7 @@ accordingly: conservative, verified, reversible.
 
 ## 1. What This Project Is
 
-A fully autonomous, single-user swing-trading system for NSE equities via Dhan. It runs
+A fully autonomous, single-user swing-trading system for NSE equities via Fyers. It runs
 three validated alpha strategies as independent capital sleeves, wraps them in an
 institutional-grade guardrail stack, executes with zero human intervention in the loop, and
 exposes a secure real-time console for supervision and override. Phase 4 adds a learning
@@ -113,7 +113,8 @@ cd _source && ./.venv/Scripts/python.exe main.py download   # → run → report
 
 - **Match the surrounding code.** The `Brain/` engine is vectorized pandas with module-level
   loggers named `"QuantPlatform.<Component>"`. New `xenalgo/` code follows the TRD component
-  layout and interface sketches in `docs/TRD.md` §2/§4.
+  layout and interface sketches in `docs/TRD.md` §2/§4. Note that `xenalgo.execution` is the
+  only sanctioned execution path; `Brain`'s executor is research-only.
 - **Typed, pure where it matters.** `RiskEngine.check()` is pure (no I/O, no mutation of
   inputs) — there is a test asserting this. Keep risk logic pure and unit-testable.
 - **Async for I/O.** Broker/network/DB I/O is asyncio (`httpx.AsyncClient`, `websockets`).
@@ -126,8 +127,8 @@ cd _source && ./.venv/Scripts/python.exe main.py download   # → run → report
   for idempotent lookup (`/orders/external/{cid}`) before any resubmit. Never blind-retry a POST.
 - **`ponytail:` comments** mark deliberate shortcuts/deferrals — keep the convention; don't
   silently "fix" them without checking intent.
-- **Pin dependencies exactly** for anything the live system relies on (e.g. `dhanhq==2.0.2` —
-  2.0.x is the only line with both `OrderSocket` and the constructor this code uses).
+- **Pin dependencies exactly** for anything the live system relies on (e.g. `fyers-apiv3` —
+  refer to the external-injected boundary described in `config.py`).
 
 ---
 
@@ -137,7 +138,7 @@ cd _source && ./.venv/Scripts/python.exe main.py download   # → run → report
   already exists in `tests/`; implement to satisfy it. Target **100% coverage** there.
 - Every safety invariant SI-1..SI-12 (`docs/SUCCESS_CRITERIA.md` §2) maps to ≥1 test. If you
   add a control, add its test and cite the SI-/FR- id in the test docstring.
-- **No test may touch the real Dhan API or place a real order** — ever. Use `MockBroker`
+- **No test may touch the real Fyers API or place a real order** — ever. Use `MockBroker`
   (`tests/conftest.py`) and `respx` for HTTP-level mocking.
 - Keep the root suite green: unimplemented modules must SKIP, not ERROR.
 
@@ -150,7 +151,7 @@ cd _source && ./.venv/Scripts/python.exe main.py download   # → run → report
   registration needed; that relief depends on staying under.)
 - **Static IP with a 7-day change lock:** the order API requires a registered static IP.
   Changing it locks for 7 days. Never assume infra/IP can change on short notice near go-live.
-- **24h Dhan token:** refreshed pre-market via TOTP. If a task needs a valid token, go through
+- **24h Fyers token:** refreshed pre-market. If a task needs a valid token, go through
   `TokenManager.ensure_valid()`; never hardcode or cache a token in code.
 - **Hosting is two-stage:** Oracle Cloud Always Free (dev/paper) → paid Mumbai VPS (live).
   Keep the app Docker-portable so migration is a redeploy, not a rewrite.
@@ -159,8 +160,7 @@ cd _source && ./.venv/Scripts/python.exe main.py download   # → run → report
 
 ## 7. Git & Change Discipline
 
-- This directory is **not currently a git repo** (`_source/` has its own `.git` from the
-  clone). Do not initialize, commit, or push unless explicitly asked.
+- This directory is **a git repo on `main`**. Do not force-push or commit config yaml files or secrets.
 - Never commit `_source/.venv/`, `.env`, `*.duckdb`, `Diary/`, `Supply/`, or any secret.
 - Prefer small, reviewable changes. When you change a design decision, update `PLAN.md` and
   the affected doc(s) in the same change so the doc set stays consistent — the docs are
