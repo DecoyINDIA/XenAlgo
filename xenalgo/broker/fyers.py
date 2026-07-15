@@ -90,12 +90,21 @@ class FyersGateway:
         return FyersAck(status, broker_order_id, "", str(response.get("message", "")))
 
     def get_order_by_correlation(self, cid: str) -> dict[str, Any] | None:
+        order = None
         if cid in self._orders_by_tag:
-            return self._orders_by_tag[cid]
-        for order in self.get_orderbook():
-            if str(order.get("tag") or order.get("orderTag") or "") == cid:
-                self._orders_by_tag[cid] = order
-                return order
+            order = self._orders_by_tag[cid]
+        else:
+            for o in self.get_orderbook():
+                if str(o.get("tag") or o.get("orderTag") or "") == cid:
+                    self._orders_by_tag[cid] = o
+                    order = o
+                    break
+        if order is not None:
+            order_copy = dict(order)
+            raw_status = order.get("status") or order.get("orderStatus") or order.get("statusText")
+            order_copy["state"] = normalize_fyers_state(raw_status)
+            order_copy["broker_order_id"] = _order_id(order)
+            return order_copy
         return None
 
     def get_orderbook(self) -> list[dict[str, Any]]:
@@ -232,6 +241,21 @@ class FyersOrderbookPoller:
         }
 
 
+def normalize_fyers_state(status_val: Any) -> str:
+    s = str(status_val).upper().strip()
+    if s in {"2", "TRADED", "FILLED", "COMPLETE", "COMPLETED"}:
+        return "TRADED"
+    if s in {"5", "REJECTED"}:
+        return "REJECTED"
+    if s in {"1", "CANCELLED", "CANCELED"}:
+        return "CANCELLED"
+    if s in {"6", "PENDING"}:
+        return "PENDING"
+    if s in {"PART_TRADED", "PARTIALLY_FILLED"}:
+        return "PART_TRADED"
+    return "PENDING"
+
+
 def fyers_payload_to_fill(payload: dict[str, Any]) -> Fill | None:
     cumulative_qty = _first_int(payload, "filledQty", "tradedQty", "filled_qty", "qtyTraded")
     if cumulative_qty <= 0:
@@ -257,6 +281,8 @@ def fyers_payload_to_fill(payload: dict[str, Any]) -> Fill | None:
         or payload.get("limitPrice")
         or 0.0
     )
+    if price <= 0.0:
+        return None
     event_key = f"fyers:{broker_order_id or cid}:{state}:{cumulative_qty}"
     return Fill(
         correlation_id=cid,

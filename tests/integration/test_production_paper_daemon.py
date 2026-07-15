@@ -23,6 +23,7 @@ from xenalgo.paper_daemon import (
     ScheduledPaperRuntime,
     StartupBlocked,
     run_host_preflight,
+    build_paper_dependencies,
 )
 from xenalgo.risk import RiskEngine
 from xenalgo.scheduler import MarketCalendar, RebalancePlan
@@ -321,3 +322,238 @@ def test_host_preflight_main_reports_only_redacted_results(monkeypatch, capsys, 
         "trading_date": "2026-07-13",
     }
     assert deps.alerts.alerter is adapter
+
+
+def test_paper_broker_mark_filled_fail_closed():
+    # Unit test on PaperBroker.mark_filled: with no ltp entry and no avg_price,
+    # the order ends REJECTED and holdings are unchanged.
+    broker = PaperBroker()
+    broker.place_order(SimpleNamespace(
+        correlation_id="cid-no-price",
+        qty=10,
+        limit_price=100.0,
+        side="BUY",
+        symbol="SBIN",
+        security_id="2885"
+    ))
+    # ltp is empty, avg_price not set in the order dict.
+    # calling mark_filled should reject the order
+    broker.mark_filled("cid-no-price")
+    order = broker.get_order_by_correlation("cid-no-price")
+    assert order["state"] == "REJECTED"
+    assert order.get("reason") == "no paper mark price"
+    assert broker.holdings.get("SBIN", 0) == 0
+
+
+def test_production_paper_daemon_process_restart(tmp_path, monkeypatch):
+    # Set up config and override files under tmp_path
+    (tmp_path / "config").mkdir()
+    config_data = {
+        "profile": "live",
+        "live_trading": {"enabled": False, "mode": "paper"},
+        "sleeves": {"std30": {"capital_fraction": 1.0, "enabled": True}},
+        "risk": {"max_order_notional_inr": 200000, "max_pct_of_adv": 0.05, "price_collar_pct": 0.03, "max_position_pct": 0.10},
+        "execution": {"order_type": "MARKETABLE_LIMIT", "buy_collar_pct": 0.005},
+        "governor": {"max_orders_per_sec": 2, "max_orders_per_day": 500},
+        "broker": {"provider": "fyers", "fyers_sdk_version": "external-injected", "token_store": ".xenalgo-secrets/fyers_token.sqlite", "order_api_enabled": False},
+        "storage": {"journal_sqlite": "Diary/state/order_journal.sqlite"},
+        "scheduler": {"overrides_file": "config/nse_overrides.yaml"},
+        "alerts": {},
+        "web": {"bind_port": 8080},
+        "logging": {"level": "INFO", "format": "json", "file_path": "Diary/logs/xenalgo.log"}
+    }
+    with open(tmp_path / "config" / "config.live.yaml", "w") as f:
+        import yaml
+        yaml.safe_dump(config_data, f)
+    
+    # Create empty overrides file
+    (tmp_path / "config" / "nse_overrides.yaml").write_text("holidays: []\nspecial_sessions: []\n")
+    
+    # Create token path directory
+    (tmp_path / ".xenalgo-secrets").mkdir(parents=True, exist_ok=True)
+    
+    # Day 1 rebalance session: BUY 10 SBIN
+    day1 = dt.date(2026, 7, 13)
+    deps1 = build_paper_dependencies(tmp_path)
+    # mock token manager to be valid
+    monkeypatch.setattr(deps1.token_manager, "ensure_valid", lambda: SimpleNamespace(value="valid-token"))
+    
+    # Seeding ltp in deps1.broker before run
+    deps1.broker.ltp["SBIN"] = 100.0
+    
+    daemon1 = ProductionPaperDaemon(deps1, evidence_dir=tmp_path / "evidence", host_id="test-host")
+    
+    # We construct the PaperOrderPlan
+    plan = PaperOrderPlan("std30:SBIN:2026-07-13", "std30", "SBIN", "2885", "BUY", 10, 100.0)
+    
+    # Run session on Day 1
+    result1 = daemon1.run_session(trading_date=day1, panel=_panel(day1), orders=[plan])
+    
+    assert result1.submitted == result1.filled == 1
+    assert result1.reconciliation_clean is True
+    assert deps1.broker.holdings == {"SBIN": 10}
+    assert deps1.broker.cash == 10_000_000.0 - 1000.0
+    
+    # Discard the daemon and broker entirely. Re-run build_paper_dependencies against the same root path.
+    deps2 = build_paper_dependencies(tmp_path)
+    monkeypatch.setattr(deps2.token_manager, "ensure_valid", lambda: SimpleNamespace(value="valid-token"))
+    
+    # Re-seed ltp for Day 2
+    deps2.broker.ltp["SBIN"] = 100.0
+    
+    # Verify the restart reloaded cash and holdings
+    assert deps2.broker.holdings == {"SBIN": 10}
+    assert deps2.broker.cash == 10_000_000.0 - 1000.0
+    
+    # Day 2: SELL 10 SBIN
+    day2 = dt.date(2026, 7, 14)
+    daemon2 = ProductionPaperDaemon(deps2, evidence_dir=tmp_path / "evidence", host_id="test-host")
+    plan_sell = PaperOrderPlan("std30:SBIN:2026-07-14", "std30", "SBIN", "2885", "SELL", 10, 100.0)
+    
+    result2 = daemon2.run_session(trading_date=day2, panel=_panel(day2), orders=[plan_sell])
+    
+    assert result2.submitted == result2.filled == 1
+    assert result2.reconciliation_clean is True
+    assert deps2.broker.holdings.get("SBIN", 0) == 0
+    assert deps2.broker.cash == 10_000_000.0
+    
+    
+def test_startup_detects_local_only_drift(tmp_path, monkeypatch):
+    # Set up config and override files under tmp_path
+    (tmp_path / "config").mkdir()
+    config_data = {
+        "profile": "live",
+        "live_trading": {"enabled": False, "mode": "paper"},
+        "sleeves": {"std30": {"capital_fraction": 1.0, "enabled": True}},
+        "risk": {"max_order_notional_inr": 200000, "max_pct_of_adv": 0.05, "price_collar_pct": 0.03, "max_position_pct": 0.10},
+        "execution": {"order_type": "MARKETABLE_LIMIT", "buy_collar_pct": 0.005},
+        "governor": {"max_orders_per_sec": 2, "max_orders_per_day": 500},
+        "broker": {"provider": "fyers", "fyers_sdk_version": "external-injected", "token_store": ".xenalgo-secrets/fyers_token.sqlite", "order_api_enabled": False},
+        "storage": {"journal_sqlite": "Diary/state/order_journal.sqlite"},
+        "scheduler": {"overrides_file": "config/nse_overrides.yaml"},
+        "alerts": {},
+        "web": {"bind_port": 8080},
+        "logging": {"level": "INFO", "format": "json", "file_path": "Diary/logs/xenalgo.log"}
+    }
+    with open(tmp_path / "config" / "config.live.yaml", "w") as f:
+        import yaml
+        yaml.safe_dump(config_data, f)
+    
+    (tmp_path / "config" / "nse_overrides.yaml").write_text("holidays: []\nspecial_sessions: []\n")
+    (tmp_path / ".xenalgo-secrets").mkdir(parents=True, exist_ok=True)
+    
+    deps = build_paper_dependencies(tmp_path)
+    monkeypatch.setattr(deps.token_manager, "ensure_valid", lambda: SimpleNamespace(value="valid-token"))
+    
+    # 1. Seed journal with 10 SBIN, but do NOT seed broker holdings
+    deps.journal.append(
+        correlation_id="std30:SBIN:2026-07-13",
+        state="TRADED",
+        symbol="SBIN",
+        side="BUY",
+        filled_qty=10,
+        avg_fill_price=100.0,
+        raw_json={"event_key": "paper-1:TRADED:10"}
+    )
+    
+    daemon = ProductionPaperDaemon(deps, evidence_dir=tmp_path / "evidence", host_id="test-host")
+    
+    # Call startup on daemon - it must raise StartupBlocked because local journal (10) != broker holdings (0)
+    with pytest.raises(StartupBlocked, match="reconciliation"):
+        daemon.startup(trading_date=dt.date(2026, 7, 13), panel=_panel(dt.date(2026, 7, 13)))
+    
+    # 2. Seed broker holdings to match journal, now startup should succeed
+    deps.broker.holdings["SBIN"] = 10
+    status = daemon.startup(trading_date=dt.date(2026, 7, 13), panel=_panel(dt.date(2026, 7, 13)))
+    assert status.ready is True
+
+
+def test_session_composition(tmp_path, monkeypatch):
+    # Set up config and overrides files
+    (tmp_path / "config").mkdir()
+    config_data = {
+        "profile": "live",
+        "live_trading": {"enabled": False, "mode": "paper"},
+        "sleeves": {"std30": {"capital_fraction": 1.0, "enabled": True}},
+        "risk": {"max_order_notional_inr": 200000, "max_pct_of_adv": 0.05, "price_collar_pct": 0.03, "max_position_pct": 0.10},
+        "execution": {"order_type": "MARKETABLE_LIMIT", "buy_collar_pct": 0.005},
+        "governor": {"max_orders_per_sec": 2, "max_orders_per_day": 500},
+        "broker": {"provider": "fyers", "fyers_sdk_version": "external-injected", "token_store": ".xenalgo-secrets/fyers_token.sqlite", "order_api_enabled": False},
+        "storage": {"journal_sqlite": "Diary/state/order_journal.sqlite"},
+        "scheduler": {"overrides_file": "config/nse_overrides.yaml"},
+        "alerts": {},
+        "web": {"bind_port": 8080},
+        "logging": {"level": "INFO", "format": "json", "file_path": "Diary/logs/xenalgo.log"},
+        "universe": {"symbols": ["SBIN"]}
+    }
+    with open(tmp_path / "config" / "config.live.yaml", "w") as f:
+        import yaml
+        yaml.safe_dump(config_data, f)
+    
+    (tmp_path / "config" / "nse_overrides.yaml").write_text("holidays: []\nspecial_sessions: []\n")
+    (tmp_path / ".xenalgo-secrets").mkdir(parents=True, exist_ok=True)
+    
+    # 1. Test build_panel_provider
+    fake_client = SimpleNamespace()
+    
+    # Mock loader.history
+    dummy_history_df = pd.DataFrame({
+        "date": [pd.Timestamp("2026-07-13")],
+        "open": [99.0],
+        "high": [101.0],
+        "low": [98.0],
+        "close": [100.0],
+        "volume": [10000.0],
+        "symbol": ["SBIN"],
+        "security_id": ["2885"]
+    })
+    
+    class FakeLoader:
+        def __init__(self, client):
+            pass
+        def history(self, symbol, start, end):
+            return dummy_history_df
+            
+    monkeypatch.setattr("xenalgo.session_composition.FyersHistoryLoader", FakeLoader)
+    
+    deps = build_paper_dependencies(tmp_path)
+    monkeypatch.setattr(deps.token_manager, "ensure_valid", lambda: SimpleNamespace(value="valid-token"))
+    
+    from xenalgo.session_composition import build_panel_provider, build_order_provider
+    panel_prov = build_panel_provider(deps.config, fake_client, ["SBIN"], warmup_days=10)
+    panel = panel_prov(dt.date(2026, 7, 13))
+    
+    assert "close" in panel
+    assert panel["close"].shape == (1, 1)
+    assert panel["close"]["SBIN"].iloc[0] == 100.0
+    
+    # 2. Test build_order_provider
+    class FakePortfolioEngine:
+        def __init__(self, config_data):
+            pass
+        def generate_target_weights(self, factor_scores, panel):
+            index = pd.DatetimeIndex([pd.Timestamp("2026-07-13")])
+            return pd.DataFrame({"SBIN": [0.5]}, index=index)
+            
+    monkeypatch.setattr("Brain.portfolio_engine.PortfolioEngine", FakePortfolioEngine)
+    
+    class FakeStd30:
+        @staticmethod
+        def compute(panel):
+            return pd.Series([1.0], index=["SBIN"])
+            
+    import sys
+    sys.modules["Strategies.std30"] = FakeStd30
+    
+    from xenalgo.execution.reconcile import Reconciler
+    reconciler = Reconciler(deps.broker)
+    order_prov = build_order_provider(deps.config, deps.journal, reconciler)
+    orders = list(order_prov(dt.date(2026, 7, 13), panel))
+    
+    assert len(orders) == 1
+    assert orders[0].symbol == "SBIN"
+    assert orders[0].side == "BUY"
+    assert orders[0].qty == 50000
+    assert orders[0].limit_price == 100.0
+
+

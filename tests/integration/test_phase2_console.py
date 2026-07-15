@@ -184,14 +184,25 @@ def test_postback_endpoint_is_removed_for_fyers_order_ws(tmp_journal):
 
 def test_telegram_command_router_status_kill_positions_and_rearm(tmp_journal):
     store = _seed_traded_order(tmp_journal)
-    router = TelegramCommandRouter(store)
-
-    assert "Unknown command" in router.handle("")
-    assert "1 positions" in router.handle("/status")
-    assert "RELIANCE: 10 @ 1000.0" in router.handle("/positions")
-    assert "Kill switch active" in router.handle("/kill", actor="telegram-user")
+    
+    # 1. Unconfigured allowed_chat_ids (empty list) -> Reject all
+    router_empty = TelegramCommandRouter(store, allowed_chat_ids=[])
+    assert "Unauthorized sender" in router_empty.handle("/status", chat_id="12345")
+    
+    # 2. Configured router
+    router = TelegramCommandRouter(store, allowed_chat_ids=["12345"])
+    
+    # Unauthorized chat ID -> Reject
+    assert "Unauthorized sender" in router.handle("/status", chat_id="99999")
+    assert "Unauthorized sender" in router.handle("/kill", chat_id="99999")
+    
+    # Authorized chat ID -> Allow
+    assert "Unknown command" in router.handle("", chat_id="12345")
+    assert "1 positions" in router.handle("/status", chat_id="12345")
+    assert "RELIANCE: 10 @ 1000.0" in router.handle("/positions", chat_id="12345")
+    assert "Kill switch active" in router.handle("/kill", chat_id="12345", actor="telegram-user")
     assert KillSwitch(tmp_journal).allow_submission() is False
-    assert "Re-armed kill_switch" in router.handle("/rearm kill_switch", actor="telegram-user")
+    assert "Re-armed kill_switch" in router.handle("/rearm kill_switch", chat_id="12345", actor="telegram-user")
     assert store.snapshot()["risk_state"] == []
 
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import logging
 import datetime as dt
 import hashlib
 import json
@@ -23,6 +24,7 @@ from xenalgo.ops import KillSwitch
 from xenalgo.phase32 import DEFAULT_SLEEVES
 from xenalgo.risk import OrderRequest, RiskContext, RiskEngine
 from xenalgo.scheduler import MarketCalendar, RebalancePlan
+logger = logging.getLogger("QuantPlatform.PaperDaemon")
 
 
 class StartupBlocked(RuntimeError):
@@ -160,19 +162,21 @@ class ProductionPaperDaemon:
             checks["replay"] = replay is not None
             data.assert_panel_fresh(panel, trading_date)
             data.assert_latest_prices_sane(
-                panel, float(self.deps.risk_engine.config.get("price_collar_pct", 0.03))
+                panel, float(self.deps.risk_engine.config.get("data_sanity_move_pct", 0.25))
             )
             checks["data"] = True
             checks["controls"] = not self.deps.kill_switch.is_active() and not self.engine.is_halted()
             close = panel["close"]
             self._previous_close = {symbol: float(close[symbol].iloc[-1]) for symbol in close.columns}
+            self.deps.broker.ltp.update(self._previous_close)
             volume = panel.get("volume")
             self._adv = (
                 {symbol: float(volume[symbol].iloc[-1]) for symbol in volume.columns}
                 if volume is not None
                 else {}
             )
-            local = {symbol: replay.qty(symbol) for symbol in self.deps.broker.holdings}
+            symbols = set(self.deps.broker.holdings) | {s for s, q in replay._qty.items() if q != 0}
+            local = {symbol: replay.qty(symbol) for symbol in symbols}
             checks["reconciliation"] = self.reconciler.reconcile(local).clean
             self._panel = panel
         except Exception as exc:
@@ -208,23 +212,25 @@ class ProductionPaperDaemon:
                 submitted += 1
                 self.deps.broker.mark_filled(plan.correlation_id)
                 order = self.deps.broker.get_order_by_correlation(plan.correlation_id)
-                self.listener.on_fill(
-                    Fill(
-                        correlation_id=plan.correlation_id,
-                        broker_order_id=order["broker_order_id"],
-                        symbol=plan.symbol,
-                        side=plan.side,
-                        filled_qty=int(order["filled_qty"]),
-                        avg_price=float(order["avg_price"]),
-                        event_key=f"{order['broker_order_id']}:TRADED:{order['filled_qty']}",
+                if order["state"] == "TRADED":
+                    self.listener.on_fill(
+                        Fill(
+                            correlation_id=plan.correlation_id,
+                            broker_order_id=order["broker_order_id"],
+                            symbol=plan.symbol,
+                            side=plan.side,
+                            filled_qty=int(order["filled_qty"]),
+                            avg_price=float(order["avg_price"]),
+                            event_key=f"{order['broker_order_id']}:TRADED:{order['filled_qty']}",
+                        )
                     )
-                )
-                filled += 1
-                self.deps.alerts.send("fill", f"{plan.correlation_id} filled")
+                    filled += 1
+                    self.deps.alerts.send("fill", f"{plan.correlation_id} filled")
 
         symbols = set(self.deps.broker.holdings) | set(self._previous_close)
         local = {symbol: self.listener.book.qty(symbol) for symbol in symbols if self.listener.book.qty(symbol)}
-        reconciled = self.reconciler.reconcile(local).clean
+        recon_obj = self.reconciler.reconcile(local)
+        reconciled = recon_obj.clean
         self.deps.alerts.send("reconcile", "clean" if reconciled else "drift", critical=not reconciled)
         ended = self.clock()
         evidence = SessionEvidence(
@@ -264,7 +270,7 @@ class ProductionPaperDaemon:
             prev_close=self._previous_close,
             cash=self.deps.broker.cash,
             restricted=set(),
-            seen_correlation_ids=set(),
+            seen_correlation_ids=self.deps.journal.known_correlation_ids(),
             breakers={"kill": self.deps.kill_switch.is_active(), "execution": self.engine.is_halted()},
         )
 
@@ -365,7 +371,8 @@ class ScheduledPaperRuntime:
             self.daemon.startup(trading_date=trading_date, panel=self.panel)
         elif name == "reconciliation":
             replay = PositionBook.from_replay(self.daemon.deps.journal)
-            local = {symbol: replay.qty(symbol) for symbol in self.daemon.deps.broker.holdings}
+            symbols = set(self.daemon.deps.broker.holdings) | {s for s, q in replay._qty.items() if q != 0}
+            local = {symbol: replay.qty(symbol) for symbol in symbols}
             if not self.daemon.reconciler.reconcile(local).clean:
                 raise StartupBlocked("scheduled reconciliation mismatch")
         elif name == "execution":
@@ -432,10 +439,55 @@ def build_paper_dependencies(root: str | Path | None = None) -> PaperDependencie
     token_path.parent.mkdir(parents=True, exist_ok=True)
     governor_config = config.data["governor"]
     broker = PaperBroker()
+    journal = Journal(journal_path)
+    
+    # ponytail: Derived paper broker state from journal replay to avoid adding database/IO dependencies
+    # directly into the PaperBroker class.
+    replay = PositionBook.from_replay(journal)
+    for symbol, qty in replay._qty.items():
+        if qty > 0:
+            broker.holdings[symbol] = qty
+
+    cash = 10_000_000.0
+    seen = set()
+    cumulative_qty_by_order = {}
+    max_seq = 0
+    for event in journal.events():
+        oid = event["broker_order_id"]
+        if oid and oid.startswith("paper-"):
+            try:
+                seq = int(oid.split("-")[1])
+                if seq > max_seq:
+                    max_seq = seq
+            except (ValueError, IndexError):
+                pass
+        if event["state"] not in {"PART_TRADED", "TRADED"} or not event["filled_qty"]:
+            continue
+        raw = json.loads(event["raw_json"] or "{}")
+        event_key = raw.get("event_key") or f"{event['event_id']}"
+        if event_key in seen:
+            continue
+        seen.add(event_key)
+        order_key = event["broker_order_id"] or event["correlation_id"]
+        cumulative_qty = int(event["filled_qty"])
+        previous_qty = cumulative_qty_by_order.get(order_key, 0)
+        delta_qty = max(cumulative_qty - previous_qty, 0)
+        cumulative_qty_by_order[order_key] = max(previous_qty, cumulative_qty)
+        price = float(event["avg_fill_price"] or 0.0)
+        sign = 1 if event["side"].upper() == "BUY" else -1
+        cash -= sign * delta_qty * price
+    broker.cash = cash
+    broker._seq = max_seq
+
+    overrides_file = config.data.get("scheduler", {}).get("overrides_file", "config/nse_overrides.yaml")
+    overrides_path = base / overrides_file
+    calendar = MarketCalendar.from_overrides_file(overrides_path)
+    logger.info(f"Loaded calendar overrides from {overrides_path}")
+
     return PaperDependencies(
         config=config,
         broker=broker,
-        journal=Journal(journal_path),
+        journal=journal,
         token_manager=TokenManager(token_path),
         risk_engine=RiskEngine(config.data["risk"]),
         governor=OrderGovernor(
@@ -443,6 +495,7 @@ def build_paper_dependencies(root: str | Path | None = None) -> PaperDependencie
             max_per_day=int(governor_config["max_orders_per_day"]),
         ),
         kill_switch=KillSwitch(journal_path),
+        calendar=calendar,
     )
 
 
@@ -450,12 +503,52 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="XenAlgo production paper daemon")
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--check", action="store_true", help="validate the paper-only composition")
+    parser.add_argument("--run-day", type=str, help="run paper session for a specific day (YYYY-MM-DD)")
     args = parser.parse_args(argv)
     deps = build_paper_dependencies(args.root)
     if args.check:
         print(json.dumps({"paper_only": True, "config_checksum": deps.config.checksum}))
         return 0
-    raise SystemExit("scheduled daemon service requires an explicit runtime panel provider")
+    if args.run_day:
+        import os
+        import datetime as dt
+        from xenalgo.session_composition import build_panel_provider, build_order_provider
+        
+        trading_date = dt.date.fromisoformat(args.run_day)
+        
+        # Instantiate Fyers client dynamically
+        from fyers_apiv3 import fyersModel
+        token = deps.token_manager.ensure_valid()
+        app_id_env = deps.config.data["broker"].get("app_id_env") or "FYERS_APP_ID"
+        client = fyersModel.FyersModel(
+            client_id=os.environ.get(app_id_env),
+            token=token.value,
+            is_async=False,
+            log_path=str(args.root / "Diary" / "logs"),
+        )
+        
+        symbols = deps.config.data.get("universe", {}).get("symbols", ["SBIN"])
+        panel_prov = build_panel_provider(deps.config, client, symbols)
+        
+        daemon = ProductionPaperDaemon(deps, evidence_dir=args.root / "evidence", host_id="production-paper-host")
+        order_prov = build_order_provider(deps.config, deps.journal, daemon.reconciler)
+        
+        runtime = ScheduledPaperRuntime(
+            daemon=daemon,
+            panel_provider=panel_prov,
+            order_provider=order_prov,
+        )
+        
+        evidence = runtime.run_trading_day(trading_date)
+        print(json.dumps({
+            "status": "success",
+            "trading_date": args.run_day,
+            "submitted": evidence.submitted,
+            "filled": evidence.filled,
+            "reconciliation_clean": evidence.reconciliation_clean,
+        }))
+        return 0
+    raise SystemExit("scheduled daemon service requires an explicit runtime panel provider or --run-day")
 
 
 if __name__ == "__main__":

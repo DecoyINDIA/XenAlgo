@@ -19,6 +19,7 @@ REARMABLE_BREAKERS = {
     "stale_data",
     "reconciliation_mismatch",
     "consecutive_failures",
+    "execution_halted",
 }
 
 
@@ -169,7 +170,7 @@ class ConsoleStore:
             "summary": {
                 "open_orders": sum(1 for order in orders if order["state"] not in _TERMINAL_STATES),
                 "positions": len(positions),
-                "active_breakers": len(risk_state),
+                "active_breakers": sum(1 for row in risk_state if row["key"] != "consecutive_failures"),
                 "events": len(events),
                 "pending_learning_proposals": len(learning["pending_proposals"]),
             },
@@ -248,6 +249,8 @@ class ConsoleStore:
         now = dt.datetime.now(dt.UTC).isoformat()
         with self._connect() as con:
             con.execute("DELETE FROM risk_state WHERE key=?", (key,))
+            if key == "execution_halted":
+                con.execute("DELETE FROM risk_state WHERE key=?", ("consecutive_failures",))
             self._audit(
                 con,
                 actor,

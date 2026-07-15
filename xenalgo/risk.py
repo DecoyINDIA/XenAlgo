@@ -87,6 +87,13 @@ class RiskEngine:
                 qty = allowed_by_position
                 decision = RiskDecision.SCALE
                 reasons.append("10% position cap")
+        elif order.side.upper() == "SELL":
+            if current_qty <= 0:
+                return RiskDecision.REJECT, 0, "no position to sell"
+            if qty > current_qty:
+                qty = current_qty
+                decision = RiskDecision.SCALE
+                reasons.append("insufficient holdings")
 
         max_notional = float(self.config.get("max_order_notional_inr", float("inf")))
         if qty * order.limit_price > max_notional:

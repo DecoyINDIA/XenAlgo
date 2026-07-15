@@ -180,3 +180,33 @@ def test_check_is_pure(base_risk_config):
     seen_before = set(ctx.seen_correlation_ids)
     eng.check(_order(), ctx)
     assert ctx.seen_correlation_ids == seen_before
+
+
+def test_sell_side_veto_and_scale_down(base_risk_config):
+    """
+    Test that SELL side orders are gated by current position quantity.
+    Covers SELL side veto / scale-down (FR-9/FR-10).
+    """
+    eng = risk.RiskEngine(base_risk_config)
+    
+    ctx_1 = _ctx(positions={"RELIANCE": {"qty": 50}})
+    decision, qty, _ = eng.check(_order(side="SELL", qty=30), ctx_1)
+    assert decision is risk.RiskDecision.ALLOW
+    assert qty == 30
+    
+    ctx_2 = _ctx(positions={"RELIANCE": {"qty": 10}})
+    decision, qty, reason = eng.check(_order(side="SELL", qty=100), ctx_2)
+    assert decision is risk.RiskDecision.SCALE
+    assert qty == 10
+    assert "insufficient holdings" in reason
+    
+    ctx_3 = _ctx(positions={"RELIANCE": {"qty": 0}})
+    decision, qty, reason = eng.check(_order(side="SELL", qty=10), ctx_3)
+    assert decision is risk.RiskDecision.REJECT
+    assert "no position to sell" in reason
+    
+    ctx_4 = _ctx(positions={})
+    decision, qty, reason = eng.check(_order(side="SELL", qty=10), ctx_4)
+    assert decision is risk.RiskDecision.REJECT
+    assert "no position to sell" in reason
+

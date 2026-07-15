@@ -57,10 +57,11 @@ class PaperDayRunner:
     ) -> PaperDayResult:
         self.token_manager.ensure_valid()
         data.assert_panel_fresh(panel, expected_trading_date)
-        data.assert_latest_prices_sane(panel, self.risk_engine.config.get("price_collar_pct", 0.03))
+        data.assert_latest_prices_sane(panel, self.risk_engine.config.get("data_sanity_move_pct", 0.25))
 
         close = panel["close"]
         prev_close = {symbol: float(close[symbol].iloc[-1]) for symbol in close.columns}
+        self.broker.ltp.update(prev_close)
         adv = {}
         if "volume" in panel:
             volume = panel["volume"]
@@ -85,7 +86,7 @@ class PaperDayRunner:
                 prev_close=prev_close,
                 cash=self.broker.cash,
                 restricted=set(),
-                seen_correlation_ids=set(),
+                seen_correlation_ids=self.journal.known_correlation_ids(),
                 breakers={},
             )
 
@@ -104,19 +105,20 @@ class PaperDayRunner:
             submitted += 1
             self.broker.mark_filled(plan.correlation_id)
             filled_order = self.broker.get_order_by_correlation(plan.correlation_id)
-            listener.on_fill(
-                Fill(
-                    correlation_id=plan.correlation_id,
-                    symbol=plan.symbol,
-                    side=plan.side,
-                    filled_qty=int(filled_order["filled_qty"]),
-                    avg_price=float(filled_order["avg_price"]),
-                    broker_order_id=filled_order["broker_order_id"],
-                    event_key=f"{filled_order['broker_order_id']}:TRADED",
+            if filled_order["state"] == "TRADED":
+                listener.on_fill(
+                    Fill(
+                        correlation_id=plan.correlation_id,
+                        symbol=plan.symbol,
+                        side=plan.side,
+                        filled_qty=int(filled_order["filled_qty"]),
+                        avg_price=float(filled_order["avg_price"]),
+                        broker_order_id=filled_order["broker_order_id"],
+                        event_key=f"{filled_order['broker_order_id']}:TRADED",
+                    )
                 )
-            )
-            self.alerter.send("fill", f"{plan.correlation_id} filled")
-            filled += 1
+                self.alerter.send("fill", f"{plan.correlation_id} filled")
+                filled += 1
 
         local = {symbol: listener.book.qty(symbol) for symbol in self.broker.holdings}
         reconciled = reconciler.reconcile(local).clean

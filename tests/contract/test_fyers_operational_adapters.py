@@ -64,3 +64,24 @@ def test_stream_health_redacts_error_and_reconnects(tmp_path):
     adapter.reconnect()
     assert adapter.health()["connected"] is True
     assert adapter.health()["reconnects"] == 1
+
+
+def test_fyers_gateway_order_state_normalization():
+    # status 2 = TRADED, status 5 = REJECTED
+    raw_order = {
+        "id": "fyers-123",
+        "tag": "cid-abc",
+        "symbol": "NSE:SBIN-EQ",
+        "side": 1,
+        "qty": 10,
+        "filledQty": 10,
+        "avgTradePrice": 100.0,
+        "status": 2
+    }
+    gateway = FyersGateway(FakeClient([raw_order]))
+    order = gateway.get_order_by_correlation("cid-abc")
+    
+    assert order is not None
+    assert order["state"] == "TRADED"
+    assert order["broker_order_id"] == "fyers-123"
+

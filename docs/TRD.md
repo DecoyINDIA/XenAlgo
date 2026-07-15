@@ -69,7 +69,7 @@ Abstract `BrokerInterface` + `FyersGateway` implementation. All Fyers I/O funnel
 - Telegram (primary, every order/fill/rejection/breaker/summary) with optional inline-button confirmations. Pushover (retry-until-ack) for system-health criticals. Email for weekly audit report. Non-blocking; alert failure never blocks trading logic but is itself logged.
 
 ### 2.11 Dashboard (`xenalgo/web/`)
-- FastAPI + Jinja2/HTMX + SSE. Screens per PRD §C. Binds to Tailscale interface only. Kill-switch endpoint + breaker re-arm (authenticated action). Read-only config view during market hours.
+- FastAPI + Jinja2/HTMX + SSE. Screens per PRD §C. Binds to Tailscale/loopback interface only. Kill-switch endpoint + breaker re-arm (authenticated action, token required). Read-only console endpoints are unauthenticated, which is an accepted risk mitigated by the Tailscale/loopback bind restriction. Read-only config view during market hours.
 
 ### 2.12 Watchdog / KillSwitch (`xenalgo/ops/`)
 - systemd `Restart=on-failure`; external heartbeat to healthchecks.io each cycle; missed beat → Pushover page.

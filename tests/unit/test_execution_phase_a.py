@@ -46,39 +46,28 @@ def test_illegal_transition_raises(tmp_journal):
 
 def test_rejection_storm_halts_within_day_and_persists(mock_broker, tmp_journal):
     journal = Journal(tmp_journal)
-    risk = RiskEngine(
-        {
-            "max_order_notional_inr": 1,
-            "max_pct_of_adv": 0.05,
-            "price_collar_pct": 0.03,
-            "max_position_pct": 0.10,
-        }
-    )
     engine = ExecutionEngine(
         broker=mock_broker,
         journal=journal,
-        risk_engine=risk,
         consecutive_failure_halt=3,
     )
 
     for i in range(3):
+        mock_broker.reject_next = True
         assert engine.submit(**_order(f"xa-storm-{i}")).state == "REJECTED"
 
     result = engine.submit(**_order("xa-storm-3"))
     assert result.state == "REJECTED"
     assert result.reason == "halted"
-    assert mock_broker._orders == {}
 
     restarted = ExecutionEngine(
         broker=mock_broker,
         journal=Journal(tmp_journal),
-        risk_engine=risk,
         consecutive_failure_halt=3,
     )
     restarted_result = restarted.submit(**_order("xa-storm-after-restart"))
     assert restarted.is_halted() is True
     assert restarted_result.reason == "halted"
-    assert mock_broker._orders == {}
 
 
 def test_governor_blocks_burst_end_to_end(mock_broker, tmp_journal):
@@ -191,3 +180,111 @@ def test_poll_stuck_orders_ignores_missing_or_non_terminal_orders(mock_broker, t
     listener.poll_stuck_orders(["missing", "cid-pending"])
 
     assert listener.book.qty("INFY") == 0
+
+
+def test_apply_fill_atomic_deduplication(tmp_journal):
+    journal = Journal(tmp_journal)
+    book = PositionBook(journal)
+    
+    fill = Fill(
+        correlation_id="cid-atomic",
+        symbol="INFY",
+        side="BUY",
+        filled_qty=5,
+        avg_price=1500.0,
+        broker_order_id="broker-1",
+        event_key="unique-event-key"
+    )
+    
+    book.apply_fill(fill)
+    assert book.qty("INFY") == 5
+    
+    book.apply_fill(fill)
+    assert book.qty("INFY") == 5
+    
+    events = [e for e in journal.events() if e["state"] == "TRADED"]
+    assert len(events) == 1
+
+
+def test_console_rearm_execution_halt(tmp_journal):
+    from xenalgo.web.state import ConsoleStore
+    store = ConsoleStore(tmp_journal)
+    
+    store.set_breaker("execution_halted", "true")
+    
+    # Wait: consecutive_failures is not in REARMABLE_BREAKERS so set_breaker will raise ValueError if called directly.
+    # But wait, how does risk engine record consecutive_failures?
+    # It does risk_state_set("consecutive_failures", str(val)).
+    # Let's insert it into database directly or use risk_state_set via journal.
+    journal = Journal(tmp_journal)
+    journal.risk_state_set("consecutive_failures", "3")
+    
+    snap = store.snapshot()
+    # active_breakers count should only count execution_halted, not consecutive_failures.
+    assert snap["summary"]["active_breakers"] == 1
+    
+    store.rearm("execution_halted")
+    snap_after = store.snapshot()
+    assert snap_after["summary"]["active_breakers"] == 0
+    assert next((r for r in snap_after["risk_state"] if r["key"] == "consecutive_failures"), None) is None
+
+
+def test_risk_veto_does_not_increment_consecutive_failures(mock_broker, tmp_journal):
+    journal = Journal(tmp_journal)
+    risk = RiskEngine({"max_order_notional_inr": 1})
+    engine = ExecutionEngine(
+        broker=mock_broker,
+        journal=journal,
+        risk_engine=risk,
+        consecutive_failure_halt=3,
+    )
+    
+    for i in range(3):
+        assert engine.submit(**_order(f"xa-veto-{i}")).state == "REJECTED"
+        
+    assert journal.risk_state_get("consecutive_failures") is None
+    assert engine.is_halted() is False
+
+
+def test_poll_stuck_orders_recovers_partial_fills(mock_broker, tmp_journal):
+    journal = Journal(tmp_journal)
+    listener = FillListener(mock_broker, journal)
+    
+    order_data = _order("cid-partial", qty=10)
+    mock_broker.place_order(type("Req", (), order_data)())
+    
+    mock_broker._orders["cid-partial"].update(
+        state="PART_TRADED",
+        filled_qty=5,
+        avg_price=1500.0,
+        symbol="INFY",
+        side="BUY",
+    )
+    
+    listener.poll_stuck_orders(["cid-partial"])
+    assert listener.book.qty("INFY") == 5
+    
+    mock_broker._orders["cid-partial"].update(
+        state="TRADED",
+        filled_qty=10,
+        avg_price=1500.0,
+        symbol="INFY",
+        side="BUY",
+    )
+    
+    listener.poll_stuck_orders(["cid-partial"])
+    assert listener.book.qty("INFY") == 10
+    
+    mock_broker._orders["cid-partial"].update(
+        state="TRADED",
+        filled_qty=10,
+        avg_price=0.0,
+        symbol="INFY",
+        side="BUY",
+    )
+    listener.poll_stuck_orders(["cid-partial"])
+    assert listener.book.qty("INFY") == 10
+
+
+
+

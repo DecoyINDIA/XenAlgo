@@ -89,7 +89,13 @@ class PaperBroker:
         qty = int(order.get("requested_qty", 0) or order.get("filled_qty", 0) or 0)
         if qty <= 0:
             qty = 1
-        price = float(self.ltp.get(order["symbol"], order.get("avg_price") or 0.0))
+        price = self.ltp.get(order["symbol"])
+        if price is None:
+            price = order.get("avg_price")
+        if price is None or float(price) <= 0.0:
+            order.update(state="REJECTED", reason="no paper mark price")
+            return
+        price = float(price)
         side = order["side"]
         sign = 1 if side == "BUY" else -1
         self.holdings[order["symbol"]] = self.holdings.get(order["symbol"], 0) + sign * qty

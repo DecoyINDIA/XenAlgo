@@ -1,6 +1,11 @@
-from __future__ import annotations
-
+import datetime as dt
 import time
+
+IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
+
+
+def default_ist_date() -> dt.date:
+    return dt.datetime.now(IST).date()
 
 
 class TokenBucket:
@@ -42,15 +47,25 @@ class OrderGovernor:
         max_per_sec: float = 2,
         max_per_day: int = 500,
         clock=time.monotonic,
+        date_provider=default_ist_date,
     ) -> None:
-        if max_per_sec > 2 or max_per_sec >= 10:
+        if max_per_sec > 2:
             raise ValueError("order governor must stay at or below 2 orders/sec")
         self.max_per_sec = float(max_per_sec)
         self.max_per_day = int(max_per_day)
         self._used_today = 0
         self.bucket = TokenBucket(rate_per_sec=self.max_per_sec, clock=clock)
+        self._date_provider = date_provider
+        self._current_date = self._date_provider()
+
+    def _check_reset(self) -> None:
+        today = self._date_provider()
+        if today != self._current_date:
+            self._used_today = 0
+            self._current_date = today
 
     def allow(self) -> bool:
+        self._check_reset()
         if self._used_today >= self.max_per_day:
             return False
         if not self.bucket.try_acquire():
@@ -59,4 +74,5 @@ class OrderGovernor:
         return True
 
     def remaining_today(self) -> int:
+        self._check_reset()
         return max(0, self.max_per_day - self._used_today)

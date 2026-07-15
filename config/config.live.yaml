@@ -7,6 +7,12 @@ live_trading:
   square_off_time: "15:15"
   results_dir: Diary/live
 
+universe:
+  symbols:
+    - SBIN
+    - RELIANCE
+    - TCS
+
 sleeves:
   std30:
     capital_fraction: 0.34
@@ -27,6 +33,7 @@ risk:
   daily_loss_halt_pct: 0.02
   drawdown_halt_pct: 0.10
   consecutive_failure_halt: 3
+  data_sanity_move_pct: 0.25
 
 execution:
   order_type: MARKETABLE_LIMIT

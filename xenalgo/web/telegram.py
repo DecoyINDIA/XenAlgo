@@ -6,10 +6,20 @@ from xenalgo.web.state import ConsoleStore
 class TelegramCommandRouter:
     """Dependency-free command handler for Phase 2 Telegram operator actions."""
 
-    def __init__(self, store: ConsoleStore) -> None:
+    def __init__(self, store: ConsoleStore, allowed_chat_ids: list[str] | set[str] | None = None) -> None:
         self.store = store
+        if allowed_chat_ids is None:
+            import os
+            raw = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
+            self.allowed_chat_ids = {c.strip() for c in raw.split(",") if c.strip()} if raw else set()
+        else:
+            self.allowed_chat_ids = {str(c).strip() for c in allowed_chat_ids if str(c).strip()}
 
-    def handle(self, text: str, *, actor: str = "telegram") -> str:
+    def handle(self, text: str, *, chat_id: str | int | None = None, actor: str = "telegram") -> str:
+        cid = str(chat_id).strip() if chat_id is not None else ""
+        if not self.allowed_chat_ids or cid not in self.allowed_chat_ids:
+            return "Unauthorized sender."
+
         parts = (text or "").strip().split()
         if not parts:
             return "Unknown command. Supported: /status, /positions, /kill, /rearm <breaker>."

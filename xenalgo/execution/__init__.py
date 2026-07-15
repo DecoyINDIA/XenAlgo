@@ -186,7 +186,10 @@ class Journal:
                 VALUES (?, ?, ?, ?, ?, ?)
                 ON CONFLICT(correlation_id) DO UPDATE SET
                   broker_order_id=COALESCE(excluded.broker_order_id, orders.broker_order_id),
-                  state=excluded.state,
+                  state=CASE
+                    WHEN orders.state IN ('TRADED', 'CANCELLED', 'REJECTED', 'EXPIRED') THEN orders.state
+                    ELSE excluded.state
+                  END,
                   filled_qty=excluded.filled_qty,
                   avg_fill_price=excluded.avg_fill_price,
                   updated_utc=excluded.updated_utc
@@ -231,6 +234,83 @@ class Journal:
         except sqlite3.IntegrityError:
             return False
 
+    def apply_fill_atomic(
+        self,
+        *,
+        event_key: str,
+        correlation_id: str,
+        state: str,
+        symbol: str,
+        side: str,
+        filled_qty: int,
+        avg_fill_price: float,
+        broker_order_id: str | None = None,
+        sleeve: str = "unknown",
+        security_id: str = "unknown",
+        intended_qty: int = 0,
+        limit_price: float | None = None,
+        reason: str | None = None,
+        raw_json: dict[str, Any] | None = None,
+    ) -> bool:
+        now = dt.datetime.now(dt.UTC).isoformat()
+        try:
+            with self._connect() as con:
+                con.execute(
+                    "INSERT INTO applied_events(event_key, correlation_id, applied_utc) VALUES (?, ?, ?)",
+                    (event_key, correlation_id, now),
+                )
+                con.execute(
+                    """
+                    INSERT INTO order_events(
+                      ts_utc, correlation_id, broker_order_id, sleeve, symbol,
+                      security_id, side, intended_qty, limit_price, state,
+                      filled_qty, avg_fill_price, reason, raw_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        now,
+                        correlation_id,
+                        broker_order_id,
+                        sleeve,
+                        symbol,
+                        security_id,
+                        side,
+                        int(intended_qty),
+                        limit_price,
+                        state,
+                        int(filled_qty),
+                        avg_fill_price,
+                        reason,
+                        json.dumps(raw_json or {}, sort_keys=True),
+                    ),
+                )
+                con.execute(
+                    """
+                    INSERT INTO orders(correlation_id, broker_order_id, state, filled_qty, avg_fill_price, updated_utc)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(correlation_id) DO UPDATE SET
+                      broker_order_id=COALESCE(excluded.broker_order_id, orders.broker_order_id),
+                      state=CASE
+                        WHEN orders.state IN ('TRADED', 'CANCELLED', 'REJECTED', 'EXPIRED') THEN orders.state
+                        ELSE excluded.state
+                      END,
+                      filled_qty=excluded.filled_qty,
+                      avg_fill_price=excluded.avg_fill_price,
+                      updated_utc=excluded.updated_utc
+                    """,
+                    (
+                        correlation_id,
+                        broker_order_id,
+                        state,
+                        int(filled_qty),
+                        avg_fill_price,
+                        now,
+                    ),
+                )
+            return True
+        except sqlite3.IntegrityError:
+            return False
+
     def risk_state_get(self, key: str) -> str | None:
         with self._connect() as con:
             row = con.execute("SELECT value FROM risk_state WHERE key=?", (key,)).fetchone()
@@ -249,6 +329,11 @@ class Journal:
     def risk_state_clear(self, key: str) -> None:
         with self._connect() as con:
             con.execute("DELETE FROM risk_state WHERE key=?", (key,))
+
+    def known_correlation_ids(self) -> set[str]:
+        with self._connect() as con:
+            rows = con.execute("SELECT correlation_id FROM orders").fetchall()
+        return {row["correlation_id"] for row in rows}
 
 
 class OrderStateMachine:
@@ -284,7 +369,18 @@ class PositionBook:
 
     def apply_fill(self, fill: Fill) -> None:
         event_key = fill.event_key or f"{fill.correlation_id}:{fill.filled_qty}:{fill.avg_price}"
-        if not self.journal.mark_applied(event_key, fill.correlation_id):
+        success = self.journal.apply_fill_atomic(
+            event_key=event_key,
+            correlation_id=fill.correlation_id,
+            state=fill.state,
+            symbol=fill.symbol,
+            side=fill.side,
+            filled_qty=fill.filled_qty,
+            avg_fill_price=fill.avg_price,
+            broker_order_id=fill.broker_order_id,
+            raw_json={"event_key": event_key},
+        )
+        if not success:
             return
         order_key = fill.broker_order_id or fill.correlation_id
         cumulative_qty = int(fill.filled_qty)
@@ -295,17 +391,6 @@ class PositionBook:
         delta = sign * delta_qty
         self._qty[fill.symbol] = self._qty.get(fill.symbol, 0) + delta
         self._qty_by_cid[fill.correlation_id] = self._qty_by_cid.get(fill.correlation_id, 0) + delta
-        self.journal.append(
-            correlation_id=fill.correlation_id,
-            broker_order_id=fill.broker_order_id,
-            state=fill.state,
-            symbol=fill.symbol,
-            side=fill.side,
-            intended_qty=fill.filled_qty,
-            filled_qty=fill.filled_qty,
-            avg_fill_price=fill.avg_price,
-            raw_json={"event_key": event_key},
-        )
 
     def qty(self, symbol: str) -> int:
         return self._qty.get(symbol, 0)
@@ -392,7 +477,6 @@ class ExecutionEngine:
         decision, allowed_qty, reason = self.risk_engine.check(risk_order, risk_ctx)
         if decision is RiskDecision.REJECT:
             self.journal.append(state="REJECTED", reason=reason, **_journal_fields(kwargs))
-            self._record_failure()
             return SubmissionResult("REJECTED", None, cid, reason)
         if decision is RiskDecision.SCALE:
             kwargs = dict(kwargs, qty=allowed_qty)
@@ -474,17 +558,26 @@ class FillListener:
     def poll_stuck_orders(self, correlation_ids: list[str]) -> None:
         for cid in correlation_ids:
             order = self.broker.get_order_by_correlation(cid)
-            if not order or order.get("state") != "TRADED":
+            if not order:
                 continue
+            state = order.get("state")
+            if state not in {"TRADED", "PART_TRADED"}:
+                continue
+            price = float(order.get("avg_price", 0.0))
+            if price <= 0.0:
+                continue
+            qty = int(order.get("filled_qty", 0))
+            broker_order_id = order.get("broker_order_id")
             self.on_fill(
                 Fill(
                     correlation_id=cid,
                     symbol=order.get("symbol", cid),
                     side=order.get("side", "BUY"),
-                    filled_qty=int(order.get("filled_qty", 0)),
-                    avg_price=float(order.get("avg_price", 0.0)),
-                    broker_order_id=order.get("broker_order_id"),
-                    event_key=f"{order.get('broker_order_id')}:{order.get('state')}",
+                    filled_qty=qty,
+                    avg_price=price,
+                    broker_order_id=broker_order_id,
+                    event_key=f"poll:{broker_order_id or cid}:{state}:{qty}",
+                    state=state,
                 )
             )
 
