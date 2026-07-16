@@ -241,6 +241,55 @@ class FyersOrderbookPoller:
         }
 
 
+class FyersQuoteFeed:
+    """Batched last-traded-price feed behind the MarketDataProvider quotes contract.
+
+    Fyers v3 accepts up to 50 symbols per quotes request, so the whole equity
+    universe resolves in one or two calls per poll. The concrete SDK client is
+    injected; tests pass a fake object.
+    """
+
+    MAX_SYMBOLS_PER_REQUEST = 50
+
+    def __init__(self, client: Any, *, symbol_resolver: FyersSymbolResolver | None = None) -> None:
+        self.client = client
+        self.symbol_resolver = symbol_resolver or FyersSymbolResolver()
+
+    def quotes(self, symbols: Iterable[str]) -> dict[str, float]:
+        ordered = list(symbols)
+        prices: dict[str, float] = {}
+        for start in range(0, len(ordered), self.MAX_SYMBOLS_PER_REQUEST):
+            batch = ordered[start : start + self.MAX_SYMBOLS_PER_REQUEST]
+            resolved = {self.symbol_resolver.resolve(symbol): symbol for symbol in batch}
+            response = self.client.quotes({"symbols": ",".join(resolved)})
+            for entry in _quote_entries(response):
+                fyers_symbol = str(entry.get("n") or entry.get("symbol") or "")
+                symbol = resolved.get(fyers_symbol)
+                if symbol is None:
+                    continue
+                price = _quote_last_price(entry)
+                if price is not None:
+                    prices[symbol] = price
+        return prices
+
+
+def _quote_entries(response: Any) -> list[dict[str, Any]]:
+    if not isinstance(response, dict):
+        return []
+    entries = response.get("d") or response.get("data") or []
+    return [entry for entry in entries if isinstance(entry, dict)] if isinstance(entries, list) else []
+
+
+def _quote_last_price(entry: dict[str, Any]) -> float | None:
+    values = entry.get("v") if isinstance(entry.get("v"), dict) else entry
+    raw = values.get("lp") or values.get("ltp") or values.get("last_price")
+    try:
+        price = float(raw)
+    except (TypeError, ValueError):
+        return None
+    return price
+
+
 def normalize_fyers_state(status_val: Any) -> str:
     s = str(status_val).upper().strip()
     if s in {"2", "TRADED", "FILLED", "COMPLETE", "COMPLETED"}:

@@ -8,9 +8,9 @@ from typing import Any, Callable, Iterable
 
 import pandas as pd
 
-from xenalgo.broker.fyers import FyersSymbolResolver
+from xenalgo.broker.fyers import FyersQuoteFeed, FyersSymbolResolver
 from xenalgo.config import RuntimeConfig
-from xenalgo.data import FyersHistoryLoader, assert_panel_fresh, validate_history_frame
+from xenalgo.data import FyersHistoryLoader, QuotePoller, assert_panel_fresh, validate_history_frame
 from xenalgo.execution import Journal
 from xenalgo.execution.reconcile import Reconciler
 from xenalgo.monolith import PaperOrderPlan
@@ -95,6 +95,34 @@ def build_panel_provider(
         return panel
 
     return panel_provider
+
+
+def build_quote_poller(
+    config: RuntimeConfig,
+    client: Any,
+    symbols: list[str],
+    panel: dict,
+    *,
+    sink: dict[str, float] | None = None,
+) -> QuotePoller:
+    """Intraday quote monitor wired to the config's quote-rate cap and sanity collar.
+
+    The poll cadence is derived from governor.max_quotes_per_sec (the compliance
+    ceiling), so "as frequent as possible" never exceeds what the governor allows.
+    Baselines come from the validated morning panel's latest closes.
+    """
+    close = panel["close"]
+    reference_close = {symbol: float(close[symbol].iloc[-1]) for symbol in close.columns}
+    governor_cfg = config.data.get("governor", {})
+    risk_cfg = config.data.get("risk", {})
+    return QuotePoller(
+        FyersQuoteFeed(client),
+        symbols,
+        reference_close=reference_close,
+        collar_pct=float(risk_cfg.get("data_sanity_move_pct", 0.25)),
+        max_quotes_per_sec=float(governor_cfg.get("max_quotes_per_sec", 1)),
+        sink=sink,
+    )
 
 
 def build_order_provider(

@@ -11,6 +11,7 @@ from typing import Any
 import pandas as pd
 
 from xenalgo.broker.fyers import FyersSymbolResolver, default_fyers_history_chunks
+from xenalgo.broker.governor import TokenBucket
 
 
 class StaleDataError(RuntimeError):
@@ -191,6 +192,97 @@ def assert_latest_prices_sane(panel: dict, sanity_move_pct: float = 0.25) -> Non
     for symbol, price in latest.items():
         if not price_is_sane(price, previous[symbol], sanity_move_pct):
             raise CorruptDataError(f"corrupt close for {symbol}")
+
+
+@dataclass(frozen=True)
+class QuotePollResult:
+    throttled: bool
+    updated: dict[str, float]
+    rejected: tuple[str, ...]
+
+
+class QuotePoller:
+    """Intraday last-price monitor: rate-capped, sanity-gated, fail-closed on staleness.
+
+    Polls the injected quote feed as often as the quote governor allows (one batched
+    request per tick), accepts only prices inside the sanity collar against the last
+    known-good price, and mirrors accepted prices into the injected sink (e.g. the
+    broker LTP map). A stale feed raises StaleDataError instead of serving old prices.
+    """
+
+    def __init__(
+        self,
+        feed: Any,
+        symbols: list[str],
+        *,
+        reference_close: dict[str, float],
+        collar_pct: float = 0.25,
+        max_quotes_per_sec: float = 1.0,
+        sink: dict[str, float] | None = None,
+        clock: Any = None,
+        bucket: TokenBucket | None = None,
+    ) -> None:
+        if max_quotes_per_sec <= 0:
+            raise ValueError("max_quotes_per_sec must be positive")
+        self.feed = feed
+        self.symbols = list(symbols)
+        self.collar_pct = float(collar_pct)
+        self.sink = sink if sink is not None else {}
+        self.clock = clock or (lambda: dt.datetime.now(dt.UTC))
+        self.bucket = bucket or TokenBucket(rate_per_sec=max_quotes_per_sec)
+        self.min_interval_seconds = 1.0 / float(max_quotes_per_sec)
+        self.last_good: dict[str, float] = dict(reference_close)
+        self.last_tick_at: dt.datetime | None = None
+        self.rejected_total = 0
+
+    def poll_once(self) -> QuotePollResult:
+        if not self.bucket.try_acquire():
+            return QuotePollResult(throttled=True, updated={}, rejected=())
+        quotes = self.feed.quotes(self.symbols)
+        updated: dict[str, float] = {}
+        rejected: list[str] = []
+        for symbol in self.symbols:
+            price = quotes.get(symbol)
+            if price is None:
+                continue
+            baseline = self.last_good.get(symbol)
+            if baseline is None or not price_is_sane(price, baseline, self.collar_pct):
+                rejected.append(symbol)
+                continue
+            updated[symbol] = float(price)
+        if rejected:
+            self.rejected_total += len(rejected)
+        if updated:
+            self.last_good.update(updated)
+            self.sink.update(updated)
+            self.last_tick_at = self.clock()
+        return QuotePollResult(throttled=False, updated=updated, rejected=tuple(rejected))
+
+    def assert_fresh(self, max_age: dt.timedelta) -> None:
+        if self.last_tick_at is None:
+            raise StaleDataError("quote poller has no successful tick yet")
+        age = self.clock() - self.last_tick_at
+        if age > max_age:
+            raise StaleDataError(f"quotes are stale: last tick {age} ago exceeds {max_age}")
+
+    def run_until(
+        self,
+        should_stop: Any,
+        *,
+        sleeper: Any = None,
+        interval_seconds: float | None = None,
+    ) -> int:
+        import time as _time
+
+        sleep = sleeper or _time.sleep
+        interval = max(float(interval_seconds or self.min_interval_seconds), self.min_interval_seconds)
+        ticks = 0
+        while not should_stop():
+            result = self.poll_once()
+            if not result.throttled:
+                ticks += 1
+            sleep(interval)
+        return ticks
 
 
 def price_is_sane(value: float, prev_close: float, collar_pct: float) -> bool:
