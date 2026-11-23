@@ -1,0 +1,174 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400" width="100%" height="auto">
+  <defs>
+    <radialGradient id="sleeveGlow" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#7C86FF" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#0A0A0F" stop-opacity="0" />
+    </radialGradient>
+    <pattern id="sleeveGrid" width="25" height="25" patternUnits="userSpaceOnUse">
+      <path d="M 25 0 L 0 0 0 25" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1" />
+    </pattern>
+    <linearGradient id="pipeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7C86FF" />
+      <stop offset="50%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#10B981" />
+    </linearGradient>
+  </defs>
+
+  <style>
+    @keyframes pulsePacket {
+      0% { stroke-dashoffset: 60; }
+      100% { stroke-dashoffset: 0; }
+    }
+    @keyframes badgeGlow {
+      0%, 100% { opacity: 0.8; }
+      50% { opacity: 0.3; }
+    }
+    .flow-packet {
+      stroke-dasharray: 8 12;
+      animation: pulsePacket 1.8s linear infinite;
+    }
+    .packet-slow {
+      stroke-dasharray: 6 10;
+      animation: pulsePacket 2.6s linear infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .flow-packet, .packet-slow {
+        animation: none !important;
+      }
+    }
+  </style>
+
+  <!-- Background Base -->
+  <rect width="900" height="400" rx="16" fill="#0A0A0F" stroke="#222234" stroke-width="1.5" />
+  <rect width="900" height="400" fill="url(#sleeveGrid)" rx="16" />
+  <rect width="900" height="400" fill="url(#sleeveGlow)" rx="16" />
+
+  <!-- HEADER -->
+  <g transform="translate(40, 36)">
+    <text font-family="'Segoe UI', 'Inter', -apple-system, sans-serif" font-weight="700" font-size="18" fill="#FFFFFF">
+      MULTI-ALPHA CAPITAL SLEEVES ARCHITECTURE
+    </text>
+    <text y="22" font-family="'Segoe UI', 'Inter', -apple-system, sans-serif" font-weight="400" font-size="12" fill="#94A3B8">
+      Three uncorrelated strategies run in strict isolation with 1/3 capital parity and netted broker execution.
+    </text>
+  </g>
+
+  <!-- LEFT: TOTAL CAPITAL POOL (X: 40, Y: 110) -->
+  <g transform="translate(40, 110)">
+    <rect width="160" height="230" rx="10" fill="#10101C" stroke="#2A2A42" stroke-width="1.5" />
+    <rect width="160" height="32" rx="10" fill="#18182A" />
+    <rect width="160" height="1" y="32" fill="rgba(255,255,255,0.08)" />
+
+    <text x="16" y="21" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="12" fill="#A5B4FC">CAPITAL POOL</text>
+    <circle cx="144" cy="16" r="4" fill="#10B981" />
+
+    <text x="16" y="65" font-family="'Cascadia Code', monospace" font-size="11" fill="#71717A">TOTAL NAV</text>
+    <text x="16" y="88" font-family="'Cascadia Code', monospace" font-size="20" font-weight="700" fill="#FFFFFF">₹10,00,000</text>
+
+    <!-- Parity Splitter Node -->
+    <rect x="16" y="110" width="128" height="30" rx="6" fill="#151524" stroke="rgba(124,134,255,0.3)" stroke-width="1" />
+    <text x="80" y="129" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="11" fill="#38BDF8">EQUAL_1/3_PARITY</text>
+
+    <text x="16" y="165" font-family="'Segoe UI', sans-serif" font-size="10.5" fill="#94A3B8">• Strict Ring-Fencing</text>
+    <text x="16" y="185" font-family="'Segoe UI', sans-serif" font-size="10.5" fill="#94A3B8">• Independent Cash</text>
+    <text x="16" y="205" font-family="'Segoe UI', sans-serif" font-size="10.5" fill="#94A3B8">• Isolated Stop Loss</text>
+  </g>
+
+  <!-- CONNECTING CONDUITS FROM POOL TO SLEEVES -->
+  <g>
+    <!-- Path to Sleeve 1 -->
+    <path d="M 200 160 L 260 160 L 260 135 L 290 135" fill="none" stroke="#252538" stroke-width="2" />
+    <path class="flow-packet" d="M 200 160 L 260 160 L 260 135 L 290 135" fill="none" stroke="#7C86FF" stroke-width="2" />
+
+    <!-- Path to Sleeve 2 -->
+    <path d="M 200 225 L 290 225" fill="none" stroke="#252538" stroke-width="2" />
+    <path class="flow-packet" d="M 200 225 L 290 225" fill="none" stroke="#38BDF8" stroke-width="2" />
+
+    <!-- Path to Sleeve 3 -->
+    <path d="M 200 290 L 260 290 L 260 315 L 290 315" fill="none" stroke="#252538" stroke-width="2" />
+    <path class="flow-packet" d="M 200 290 L 260 290 L 260 315 L 290 315" fill="none" stroke="#10B981" stroke-width="2" />
+  </g>
+
+  <!-- CENTER: 3 PARALLEL ALPHA SLEEVES -->
+  <!-- Sleeve 1: std30 -->
+  <g transform="translate(290, 95)">
+    <rect width="260" height="78" rx="8" fill="#11111E" stroke="#7C86FF" stroke-width="1.2" />
+    <rect x="0" y="0" width="4" height="78" rx="2" fill="#7C86FF" />
+    <text x="16" y="24" font-family="'Cascadia Code', monospace" font-size="13" font-weight="700" fill="#FFFFFF">SLEEVE 1: std30</text>
+    <rect x="180" y="10" width="68" height="18" rx="4" fill="rgba(124,134,255,0.2)" />
+    <text x="214" y="23" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="10" font-weight="700" fill="#A5B4FC">33.3% CAP</text>
+    <text x="16" y="46" font-family="'Segoe UI', sans-serif" font-size="10.5" fill="#94A3B8">Alpha: 30-Day Volatility Breakout &amp; Trend</text>
+    <text x="16" y="64" font-family="'Cascadia Code', monospace" font-size="9.5" fill="#71717A">UNIVERSE: NIFTY 500 | MAX_HOLD: 20 DAYS</text>
+  </g>
+
+  <!-- Sleeve 2: alpha_027 -->
+  <g transform="translate(290, 185)">
+    <rect width="260" height="78" rx="8" fill="#11111E" stroke="#38BDF8" stroke-width="1.2" />
+    <rect x="0" y="0" width="4" height="78" rx="2" fill="#38BDF8" />
+    <text x="16" y="24" font-family="'Cascadia Code', monospace" font-size="13" font-weight="700" fill="#FFFFFF">SLEEVE 2: alpha_027</text>
+    <rect x="180" y="10" width="68" height="18" rx="4" fill="rgba(56,189,248,0.2)" />
+    <text x="214" y="23" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="10" font-weight="700" fill="#38BDF8">33.3% CAP</text>
+    <text x="16" y="46" font-family="'Segoe UI', sans-serif" font-size="10.5" fill="#94A3B8">Alpha: RSI Extreme + Bollinger Mean Reversion</text>
+    <text x="16" y="64" font-family="'Cascadia Code', monospace" font-size="9.5" fill="#71717A">UNIVERSE: NIFTY 500 | COUNTER-TREND</text>
+  </g>
+
+  <!-- Sleeve 3: alpha_062 -->
+  <g transform="translate(290, 275)">
+    <rect width="260" height="78" rx="8" fill="#11111E" stroke="#10B981" stroke-width="1.2" />
+    <rect x="0" y="0" width="4" height="78" rx="2" fill="#10B981" />
+    <text x="16" y="24" font-family="'Cascadia Code', monospace" font-size="13" font-weight="700" fill="#FFFFFF">SLEEVE 3: alpha_062</text>
+    <rect x="180" y="10" width="68" height="18" rx="4" fill="rgba(16,185,129,0.2)" />
+    <text x="214" y="23" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="10" font-weight="700" fill="#10B981">33.3% CAP</text>
+    <text x="16" y="46" font-family="'Segoe UI', sans-serif" font-size="10.5" fill="#94A3B8">Alpha: Volume Flow Filtered Price Momentum</text>
+    <text x="16" y="64" font-family="'Cascadia Code', monospace" font-size="9.5" fill="#71717A">UNIVERSE: NIFTY 500 | MOMENTUM</text>
+  </g>
+
+  <!-- CONNECTING CONDUITS FROM SLEEVES TO NETTING ENGINE -->
+  <g>
+    <!-- From Sleeve 1 -->
+    <path d="M 550 135 L 590 135 L 590 205 L 630 205" fill="none" stroke="#252538" stroke-width="2" />
+    <path class="flow-packet" d="M 550 135 L 590 135 L 590 205 L 630 205" fill="none" stroke="#7C86FF" stroke-width="2" />
+
+    <!-- From Sleeve 2 -->
+    <path d="M 550 225 L 630 225" fill="none" stroke="#252538" stroke-width="2" />
+    <path class="flow-packet" d="M 550 225 L 630 225" fill="none" stroke="#38BDF8" stroke-width="2" />
+
+    <!-- From Sleeve 3 -->
+    <path d="M 550 315 L 590 315 L 590 245 L 630 245" fill="none" stroke="#252538" stroke-width="2" />
+    <path class="flow-packet" d="M 550 315 L 590 315 L 590 245 L 630 245" fill="none" stroke="#10B981" stroke-width="2" />
+  </g>
+
+  <!-- RIGHT: CROSS-SLEEVE NETTING & BROKER ROUTER -->
+  <g transform="translate(630, 110)">
+    <rect width="230" height="230" rx="10" fill="#10101C" stroke="#2A2A42" stroke-width="1.5" />
+    <rect width="230" height="32" rx="10" fill="#18182A" />
+    <rect width="230" height="1" y="32" fill="rgba(255,255,255,0.08)" />
+
+    <text x="16" y="21" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="12" fill="#E2E8F0">CROSS-SLEEVE NETTING</text>
+    <rect x="175" y="7" width="44" height="18" rx="4" fill="rgba(56,189,248,0.2)" />
+    <text x="197" y="20" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="9" font-weight="700" fill="#38BDF8">ACTIVE</text>
+
+    <!-- Netting explanation -->
+    <g transform="translate(16, 50)">
+      <rect width="198" height="52" rx="6" fill="#151524" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
+      <text x="10" y="20" font-family="'Cascadia Code', monospace" font-size="9.5" fill="#A5B4FC">std30 BUY 100 INFY</text>
+      <text x="10" y="38" font-family="'Cascadia Code', monospace" font-size="9.5" fill="#F87171">a027 SELL 40 INFY</text>
+      <line x1="120" y1="10" x2="120" y2="42" stroke="#28283E" stroke-width="1" />
+      <text x="130" y="30" font-family="'Cascadia Code', monospace" font-size="11" font-weight="700" fill="#10B981">NET: +60</text>
+    </g>
+
+    <text x="16" y="125" font-family="'Segoe UI', sans-serif" font-size="10.5" fill="#94A3B8">• Wash Trade Prevention</text>
+    <text x="16" y="145" font-family="'Segoe UI', sans-serif" font-size="10.5" fill="#94A3B8">• Transaction Cost Alpha</text>
+    <text x="16" y="165" font-family="'Segoe UI', sans-serif" font-size="10.5" fill="#94A3B8">• Atomic Dispatches</text>
+
+    <!-- Out Conduit to Fyers Gateway -->
+    <g transform="translate(16, 185)">
+      <rect width="198" height="30" rx="6" fill="#0C1A14" stroke="#10B981" stroke-width="1" />
+      <circle cx="14" cy="15" r="4" fill="#10B981" />
+      <text x="26" y="19" font-family="'Cascadia Code', monospace" font-size="10" font-weight="700" fill="#10B981">
+        → TO RISK VETO LAYER
+      </text>
+    </g>
+  </g>
+</svg>

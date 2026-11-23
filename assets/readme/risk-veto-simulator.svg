@@ -1,0 +1,197 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 440" width="100%" height="auto">
+  <defs>
+    <radialGradient id="simGlow" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#7C86FF" stop-opacity="0.16" />
+      <stop offset="100%" stop-color="#0A0A0F" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="simRadarSweep" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7C86FF" stop-opacity="0.6" />
+      <stop offset="50%" stop-color="#38BDF8" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#7C86FF" stop-opacity="0" />
+    </linearGradient>
+    <pattern id="simGrid" width="25" height="25" patternUnits="userSpaceOnUse">
+      <path d="M 25 0 L 0 0 0 25" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1" />
+    </pattern>
+  </defs>
+
+  <style>
+    @keyframes simSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes pulseVetoNode {
+      0%, 100% { transform: scale(1); opacity: 0.6; }
+      50% { transform: scale(1.2); opacity: 1; filter: drop-shadow(0 0 6px #EF4444); }
+    }
+    @keyframes pulsePassNode {
+      0%, 100% { transform: scale(1); opacity: 0.6; }
+      50% { transform: scale(1.2); opacity: 1; filter: drop-shadow(0 0 6px #10B981); }
+    }
+
+    .radar-sweep-beam {
+      transform-origin: 450px 240px;
+      animation: simSpin 5s linear infinite;
+    }
+    .node-veto-alert {
+      animation: pulseVetoNode 2s ease-in-out infinite;
+    }
+    .node-pass-alert {
+      animation: pulsePassNode 2.4s ease-in-out infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .radar-sweep-beam, .node-veto-alert, .node-pass-alert {
+        animation: none !important;
+      }
+    }
+  </style>
+
+  <!-- Base Canvas -->
+  <rect width="900" height="440" rx="16" fill="#0A0A0F" stroke="#222234" stroke-width="1.5" />
+  <rect width="900" height="440" fill="url(#simGrid)" rx="16" />
+  <rect width="900" height="440" fill="url(#simGlow)" rx="16" />
+
+  <!-- HEADER -->
+  <g transform="translate(40, 36)">
+    <text font-family="'Segoe UI', 'Inter', -apple-system, sans-serif" font-weight="700" font-size="18" fill="#FFFFFF">
+      LIVE RISK VETO SIMULATOR &amp; TELEMETRY RADAR
+    </text>
+    <text y="22" font-family="'Segoe UI', 'Inter', -apple-system, sans-serif" font-weight="400" font-size="12" fill="#94A3B8">
+      Real-time mathematical evaluation of order intents against all 12 pure safety invariants.
+    </text>
+  </g>
+
+  <!-- LEFT: ORDER INTENT INGEST STREAM (X: 40, Y: 85) -->
+  <g transform="translate(40, 85)">
+    <rect width="240" height="315" rx="10" fill="#10101A" stroke="#252538" stroke-width="1" />
+    <rect width="240" height="28" rx="10" fill="#161626" />
+    <text x="14" y="19" font-family="'Cascadia Code', monospace" font-size="10.5" font-weight="700" fill="#A5B4FC">ORDER_INTENT_STREAM</text>
+
+    <!-- Intent Item 1 -->
+    <g transform="translate(10, 38)">
+      <rect width="220" height="60" rx="6" fill="#131320" stroke="#252538" stroke-width="1" />
+      <circle cx="14" cy="16" r="3.5" fill="#10B981" />
+      <text x="24" y="19" font-family="'Cascadia Code', monospace" font-size="10.5" font-weight="700" fill="#FFFFFF">INFY.NS // BUY</text>
+      <text x="14" y="36" font-family="'Cascadia Code', monospace" font-size="9" fill="#94A3B8">Qty: 120 @ ₹1,480 | std30</text>
+      <text x="14" y="50" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#10B981">12 GATES: 100% PASS</text>
+    </g>
+
+    <!-- Intent Item 2 -->
+    <g transform="translate(10, 106)">
+      <rect width="220" height="60" rx="6" fill="#1A1218" stroke="rgba(239,68,68,0.4)" stroke-width="1" />
+      <circle cx="14" cy="16" r="3.5" fill="#EF4444" />
+      <text x="24" y="19" font-family="'Cascadia Code', monospace" font-size="10.5" font-weight="700" fill="#FFFFFF">RELIANCE // BUY</text>
+      <text x="14" y="36" font-family="'Cascadia Code', monospace" font-size="9" fill="#F87171">Qty: 900 @ ₹2,950 | a027</text>
+      <text x="14" y="50" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#EF4444">GATE 1 TRIP: FAT-FINGER</text>
+    </g>
+
+    <!-- Intent Item 3 -->
+    <g transform="translate(10, 174)">
+      <rect width="220" height="60" rx="6" fill="#1A1218" stroke="rgba(239,68,68,0.4)" stroke-width="1" />
+      <circle cx="14" cy="16" r="3.5" fill="#EF4444" />
+      <text x="24" y="19" font-family="'Cascadia Code', monospace" font-size="10.5" font-weight="700" fill="#FFFFFF">SUZLON // BUY</text>
+      <text x="14" y="36" font-family="'Cascadia Code', monospace" font-size="9" fill="#F87171">Qty: 40,000 @ ₹65 | a062</text>
+      <text x="14" y="50" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#EF4444">GATE 3 TRIP: ADV &gt; 1%</text>
+    </g>
+
+    <!-- Intent Item 4 -->
+    <g transform="translate(10, 242)">
+      <rect width="220" height="60" rx="6" fill="#131320" stroke="#252538" stroke-width="1" />
+      <circle cx="14" cy="16" r="3.5" fill="#10B981" />
+      <text x="24" y="19" font-family="'Cascadia Code', monospace" font-size="10.5" font-weight="700" fill="#FFFFFF">TCS.NS // BUY</text>
+      <text x="14" y="36" font-family="'Cascadia Code', monospace" font-size="9" fill="#94A3B8">Qty: 50 @ ₹3,850 | std30</text>
+      <text x="14" y="50" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#10B981">12 GATES: 100% PASS</text>
+    </g>
+  </g>
+
+  <!-- CENTER: CIRCULAR RADAR WITH 12 SENSORS (Center: 450, 240) -->
+  <g transform="translate(450, 240)">
+    <!-- Radar Base & Concentric Circles -->
+    <circle cx="0" cy="0" r="130" fill="#0C0D14" stroke="rgba(124,134,255,0.2)" stroke-width="1.2" />
+    <circle cx="0" cy="0" r="95" fill="none" stroke="rgba(124,134,255,0.15)" stroke-width="1" />
+    <circle cx="0" cy="0" r="60" fill="none" stroke="rgba(124,134,255,0.2)" stroke-width="1" />
+    <circle cx="0" cy="0" r="25" fill="none" stroke="rgba(124,134,255,0.25)" stroke-width="1" />
+
+    <!-- Crosshairs -->
+    <line x1="-130" y1="0" x2="130" y2="0" stroke="rgba(124,134,255,0.15)" stroke-width="1" />
+    <line x1="0" y1="-130" x2="0" y2="130" stroke="rgba(124,134,255,0.15)" stroke-width="1" />
+
+    <!-- Rotating Radar Sweep Beam -->
+    <g class="radar-sweep-beam" style="transform-origin: 0px 0px;">
+      <path d="M 0 0 L 130 0 A 130 130 0 0 0 92 -92 Z" fill="url(#simRadarSweep)" />
+      <line x1="0" y1="0" x2="130" y2="0" stroke="#7C86FF" stroke-width="2" />
+    </g>
+
+    <!-- Center Core Node -->
+    <circle cx="0" cy="0" r="5" fill="#7C86FF" />
+
+    <!-- 12 Safety Invariant Sensor Nodes around the perimeter (r = 115) -->
+    <!-- 12 points spaced at 30 deg intervals -->
+    <!-- G1: 0 deg (115, 0) -->
+    <circle cx="115" cy="0" r="4.5" fill="#EF4444" class="node-veto-alert" />
+    <!-- G2: 30 deg (99.5, 57.5) -->
+    <circle cx="99.5" cy="57.5" r="4" fill="#10B981" />
+    <!-- G3: 60 deg (57.5, 99.5) -->
+    <circle cx="57.5" cy="99.5" r="4.5" fill="#EF4444" class="node-veto-alert" />
+    <!-- G4: 90 deg (0, 115) -->
+    <circle cx="0" cy="115" r="4" fill="#10B981" />
+    <!-- G5: 120 deg (-57.5, 99.5) -->
+    <circle cx="-57.5" cy="99.5" r="4" fill="#10B981" />
+    <!-- G6: 150 deg (-99.5, 57.5) -->
+    <circle cx="-99.5" cy="57.5" r="4" fill="#10B981" />
+    <!-- G7: 180 deg (-115, 0) -->
+    <circle cx="-115" cy="0" r="4" fill="#10B981" />
+    <!-- G8: 210 deg (-99.5, -57.5) -->
+    <circle cx="-99.5" cy="-57.5" r="4" fill="#10B981" />
+    <!-- G9: 240 deg (-57.5, -99.5) -->
+    <circle cx="-57.5" cy="-99.5" r="4" fill="#10B981" />
+    <!-- G10: 270 deg (0, -115) -->
+    <circle cx="0" cy="-115" r="4" fill="#10B981" />
+    <!-- G11: 300 deg (57.5, -99.5) -->
+    <circle cx="57.5" cy="-99.5" r="4" fill="#10B981" />
+    <!-- G12: 330 deg (99.5, -57.5) -->
+    <circle cx="99.5" cy="-57.5" r="4" fill="#10B981" />
+
+    <!-- Label Inside Radar -->
+    <text x="0" y="-35" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="9" fill="#71717A">12_INVARIANTS</text>
+    <text x="0" y="42" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="10" font-weight="700" fill="#38BDF8">PURE_VETO</text>
+  </g>
+
+  <!-- RIGHT: REAL-TIME DECISION AUDIT LOG (X: 615, Y: 85) -->
+  <g transform="translate(615, 85)">
+    <rect width="245" height="315" rx="10" fill="#0D0E16" stroke="#252538" stroke-width="1" />
+    <rect width="245" height="28" rx="10" fill="#161726" />
+    <text x="14" y="19" font-family="'Cascadia Code', monospace" font-size="10.5" font-weight="700" fill="#38BDF8">REALTIME_DECISION_FEED</text>
+
+    <!-- Terminal Output Stream -->
+    <g transform="translate(12, 42)">
+      <text font-family="'Cascadia Code', monospace" font-size="8.5" fill="#71717A">[15:00:01.810] Ingest: INFY.NS buy 120</text>
+      <text y="16" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#10B981">[15:00:01.812] SI-1..12: APPROVED</text>
+      <text y="30" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#38BDF8">[15:00:01.815] ROUTE: Governor Queue</text>
+      <line x1="0" y1="38" x2="220" y2="38" stroke="#1F2030" stroke-width="1" />
+
+      <text y="52" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#71717A">[15:00:02.040] Ingest: RELIANCE buy 900</text>
+      <text y="66" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#EF4444">[15:00:02.042] SI-3 FAT-FINGER VETO!</text>
+      <text y="80" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#EF4444">[15:00:02.044] QUARANTINED (Zero route)</text>
+      <line x1="0" y1="88" x2="220" y2="88" stroke="#1F2030" stroke-width="1" />
+
+      <text y="102" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#71717A">[15:00:02.210] Ingest: SUZLON buy 40k</text>
+      <text y="116" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#EF4444">[15:00:02.212] SI-5 ADV 1% EXCEEDED</text>
+      <text y="130" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#EF4444">[15:00:02.214] QUARANTINED (Zero route)</text>
+      <line x1="0" y1="138" x2="220" y2="138" stroke="#1F2030" stroke-width="1" />
+
+      <text y="152" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#71717A">[15:00:02.400] Ingest: TCS.NS buy 50</text>
+      <text y="166" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#10B981">[15:00:02.402] SI-1..12: APPROVED</text>
+      <text y="180" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#38BDF8">[15:00:02.405] ROUTE: Governor Queue</text>
+    </g>
+
+    <!-- Bottom Health Metric -->
+    <g transform="translate(12, 260)">
+      <rect width="221" height="40" rx="6" fill="#121320" stroke="#25253C" stroke-width="1" />
+      <text x="10" y="16" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#71717A">VETO_ACCURACY</text>
+      <text x="10" y="32" font-family="'Cascadia Code', monospace" font-size="12" font-weight="700" fill="#10B981">
+        100.0% (0 False Passes)
+      </text>
+    </g>
+  </g>
+</svg>

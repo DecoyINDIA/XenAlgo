@@ -1,0 +1,189 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" width="100%" height="auto">
+  <defs>
+    <radialGradient id="wfGlow" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#7C86FF" stop-opacity="0.14" />
+      <stop offset="100%" stop-color="#0A0A0F" stop-opacity="0" />
+    </radialGradient>
+    <pattern id="wfGrid" width="25" height="25" patternUnits="userSpaceOnUse">
+      <path d="M 25 0 L 0 0 0 25" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1" />
+    </pattern>
+  </defs>
+
+  <style>
+    @keyframes pulseStep {
+      0% { stroke-dashoffset: 40; }
+      100% { stroke-dashoffset: 0; }
+    }
+    @keyframes phaseGlow {
+      0%, 100% { opacity: 0.8; }
+      50% { opacity: 0.3; }
+    }
+    .flow-line {
+      stroke-dasharray: 6 6;
+      animation: pulseStep 2s linear infinite;
+    }
+    .phase-badge {
+      animation: phaseGlow 2.5s ease-in-out infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .flow-line, .phase-badge {
+        animation: none !important;
+      }
+    }
+  </style>
+
+  <!-- Base Canvas -->
+  <rect width="900" height="420" rx="16" fill="#0A0A0F" stroke="#222234" stroke-width="1.5" />
+  <rect width="900" height="420" fill="url(#wfGrid)" rx="16" />
+  <rect width="900" height="420" fill="url(#wfGlow)" rx="16" />
+
+  <!-- HEADER -->
+  <g transform="translate(40, 36)">
+    <text font-family="'Segoe UI', 'Inter', -apple-system, sans-serif" font-weight="700" font-size="18" fill="#FFFFFF">
+      AUTONOMOUS DAILY SESSION WORKFLOW
+    </text>
+    <text y="22" font-family="'Segoe UI', 'Inter', -apple-system, sans-serif" font-weight="400" font-size="12" fill="#94A3B8">
+      Four discrete execution phases governed by deterministic startup and shutdown gates.
+    </text>
+  </g>
+
+  <!-- HORIZONTAL CONNECTOR TRACE -->
+  <g transform="translate(40, 160)">
+    <line x1="100" y1="0" x2="720" y2="0" stroke="#1F1F32" stroke-width="3" />
+    <line class="flow-line" x1="100" y1="0" x2="720" y2="0" stroke="#7C86FF" stroke-width="2" />
+  </g>
+
+  <!-- 4 PHASES COLUMNS -->
+  <!-- PHASE 1: PRE-MARKET -->
+  <g transform="translate(40, 85)">
+    <rect width="195" height="280" rx="10" fill="#10101C" stroke="#26263C" stroke-width="1.2" />
+    <rect width="195" height="30" rx="10" fill="#161628" />
+    <text x="12" y="20" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11" fill="#38BDF8">PHASE 1: PRE-MARKET</text>
+    <text x="145" y="20" font-family="'Cascadia Code', monospace" font-size="9.5" fill="#71717A">08:00-09:15</text>
+
+    <!-- Phase 1 Steps -->
+    <g transform="translate(12, 42)">
+      <rect width="171" height="48" rx="6" fill="#141424" stroke="#222238" stroke-width="1" />
+      <text x="10" y="18" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF">1. Auth Handshake</text>
+      <text x="10" y="34" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">24h OAuth + SHA-256 HMAC</text>
+    </g>
+
+    <g transform="translate(12, 98)">
+      <rect width="171" height="48" rx="6" fill="#141424" stroke="#222238" stroke-width="1" />
+      <text x="10" y="18" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF">2. Data Ingest</text>
+      <text x="10" y="34" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">Bhavcopy sync to DuckDB</text>
+    </g>
+
+    <g transform="translate(12, 154)">
+      <rect width="171" height="48" rx="6" fill="#141424" stroke="#222238" stroke-width="1" />
+      <text x="10" y="18" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF">3. Startup Gate</text>
+      <text x="10" y="34" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">Reconcile Journal &amp; Broker</text>
+    </g>
+
+    <g transform="translate(12, 218)">
+      <rect width="171" height="26" rx="5" fill="#0E1A16" stroke="#10B981" stroke-width="0.8" />
+      <text x="85" y="17" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="9.5" font-weight="700" fill="#10B981">GATE 1 CLEARED</text>
+    </g>
+  </g>
+
+  <!-- PHASE 2: MARKET OBSERVATION -->
+  <g transform="translate(248, 85)">
+    <rect width="195" height="280" rx="10" fill="#10101C" stroke="#26263C" stroke-width="1.2" />
+    <rect width="195" height="30" rx="10" fill="#161628" />
+    <text x="12" y="20" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11" fill="#7C86FF">PHASE 2: MARKET</text>
+    <text x="145" y="20" font-family="'Cascadia Code', monospace" font-size="9.5" fill="#71717A">09:15-15:00</text>
+
+    <g transform="translate(12, 42)">
+      <rect width="171" height="48" rx="6" fill="#141424" stroke="#222238" stroke-width="1" />
+      <text x="10" y="18" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF">1. Passive Stream</text>
+      <text x="10" y="34" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">WebSocket L2 Price Ticks</text>
+    </g>
+
+    <g transform="translate(12, 98)">
+      <rect width="171" height="48" rx="6" fill="#141424" stroke="#222238" stroke-width="1" />
+      <text x="10" y="18" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF">2. Collar Tracking</text>
+      <text x="10" y="34" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">Monitor +/-3% Band Threshold</text>
+    </g>
+
+    <g transform="translate(12, 154)">
+      <rect width="171" height="48" rx="6" fill="#141424" stroke="#222238" stroke-width="1" />
+      <text x="10" y="18" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF">3. Zero Intra Orders</text>
+      <text x="10" y="34" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">Swing horizon (No day-trades)</text>
+    </g>
+
+    <g transform="translate(12, 218)">
+      <rect width="171" height="26" rx="5" fill="#151528" stroke="#7C86FF" stroke-width="0.8" />
+      <text x="85" y="17" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="9.5" font-weight="700" fill="#A5B4FC">PASSIVE MONITOR</text>
+    </g>
+  </g>
+
+  <!-- PHASE 3: EXECUTION -->
+  <g transform="translate(456, 85)">
+    <rect width="195" height="280" rx="10" fill="#131322" stroke="#7C86FF" stroke-width="1.4" />
+    <rect width="195" height="30" rx="10" fill="#1B1C34" />
+    <text x="12" y="20" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11" fill="#FFFFFF">PHASE 3: EXECUTION</text>
+    <text x="145" y="20" font-family="'Cascadia Code', monospace" font-size="9.5" fill="#38BDF8">15:00-15:25</text>
+
+    <g transform="translate(12, 42)">
+      <rect width="171" height="48" rx="6" fill="#18182E" stroke="#2B2B4A" stroke-width="1" />
+      <text x="10" y="18" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF">1. Alpha Signals</text>
+      <text x="10" y="34" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">3 Sleeves (std30, a027, a062)</text>
+    </g>
+
+    <g transform="translate(12, 98)">
+      <rect width="171" height="48" rx="6" fill="#18182E" stroke="#2B2B4A" stroke-width="1" />
+      <text x="10" y="18" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF">2. Pure Veto Check</text>
+      <text x="10" y="34" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">12 Safety Invariants verified</text>
+    </g>
+
+    <g transform="translate(12, 154)">
+      <rect width="171" height="48" rx="6" fill="#18182E" stroke="#2B2B4A" stroke-width="1" />
+      <text x="10" y="18" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF">3. 2-OPS Governor</text>
+      <text x="10" y="34" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">Limit CNC orders dispatched</text>
+    </g>
+
+    <g transform="translate(12, 218)">
+      <rect width="171" height="26" rx="5" fill="#102528" stroke="#38BDF8" stroke-width="0.8" />
+      <text x="85" y="17" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="9.5" font-weight="700" fill="#38BDF8">ROUTED &amp; ACTIVE</text>
+    </g>
+  </g>
+
+  <!-- PHASE 4: EOD CLOSE & SYNC -->
+  <g transform="translate(664, 85)">
+    <rect width="195" height="280" rx="10" fill="#10101C" stroke="#26263C" stroke-width="1.2" />
+    <rect width="195" height="30" rx="10" fill="#161628" />
+    <text x="12" y="20" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11" fill="#10B981">PHASE 4: EOD CLOSE</text>
+    <text x="145" y="20" font-family="'Cascadia Code', monospace" font-size="9.5" fill="#71717A">15:25-16:00</text>
+
+    <g transform="translate(12, 42)">
+      <rect width="171" height="48" rx="6" fill="#141424" stroke="#222238" stroke-width="1" />
+      <text x="10" y="18" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF">1. Confirmed Fills</text>
+      <text x="10" y="34" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">Append fills to SQLite WAL</text>
+    </g>
+
+    <g transform="translate(12, 98)">
+      <rect width="171" height="48" rx="6" fill="#141424" stroke="#222238" stroke-width="1" />
+      <text x="10" y="18" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF">2. Position Mutation</text>
+      <text x="10" y="34" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">State derived by event replay</text>
+    </g>
+
+    <g transform="translate(12, 154)">
+      <rect width="171" height="48" rx="6" fill="#141424" stroke="#222238" stroke-width="1" />
+      <text x="10" y="18" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF">3. Session Lock</text>
+      <text x="10" y="34" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">Recon report, session closed</text>
+    </g>
+
+    <g transform="translate(12, 218)">
+      <rect width="171" height="26" rx="5" fill="#0E1A16" stroke="#10B981" stroke-width="0.8" />
+      <text x="85" y="17" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="9.5" font-weight="700" fill="#10B981">SESSION LOCKED</text>
+    </g>
+  </g>
+
+  <!-- BOTTOM STATUS -->
+  <g transform="translate(40, 380)">
+    <text font-family="'Cascadia Code', monospace" font-size="10.5" fill="#71717A">
+      CRON SCHEDULE // APSCHEDULER ASYNCIO // TIMEZONE: ASIA/KOLKATA (IST) // AUTOMATED REPLAY RECOVERY
+    </text>
+  </g>
+</svg>

@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 40" width="100%" height="auto">
+  <defs>
+    <linearGradient id="divLineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7C86FF" stop-opacity="0" />
+      <stop offset="35%" stop-color="#7C86FF" stop-opacity="0.4" />
+      <stop offset="50%" stop-color="#38BDF8" stop-opacity="1" />
+      <stop offset="65%" stop-color="#7C86FF" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#7C86FF" stop-opacity="0" />
+    </linearGradient>
+    <linearGradient id="travelBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0" />
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="1" />
+      <stop offset="100%" stop-color="#38BDF8" stop-opacity="0" />
+    </linearGradient>
+    <radialGradient id="divCenterGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#7C86FF" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#0A0A0F" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <style>
+    @keyframes pulseGem {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px #7C86FF); }
+      50% { transform: scale(1.15); filter: drop-shadow(0 0 8px #38BDF8); }
+    }
+    @keyframes laserPass {
+      0% { transform: translateX(200px); opacity: 0; }
+      20% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { transform: translateX(1000px); opacity: 0; }
+    }
+    .center-gem {
+      transform-origin: 600px 20px;
+      animation: pulseGem 3s ease-in-out infinite;
+    }
+    .laser-slider {
+      animation: laserPass 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .center-gem, .laser-slider {
+        animation: none !important;
+      }
+    }
+  </style>
+
+  <!-- Background Canvas -->
+  <rect width="1200" height="40" fill="#0A0A0F" />
+
+  <!-- Base Horizontal Glowing Rule -->
+  <line x1="80" y1="20" x2="1120" y2="20" stroke="url(#divLineGrad)" stroke-width="1.5" />
+  <line x1="250" y1="20" x2="950" y2="20" stroke="#7C86FF" stroke-width="0.8" opacity="0.5" />
+
+  <!-- Animated Traveling Laser Beam -->
+  <line class="laser-slider" x1="0" y1="20" x2="80" y2="20" stroke="url(#travelBeam)" stroke-width="2.5" />
+
+  <!-- Left Technical Coordinate Marker -->
+  <g transform="translate(100, 24)">
+    <text font-family="'Cascadia Code', monospace" font-size="8" fill="#4B5563">[0x7C86FF]</text>
+  </g>
+
+  <!-- Right Technical Coordinate Marker -->
+  <g transform="translate(1020, 24)">
+    <text font-family="'Cascadia Code', monospace" font-size="8" fill="#4B5563">// XENALGO</text>
+  </g>
+
+  <!-- Center Hexagonal Cybernetic Node -->
+  <circle cx="600" cy="20" r="16" fill="url(#divCenterGlow)" />
+  <g class="center-gem" transform="translate(600, 20)">
+    <polygon points="0,-9 9,0 0,9 -9,0" fill="#141424" stroke="#7C86FF" stroke-width="1.2" />
+    <polygon points="0,-4 4,0 0,4 -4,0" fill="#38BDF8" />
+  </g>
+</svg>

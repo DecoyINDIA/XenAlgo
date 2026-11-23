@@ -1,0 +1,164 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 260" width="100%" height="auto">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="45%" stop-color="#E0E7FF" />
+      <stop offset="100%" stop-color="#7C86FF" />
+    </linearGradient>
+    <linearGradient id="xenonLaserGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7C86FF" stop-opacity="0" />
+      <stop offset="50%" stop-color="#38BDF8" stop-opacity="1" />
+      <stop offset="100%" stop-color="#7C86FF" stop-opacity="0" />
+    </linearGradient>
+    <radialGradient id="markGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#7C86FF" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#0A0A0F" stop-opacity="0" />
+    </radialGradient>
+    <pattern id="brandGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="0.8" />
+    </pattern>
+  </defs>
+
+  <style>
+    @keyframes strokeDraw {
+      0% { stroke-dashoffset: 400; }
+      50% { stroke-dashoffset: 0; }
+      100% { stroke-dashoffset: -400; }
+    }
+    @keyframes pulseAura {
+      0%, 100% { transform: scale(1); opacity: 0.25; }
+      50% { transform: scale(1.08); opacity: 0.55; }
+    }
+    @keyframes laserSweep {
+      0% { transform: translateX(-80px); opacity: 0; }
+      30% { opacity: 1; }
+      70% { opacity: 1; }
+      100% { transform: translateX(80px); opacity: 0; }
+    }
+    @keyframes beaconExpand {
+      0% { r: 6px; opacity: 0.9; }
+      100% { r: 38px; opacity: 0; }
+    }
+    @keyframes rotRing {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .stepped-x-path {
+      stroke-dasharray: 400;
+      animation: strokeDraw 8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+    .aura-glow {
+      transform-origin: 120px 130px;
+      animation: pulseAura 4s ease-in-out infinite;
+    }
+    .laser-beam {
+      animation: laserSweep 3.5s ease-in-out infinite;
+    }
+    .beacon-wave {
+      animation: beaconExpand 2.2s ease-out infinite;
+    }
+    .ring-rot {
+      transform-origin: 120px 130px;
+      animation: rotRing 20s linear infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .stepped-x-path, .aura-glow, .laser-beam, .beacon-wave, .ring-rot {
+        animation: none !important;
+      }
+    }
+  </style>
+
+  <!-- Background Base -->
+  <rect width="800" height="260" rx="16" fill="#0A0A0F" stroke="#222236" stroke-width="1.5" />
+  <rect width="800" height="260" fill="url(#brandGrid)" rx="16" />
+  <circle class="aura-glow" cx="120" cy="130" r="100" fill="url(#markGlow)" />
+
+  <!-- LEFT: STEPPED 'X' BRAND EMBLEM -->
+  <g transform="translate(120, 130)">
+    <!-- Outer Orbit Rings -->
+    <circle cx="0" cy="0" r="76" fill="none" stroke="rgba(124,134,255,0.18)" stroke-width="1" stroke-dasharray="4 6" />
+    <circle class="ring-rot" cx="0" cy="0" r="66" fill="none" stroke="rgba(56,189,248,0.25)" stroke-width="1.5" stroke-dasharray="24 16 8 16" />
+
+    <!-- Pulsing Concentric Beacon -->
+    <circle class="beacon-wave" cx="0" cy="0" r="10" fill="none" stroke="#7C86FF" stroke-width="1.5" />
+
+    <!-- Stepped X Facets: Modern Geometric Glyph -->
+    <!-- Wing 1: Top-Left to Center -->
+    <path d="M-42 -48 L-22 -48 L-2 -18 L-14 -6 Z" fill="#18182A" stroke="#7C86FF" stroke-width="1.5" />
+    <path class="stepped-x-path" d="M-42 -48 L-22 -48 L-2 -18 L-14 -6 Z" fill="none" stroke="#38BDF8" stroke-width="2" />
+
+    <!-- Wing 2: Bottom-Right to Center -->
+    <path d="M14 6 L2 18 L22 48 L42 48 Z" fill="#18182A" stroke="#7C86FF" stroke-width="1.5" />
+    <path class="stepped-x-path" d="M14 6 L2 18 L22 48 L42 48 Z" fill="none" stroke="#38BDF8" stroke-width="2" />
+
+    <!-- Wing 3: Top-Right to Center -->
+    <path d="M42 -48 L22 -48 L2 -18 L14 -6 Z" fill="#202038" stroke="#7C86FF" stroke-width="1.5" />
+    <path class="stepped-x-path" d="M42 -48 L22 -48 L2 -18 L14 -6 Z" fill="none" stroke="#7C86FF" stroke-width="2" />
+
+    <!-- Wing 4: Bottom-Left to Center -->
+    <path d="M-14 6 L-2 18 L-22 48 L-42 48 Z" fill="#202038" stroke="#7C86FF" stroke-width="1.5" />
+    <path class="stepped-x-path" d="M-14 6 L-2 18 L-22 48 L-42 48 Z" fill="none" stroke="#7C86FF" stroke-width="2" />
+
+    <!-- Center Glowing Diamond Core -->
+    <polygon points="0,-10 10,0 0,10 -10,0" fill="#7C86FF" />
+    <polygon points="0,-5 5,0 0,5 -5,0" fill="#FFFFFF" />
+
+    <!-- Laser horizontal pulse across center -->
+    <line class="laser-beam" x1="-60" y1="0" x2="60" y2="0" stroke="url(#xenonLaserGrad)" stroke-width="2.5" />
+
+    <!-- Corner registration marks -->
+    <path d="M-60 -60 L-50 -60 M-60 -60 L-60 -50" stroke="rgba(124,134,255,0.4)" stroke-width="1.2" />
+    <path d="M60 -60 L50 -60 M60 -60 L60 -50" stroke="rgba(124,134,255,0.4)" stroke-width="1.2" />
+    <path d="M-60 60 L-50 60 M-60 60 L-60 50" stroke="rgba(124,134,255,0.4)" stroke-width="1.2" />
+    <path d="M60 60 L50 60 M60 60 L60 50" stroke="rgba(124,134,255,0.4)" stroke-width="1.2" />
+  </g>
+
+  <!-- RIGHT: WORDMARK & BRAND METADATA -->
+  <g transform="translate(230, 75)">
+    <!-- Main Wordmark -->
+    <text x="0" y="52" font-family="'Segoe UI', 'Inter', -apple-system, sans-serif" font-weight="800" font-size="56" fill="url(#brandGrad)" letter-spacing="4">
+      XENALGO
+    </text>
+
+    <!-- Subtitle / Tagline -->
+    <text x="2" y="86" font-family="'Segoe UI', 'Inter', -apple-system, sans-serif" font-weight="600" font-size="13" fill="#94A3B8" letter-spacing="1.5">
+      AUTONOMOUS QUANTITATIVE EXECUTION FOR NSE EQUITIES
+    </text>
+
+    <!-- Pillar Pills -->
+    <g transform="translate(2, 110)">
+      <!-- Pill 1 -->
+      <rect width="112" height="24" rx="5" fill="#13131F" stroke="#7C86FF" stroke-width="0.8" />
+      <circle cx="12" cy="12" r="3" fill="#7C86FF" />
+      <text x="22" y="16" font-family="'Cascadia Code', monospace" font-size="10" font-weight="600" fill="#E2E8F0">PURE_VETO</text>
+
+      <!-- Pill 2 -->
+      <g transform="translate(122, 0)">
+        <rect width="128" height="24" rx="5" fill="#13131F" stroke="#10B981" stroke-width="0.8" />
+        <circle cx="12" cy="12" r="3" fill="#10B981" />
+        <text x="22" y="16" font-family="'Cascadia Code', monospace" font-size="10" font-weight="600" fill="#E2E8F0">2-OPS_SEBI</text>
+      </g>
+
+      <!-- Pill 3 -->
+      <g transform="translate(260, 0)">
+        <rect width="134" height="24" rx="5" fill="#13131F" stroke="#38BDF8" stroke-width="0.8" />
+        <circle cx="12" cy="12" r="3" fill="#38BDF8" />
+        <text x="22" y="16" font-family="'Cascadia Code', monospace" font-size="10" font-weight="600" fill="#E2E8F0">CONFIRMED_FILLS</text>
+      </g>
+
+      <!-- Pill 4 -->
+      <g transform="translate(404, 0)">
+        <rect width="120" height="24" rx="5" fill="#13131F" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" />
+        <text x="12" y="16" font-family="'Cascadia Code', monospace" font-size="10" font-weight="600" fill="#71717A">SQLITE_WAL</text>
+      </g>
+    </g>
+
+    <!-- Micro telemetry info line -->
+    <text x="2" y="160" font-family="'Cascadia Code', monospace" font-size="10" fill="#4B5563">
+      EST. 2026 // NSE:NIFTY500 // FYERS BROKER API V3 // ZERO HUMAN IN THE LOOP
+    </text>
+  </g>
+</svg>

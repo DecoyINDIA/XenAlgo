@@ -1,0 +1,179 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400" width="100%" height="auto">
+  <defs>
+    <radialGradient id="govGlow" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.14" />
+      <stop offset="100%" stop-color="#0A0A0F" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="safetyMeterGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="20%" stop-color="#38BDF8" />
+      <stop offset="40%" stop-color="#F59E0B" />
+      <stop offset="100%" stop-color="#EF4444" />
+    </linearGradient>
+    <pattern id="govGrid" width="25" height="25" patternUnits="userSpaceOnUse">
+      <path d="M 25 0 L 0 0 0 25" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1" />
+    </pattern>
+  </defs>
+
+  <style>
+    @keyframes tokenDrop {
+      0% { transform: translateY(-40px); opacity: 0; }
+      20% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { transform: translateY(40px); opacity: 0; }
+    }
+    @keyframes pulseMeter {
+      0%, 100% { filter: drop-shadow(0 0 2px #38BDF8); }
+      50% { filter: drop-shadow(0 0 8px #38BDF8); }
+    }
+    @keyframes burstGlow {
+      0%, 100% { opacity: 0.8; }
+      50% { opacity: 0.3; }
+    }
+
+    .dropping-token {
+      animation: tokenDrop 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+    .meter-glow {
+      animation: pulseMeter 3s ease-in-out infinite;
+    }
+    .badge-pulse {
+      animation: burstGlow 2s ease-in-out infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .dropping-token, .meter-glow, .badge-pulse {
+        animation: none !important;
+      }
+    }
+  </style>
+
+  <!-- Base Canvas -->
+  <rect width="900" height="400" rx="16" fill="#0A0A0F" stroke="#222234" stroke-width="1.5" />
+  <rect width="900" height="400" fill="url(#govGrid)" rx="16" />
+  <rect width="900" height="400" fill="url(#govGlow)" rx="16" />
+
+  <!-- HEADER -->
+  <g transform="translate(40, 36)">
+    <text font-family="'Segoe UI', 'Inter', -apple-system, sans-serif" font-weight="700" font-size="18" fill="#FFFFFF">
+      SEBI COMPLIANCE ENVELOPE &amp; 2-OPS TOKEN BUCKET GOVERNOR
+    </text>
+    <text y="22" font-family="'Segoe UI', 'Inter', -apple-system, sans-serif" font-weight="400" font-size="12" fill="#94A3B8">
+      Strict token bucket rate limiting guarantees XenAlgo never trips SEBI's 10 orders/sec algo threshold.
+    </text>
+  </g>
+
+  <!-- LEFT: TOKEN BUCKET MECHANISM (X: 40, Y: 95) -->
+  <g transform="translate(40, 95)">
+    <rect width="360" height="265" rx="10" fill="#0F101A" stroke="#25253C" stroke-width="1.2" />
+    <rect width="360" height="30" rx="10" fill="#161726" />
+    <text x="16" y="20" font-family="'Cascadia Code', monospace" font-size="11" font-weight="700" fill="#38BDF8">TOKEN_BUCKET_ALGORITHM</text>
+    <rect x="250" y="6" width="96" height="18" rx="4" fill="rgba(56,189,248,0.2)" />
+    <text x="298" y="19" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="9" font-weight="700" fill="#38BDF8">LEAKY_BUCKET</text>
+
+    <!-- Token Generator Spout -->
+    <g transform="translate(80, 50)">
+      <rect x="25" y="0" width="50" height="16" rx="4" fill="#1A1B2C" stroke="#38BDF8" stroke-width="1" />
+      <text x="50" y="12" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#38BDF8">+2.0 TOKENS/S</text>
+
+      <!-- Animated Dropping Token -->
+      <g class="dropping-token" transform="translate(50, 40)">
+        <circle cx="0" cy="0" r="10" fill="#06B6D4" stroke="#FFFFFF" stroke-width="1" />
+        <text x="0" y="3.5" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="9" font-weight="700" fill="#0A0A0F">1T</text>
+      </g>
+
+      <!-- The Physical Bucket Vessel -->
+      <path d="M 15 50 L 25 125 L 75 125 L 85 50 Z" fill="#141424" stroke="#7C86FF" stroke-width="2" />
+      <!-- Water/Token Fill Level in Bucket -->
+      <path d="M 22 95 L 25 124 L 75 124 L 78 95 Z" fill="rgba(56,189,248,0.3)" />
+      <line x1="22" y1="95" x2="78" y2="95" stroke="#38BDF8" stroke-width="2" stroke-dasharray="2 3" />
+
+      <!-- Tokens resting in bucket -->
+      <circle cx="42" cy="112" r="7" fill="#38BDF8" />
+      <circle cx="58" cy="112" r="7" fill="#7C86FF" />
+      <text x="50" y="142" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="9" fill="#A5B4FC">CAPACITY: 2 TOKENS</text>
+    </g>
+
+    <!-- Right Side Parameters of Bucket -->
+    <g transform="translate(200, 52)">
+      <text font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11" fill="#FFFFFF">GOVERNOR INVARIANTS</text>
+      <text y="22" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">• Max Burst: 2 orders</text>
+      <text y="42" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">• Refill: 500ms / token</text>
+      <text y="62" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">• Async Sleep Queue</text>
+      <text y="82" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">• Zero Exchange Throttles</text>
+
+      <rect y="105" width="144" height="26" rx="5" fill="#121F18" stroke="#10B981" stroke-width="1" />
+      <text x="72" y="122" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="9.5" font-weight="700" fill="#10B981">SI-2 ENFORCED</text>
+    </g>
+
+    <!-- Bottom Dispatch Status -->
+    <g transform="translate(16, 215)">
+      <rect width="328" height="36" rx="6" fill="#0C0D16" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
+      <circle cx="16" cy="18" r="4" fill="#10B981" />
+      <text x="28" y="22" font-family="'Cascadia Code', monospace" font-size="10" fill="#E2E8F0">DISPATCH RATE: 0.45 OPS (Bucket Full)</text>
+    </g>
+  </g>
+
+  <!-- RIGHT: SEBI COMPARISON GAUGE & SAFETY MARGIN (X: 430, Y: 95) -->
+  <g transform="translate(430, 95)">
+    <rect width="430" height="265" rx="10" fill="#0F101A" stroke="#25253C" stroke-width="1.2" />
+    <rect width="430" height="30" rx="10" fill="#161726" />
+    <text x="16" y="20" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="12" fill="#FFFFFF">RATE ENVELOPE BENCHMARK</text>
+    <rect x="300" y="6" width="116" height="18" rx="4" fill="rgba(16,185,129,0.2)" />
+    <text x="358" y="19" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="9" font-weight="700" fill="#10B981">5X SAFETY MARGIN</text>
+
+    <!-- Rate Comparison Bar Graphic -->
+    <g transform="translate(24, 60)">
+      <text font-family="'Segoe UI', sans-serif" font-size="11" font-weight="600" fill="#94A3B8">ORDERS PER SECOND SCALE (0 to 10 OPS)</text>
+
+      <!-- Background Track -->
+      <rect y="16" width="380" height="28" rx="6" fill="#141422" stroke="#222234" stroke-width="1" />
+
+      <!-- Gradient Fill representing the entire scale -->
+      <rect y="16" width="380" height="28" rx="6" fill="url(#safetyMeterGrad)" opacity="0.25" />
+
+      <!-- XenAlgo Operating Range (0 to 2 OPS) = (0 to 76px width) -->
+      <rect y="16" width="76" height="28" rx="6" fill="#10B981" opacity="0.8" />
+      <!-- Pin at XenAlgo Hard Cap (2 OPS = 76px) -->
+      <line class="meter-glow" x1="76" y1="10" x2="76" y2="50" stroke="#38BDF8" stroke-width="3" />
+
+      <!-- Pin at SEBI Limit (10 OPS = 380px) -->
+      <line x1="380" y1="10" x2="380" y2="50" stroke="#EF4444" stroke-width="3" />
+
+      <!-- Scale Labels -->
+      <text x="0" y="60" font-family="'Cascadia Code', monospace" font-size="9" fill="#71717A">0 OPS</text>
+      <text x="76" y="60" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="9" font-weight="700" fill="#38BDF8">2.0 OPS</text>
+      <text x="380" y="60" text-anchor="end" font-family="'Cascadia Code', monospace" font-size="9" font-weight="700" fill="#EF4444">10.0 OPS</text>
+
+      <!-- Callout Annotations -->
+      <g transform="translate(60, -22)">
+        <polygon points="16,14 11,6 21,6" fill="#38BDF8" />
+        <rect x="-35" y="-14" width="102" height="20" rx="4" fill="#0D1E2A" stroke="#38BDF8" stroke-width="0.8" />
+        <text x="16" y="0" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="8.5" font-weight="700" fill="#38BDF8">XENALGO LIMIT</text>
+      </g>
+
+      <g transform="translate(365, -22)">
+        <polygon points="15,14 10,6 20,6" fill="#EF4444" />
+        <rect x="-35" y="-14" width="100" height="20" rx="4" fill="#240D12" stroke="#EF4444" stroke-width="0.8" />
+        <text x="15" y="0" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="8.5" font-weight="700" fill="#EF4444">SEBI THRESHOLD</text>
+      </g>
+    </g>
+
+    <!-- Explanatory Safety Matrix -->
+    <g transform="translate(24, 155)">
+      <rect width="380" height="90" rx="8" fill="#131320" stroke="#242436" stroke-width="1" />
+      <g transform="translate(16, 20)">
+        <text font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11" fill="#FFFFFF">WHY 2.0 OPS MATTERS:</text>
+        <text y="20" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">
+          • SEBI circular requires algorithmic trading registration if rate &gt;= 10 OPS.
+        </text>
+        <text y="38" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">
+          • Capping at 2.0 OPS operates on personal retail broker API with full legal relief.
+        </text>
+        <text y="54" font-family="'Segoe UI', sans-serif" font-size="10" fill="#10B981">
+          • Zero exchange throttling, zero compliance risk, 100% autonomous.
+        </text>
+      </g>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,225 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560" width="100%" height="auto">
+  <defs>
+    <radialGradient id="archGlow" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#7C86FF" stop-opacity="0.14" />
+      <stop offset="100%" stop-color="#0A0A0F" stop-opacity="0" />
+    </radialGradient>
+    <pattern id="archGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1" />
+    </pattern>
+  </defs>
+
+  <style>
+    @keyframes conduitFlow {
+      0% { stroke-dashoffset: 40; }
+      100% { stroke-dashoffset: 0; }
+    }
+    @keyframes pulseNode {
+      0%, 100% { opacity: 0.8; }
+      50% { opacity: 0.3; }
+    }
+
+    .conduit-dash {
+      stroke-dasharray: 6 8;
+      animation: conduitFlow 2s linear infinite;
+    }
+    .node-pulse {
+      animation: pulseNode 2.5s ease-in-out infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .conduit-dash, .node-pulse {
+        animation: none !important;
+      }
+    }
+  </style>
+
+  <!-- Base Canvas -->
+  <rect width="1000" height="560" rx="16" fill="#0A0A0F" stroke="#222234" stroke-width="1.5" />
+  <rect width="1000" height="560" fill="url(#archGrid)" rx="16" />
+  <rect width="1000" height="560" fill="url(#archGlow)" rx="16" />
+
+  <!-- HEADER -->
+  <g transform="translate(44, 38)">
+    <text font-family="'Segoe UI', 'Inter', -apple-system, sans-serif" font-weight="700" font-size="20" fill="#FFFFFF">
+      XENALGO COMPLETE SYSTEM ARCHITECTURE
+    </text>
+    <text y="22" font-family="'Segoe UI', 'Inter', -apple-system, sans-serif" font-weight="400" font-size="12.5" fill="#94A3B8">
+      Single-process Asyncio monolith on Mumbai VPS with Tailscale encrypted private mesh supervision.
+    </text>
+  </g>
+
+  <!-- TOP LAYER: OPERATOR SUPERVISION & CONSOLE (Y: 80 to 140) -->
+  <g transform="translate(44, 80)">
+    <rect width="912" height="65" rx="8" fill="#10101C" stroke="#282840" stroke-width="1.2" />
+    <rect width="912" height="22" rx="8" fill="#161628" />
+    <text x="14" y="15" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="10.5" fill="#A5B4FC">
+      SUPERVISION &amp; OVERRIDE PLANE (TAILSCALE ENCRYPTED MESH)
+    </text>
+    <rect x="790" y="3" width="105" height="16" rx="4" fill="rgba(16,185,129,0.2)" />
+    <text x="842" y="14" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="8.5" font-weight="700" fill="#10B981">TAILSCALE ONLY</text>
+
+    <!-- Sub-boxes in Supervision -->
+    <g transform="translate(14, 28)">
+      <rect width="210" height="28" rx="5" fill="#141424" stroke="#2C2C46" stroke-width="1" />
+      <text x="10" y="18" font-family="'Cascadia Code', monospace" font-size="10" fill="#FFFFFF">FastAPI + HTMX Dashboard</text>
+    </g>
+    <g transform="translate(238, 28)">
+      <rect width="210" height="28" rx="5" fill="#141424" stroke="#2C2C46" stroke-width="1" />
+      <text x="10" y="18" font-family="'Cascadia Code', monospace" font-size="10" fill="#38BDF8">SSE Live Telemetry &amp; Logs</text>
+    </g>
+    <g transform="translate(462, 28)">
+      <rect width="210" height="28" rx="5" fill="#141424" stroke="#2C2C46" stroke-width="1" />
+      <text x="10" y="18" font-family="'Cascadia Code', monospace" font-size="10" fill="#A5B4FC">Telegram Bot (Alerts &amp; Ack)</text>
+    </g>
+    <g transform="translate(686, 28)">
+      <rect width="212" height="28" rx="5" fill="#201016" stroke="#EF4444" stroke-width="1" />
+      <text x="10" y="18" font-family="'Cascadia Code', monospace" font-size="10" font-weight="700" fill="#FCA5A5">Triple Kill Switch (Nuke)</text>
+    </g>
+  </g>
+
+  <!-- CONNECTOR PIPES FROM SUPERVISION TO CORE (Y: 145 to 175) -->
+  <g>
+    <path class="conduit-dash" d="M 150 145 L 150 175" stroke="#7C86FF" stroke-width="2" />
+    <path class="conduit-dash" d="M 370 145 L 370 175" stroke="#38BDF8" stroke-width="2" />
+    <path class="conduit-dash" d="M 800 145 L 800 175" stroke="#EF4444" stroke-width="2" />
+  </g>
+
+  <!-- MIDDLE LAYER: CORE ASYNCIO MONOLITH (Y: 175 to 370) -->
+  <g transform="translate(44, 175)">
+    <rect width="912" height="195" rx="10" fill="#0D0E18" stroke="#7C86FF" stroke-width="1.5" />
+    <rect width="912" height="26" rx="10" fill="#17182E" />
+    <text x="16" y="18" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="12" fill="#FFFFFF">
+      CORE EXECUTION MONOLITH (SINGLE PYTHON 3.14 ASYNCIO PROCESS)
+    </text>
+    <text x="730" y="18" font-family="'Cascadia Code', monospace" font-size="10" fill="#A5B4FC">
+      MUMBAI VPS // HOSTED INSTANCE
+    </text>
+
+    <!-- Module 1: Scheduler & Lifecycle -->
+    <g transform="translate(16, 38)">
+      <rect width="165" height="142" rx="8" fill="#121322" stroke="#262740" stroke-width="1" />
+      <text x="12" y="22" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11" fill="#FFFFFF">SCHEDULER &amp; LIFE</text>
+      <text x="12" y="38" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#38BDF8">APScheduler + Cron</text>
+      <line x1="12" y1="46" x2="153" y2="46" stroke="#1F2034" stroke-width="1" />
+      <text x="12" y="64" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• 08:15 Token Check</text>
+      <text x="12" y="80" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• 09:00 Pre-Market</text>
+      <text x="12" y="96" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• 15:00 Signal Run</text>
+      <text x="12" y="112" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• 15:45 EOD Close</text>
+      <text x="12" y="130" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#10B981">STATE: ONLINE</text>
+    </g>
+
+    <!-- Module 2: Multi-Alpha Engine -->
+    <g transform="translate(195, 38)">
+      <rect width="165" height="142" rx="8" fill="#121322" stroke="#262740" stroke-width="1" />
+      <text x="12" y="22" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11" fill="#FFFFFF">ALPHA SLEEVES</text>
+      <text x="12" y="38" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#7C86FF">Vectorized Pandas</text>
+      <line x1="12" y1="46" x2="153" y2="46" stroke="#1F2034" stroke-width="1" />
+      <text x="12" y="64" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• Sleeve 1: std30</text>
+      <text x="12" y="80" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• Sleeve 2: a027</text>
+      <text x="12" y="96" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• Sleeve 3: a062</text>
+      <text x="12" y="112" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• Cross-Netting</text>
+      <text x="12" y="130" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#7C86FF">ALLOC: 1/3 EACH</text>
+    </g>
+
+    <!-- Module 3: Pure Risk Veto -->
+    <g transform="translate(374, 38)">
+      <rect width="165" height="142" rx="8" fill="#141122" stroke="#7C86FF" stroke-width="1.2" />
+      <text x="12" y="22" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11" fill="#FFFFFF">RISK ENGINE</text>
+      <text x="12" y="38" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#EF4444">Pure Veto Guard</text>
+      <line x1="12" y1="46" x2="153" y2="46" stroke="#241E34" stroke-width="1" />
+      <text x="12" y="64" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• 12 Pure Invariants</text>
+      <text x="12" y="80" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• Fat-Finger &lt; 5%</text>
+      <text x="12" y="96" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• Price Collar 3%</text>
+      <text x="12" y="112" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• Liquidity ADV 1%</text>
+      <text x="12" y="130" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#10B981">ZERO BYPASS</text>
+    </g>
+
+    <!-- Module 4: 2-OPS Governor -->
+    <g transform="translate(553, 38)">
+      <rect width="165" height="142" rx="8" fill="#101524" stroke="#38BDF8" stroke-width="1.2" />
+      <text x="12" y="22" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11" fill="#FFFFFF">RATE GOVERNOR</text>
+      <text x="12" y="38" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#38BDF8">SEBI Token Bucket</text>
+      <line x1="12" y1="46" x2="153" y2="46" stroke="#1D253A" stroke-width="1" />
+      <text x="12" y="64" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• Hard Cap: 2.0 OPS</text>
+      <text x="12" y="80" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• SEBI Floor: 10 OPS</text>
+      <text x="12" y="96" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• 5x Safety Margin</text>
+      <text x="12" y="112" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• Burst Cap: 2</text>
+      <text x="12" y="130" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#38BDF8">SEBI COMPLIANT</text>
+    </g>
+
+    <!-- Module 5: Execution Engine & Reconciler -->
+    <g transform="translate(732, 38)">
+      <rect width="165" height="142" rx="8" fill="#10181A" stroke="#10B981" stroke-width="1.2" />
+      <text x="12" y="22" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11" fill="#FFFFFF">EXECUTION &amp; RECON</text>
+      <text x="12" y="38" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#10B981">Confirmed Fills</text>
+      <line x1="12" y1="46" x2="153" y2="46" stroke="#182A24" stroke-width="1" />
+      <text x="12" y="64" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• Idempotent CID</text>
+      <text x="12" y="80" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• WS Fill Catch</text>
+      <text x="12" y="96" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• Mutate on Fill</text>
+      <text x="12" y="112" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• Broker Audit</text>
+      <text x="12" y="130" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#10B981">ZERO DRIFT</text>
+    </g>
+  </g>
+
+  <!-- CONNECTOR PIPES FROM CORE TO LOWER TIERS (Y: 370 to 410) -->
+  <g>
+    <path class="conduit-dash" d="M 270 370 L 270 410" stroke="#7C86FF" stroke-width="2" />
+    <path class="conduit-dash" d="M 750 370 L 750 410" stroke="#10B981" stroke-width="2" />
+  </g>
+
+  <!-- BOTTOM LAYER: STORAGE (LEFT) & EXTERNAL BROKER (RIGHT) -->
+  <!-- Left Box: Storage Layer (DuckDB & SQLite) -->
+  <g transform="translate(44, 410)">
+    <rect width="440" height="120" rx="10" fill="#10101C" stroke="#25253A" stroke-width="1.2" />
+    <rect width="440" height="24" rx="10" fill="#161628" />
+    <text x="14" y="16" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11" fill="#A5B4FC">
+      PERSISTENCE &amp; STORAGE PLANE
+    </text>
+
+    <!-- DuckDB -->
+    <g transform="translate(14, 34)">
+      <rect width="198" height="74" rx="6" fill="#131322" stroke="#2C2C44" stroke-width="1" />
+      <text x="10" y="20" font-family="'Cascadia Code', monospace" font-size="11" font-weight="700" fill="#38BDF8">DuckDB EOD</text>
+      <text x="10" y="38" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">Read-Only in Live Loop</text>
+      <text x="10" y="52" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">NIFTY 500 Historical Data</text>
+      <text x="10" y="66" font-family="'Cascadia Code', monospace" font-size="8" fill="#71717A">Vectorized Parquet Ingest</text>
+    </g>
+
+    <!-- SQLite WAL -->
+    <g transform="translate(228, 34)">
+      <rect width="198" height="74" rx="6" fill="#131322" stroke="#2C2C44" stroke-width="1" />
+      <text x="10" y="20" font-family="'Cascadia Code', monospace" font-size="11" font-weight="700" fill="#10B981">SQLite (WAL)</text>
+      <text x="10" y="38" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">Append-Only Event Sourcing</text>
+      <text x="10" y="52" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">synchronous=FULL Journal</text>
+      <text x="10" y="66" font-family="'Cascadia Code', monospace" font-size="8" fill="#10B981">Deterministic State Replay</text>
+    </g>
+  </g>
+
+  <!-- Right Box: External Broker & Exchange Gateway -->
+  <g transform="translate(516, 410)">
+    <rect width="440" height="120" rx="10" fill="#10101C" stroke="#25253A" stroke-width="1.2" />
+    <rect width="440" height="24" rx="10" fill="#161628" />
+    <text x="14" y="16" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11" fill="#38BDF8">
+      BROKER &amp; EXCHANGE INTERFACE (FYERS API V3)
+    </text>
+
+    <!-- Fyers REST API -->
+    <g transform="translate(14, 34)">
+      <rect width="198" height="74" rx="6" fill="#131322" stroke="#2C2C44" stroke-width="1" />
+      <text x="10" y="20" font-family="'Cascadia Code', monospace" font-size="11" font-weight="700" fill="#38BDF8">REST v3 Orders</text>
+      <text x="10" y="38" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">Static IP Locked Gate</text>
+      <text x="10" y="52" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">Limit CNC Orders Only</text>
+      <text x="10" y="66" font-family="'Cascadia Code', monospace" font-size="8" fill="#71717A">24h Token + SHA256 HMAC</text>
+    </g>
+
+    <!-- Fyers WebSocket & NSE -->
+    <g transform="translate(228, 34)">
+      <rect width="198" height="74" rx="6" fill="#131322" stroke="#2C2C44" stroke-width="1" />
+      <text x="10" y="20" font-family="'Cascadia Code', monospace" font-size="11" font-weight="700" fill="#10B981">WebSocket Feed</text>
+      <text x="10" y="38" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">Real-time Order &amp; Trade WS</text>
+      <text x="10" y="52" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">NSE Equities Matching</text>
+      <text x="10" y="66" font-family="'Cascadia Code', monospace" font-size="8" fill="#10B981">Heartbeat Monitored</text>
+    </g>
+  </g>
+</svg>

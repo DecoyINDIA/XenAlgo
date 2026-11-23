@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400" width="100%" height="auto">
+  <defs>
+    <radialGradient id="smGlow" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#10B981" stop-opacity="0.14" />
+      <stop offset="100%" stop-color="#0A0A0F" stop-opacity="0" />
+    </radialGradient>
+    <pattern id="smGrid" width="25" height="25" patternUnits="userSpaceOnUse">
+      <path d="M 25 0 L 0 0 0 25" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1" />
+    </pattern>
+  </defs>
+
+  <style>
+    @keyframes statePulse {
+      0%, 100% { filter: drop-shadow(0 0 2px #10B981); }
+      50% { filter: drop-shadow(0 0 10px #10B981); }
+    }
+    @keyframes dashStream {
+      0% { stroke-dashoffset: 40; }
+      100% { stroke-dashoffset: 0; }
+    }
+    @keyframes cursorBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    .active-state {
+      animation: statePulse 2.5s ease-in-out infinite;
+    }
+    .flow-dash {
+      stroke-dasharray: 6 6;
+      animation: dashStream 2s linear infinite;
+    }
+    .terminal-cursor {
+      animation: cursorBlink 1s step-start infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .active-state, .flow-dash, .terminal-cursor {
+        animation: none !important;
+      }
+    }
+  </style>
+
+  <!-- Base Canvas -->
+  <rect width="900" height="400" rx="16" fill="#0A0A0F" stroke="#222234" stroke-width="1.5" />
+  <rect width="900" height="400" fill="url(#smGrid)" rx="16" />
+  <rect width="900" height="400" fill="url(#smGlow)" rx="16" />
+
+  <!-- HEADER -->
+  <g transform="translate(40, 36)">
+    <text font-family="'Segoe UI', 'Inter', -apple-system, sans-serif" font-weight="700" font-size="18" fill="#FFFFFF">
+      CONFIRMED-FILLS ORDER STATE MACHINE &amp; APPEND-ONLY JOURNAL
+    </text>
+    <text y="22" font-family="'Segoe UI', 'Inter', -apple-system, sans-serif" font-weight="400" font-size="12" fill="#94A3B8">
+      Positions change ONLY from confirmed broker fills. SQLite WAL event log is strictly append-only.
+    </text>
+  </g>
+
+  <!-- TOP HALF: 5-STATE PIPELINE (Y: 85 to 205) -->
+  <g transform="translate(40, 85)">
+    <!-- CRITICAL INVARIANT CALLOUT BANNER -->
+    <rect width="820" height="28" rx="6" fill="#181414" stroke="rgba(239,68,68,0.4)" stroke-width="1" />
+    <circle cx="16" cy="14" r="4" fill="#EF4444" />
+    <text x="28" y="18" font-family="'Cascadia Code', monospace" font-size="10.5" font-weight="700" fill="#FCA5A5">
+      CORE SAFETY INVARIANT (SI-1):
+    </text>
+    <text x="215" y="18" font-family="'Segoe UI', sans-serif" font-size="11" fill="#E2E8F0">
+      Positions mutate exclusively on confirmed TRADED fill events. SUBMITTED or PENDING never alter portfolio state!
+    </text>
+
+    <!-- State 1: INTENT -->
+    <g transform="translate(0, 45)">
+      <rect width="130" height="74" rx="8" fill="#11111E" stroke="#7C86FF" stroke-width="1.2" />
+      <text x="14" y="24" font-family="'Cascadia Code', monospace" font-size="12" font-weight="700" fill="#A5B4FC">1. INTENT</text>
+      <text x="14" y="44" font-family="'Segoe UI', sans-serif" font-size="9.5" fill="#94A3B8">Alpha Engine</text>
+      <text x="14" y="60" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#71717A">NO_POSITION</text>
+    </g>
+
+    <!-- Flow Arrow 1 -->
+    <path class="flow-dash" d="M 130 82 L 165 82" stroke="#7C86FF" stroke-width="2" />
+
+    <!-- State 2: SUBMITTED -->
+    <g transform="translate(165, 45)">
+      <rect width="135" height="74" rx="8" fill="#11111E" stroke="#38BDF8" stroke-width="1.2" />
+      <text x="14" y="24" font-family="'Cascadia Code', monospace" font-size="12" font-weight="700" fill="#38BDF8">2. SUBMITTED</text>
+      <text x="14" y="44" font-family="'Segoe UI', sans-serif" font-size="9.5" fill="#94A3B8">Veto OK &amp; Routed</text>
+      <text x="14" y="60" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#EF4444">NO_POSITION</text>
+    </g>
+
+    <!-- Flow Arrow 2 -->
+    <path class="flow-dash" d="M 300 82 L 335 82" stroke="#38BDF8" stroke-width="2" />
+
+    <!-- State 3: PENDING -->
+    <g transform="translate(335, 45)">
+      <rect width="135" height="74" rx="8" fill="#11111E" stroke="#F59E0B" stroke-width="1.2" />
+      <text x="14" y="24" font-family="'Cascadia Code', monospace" font-size="12" font-weight="700" fill="#F59E0B">3. PENDING</text>
+      <text x="14" y="44" font-family="'Segoe UI', sans-serif" font-size="9.5" fill="#94A3B8">Broker Orderbook</text>
+      <text x="14" y="60" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#EF4444">NO_POSITION</text>
+    </g>
+
+    <!-- Flow Arrow 3 -->
+    <path class="flow-dash" d="M 470 82 L 505 82" stroke="#F59E0B" stroke-width="2" />
+
+    <!-- State 4: PART_TRADED -->
+    <g transform="translate(505, 45)">
+      <rect width="140" height="74" rx="8" fill="#11111E" stroke="#10B981" stroke-width="1.2" />
+      <text x="14" y="24" font-family="'Cascadia Code', monospace" font-size="12" font-weight="700" fill="#6EE7B7">4. PARTIAL</text>
+      <text x="14" y="44" font-family="'Segoe UI', sans-serif" font-size="9.5" fill="#94A3B8">Partial Fill Event</text>
+      <text x="14" y="60" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#10B981">PARTIAL_FILL</text>
+    </g>
+
+    <!-- Flow Arrow 4 -->
+    <path class="flow-dash" d="M 645 82 L 680 82" stroke="#10B981" stroke-width="2" />
+
+    <!-- State 5: TRADED (Target State) -->
+    <g class="active-state" transform="translate(680, 45)">
+      <rect width="140" height="74" rx="8" fill="#0C1F16" stroke="#10B981" stroke-width="2" />
+      <text x="14" y="24" font-family="'Cascadia Code', monospace" font-size="13" font-weight="800" fill="#10B981">5. TRADED</text>
+      <text x="14" y="44" font-family="'Segoe UI', sans-serif" font-size="9.5" fill="#A7F3D0">Confirmed Fill</text>
+      <rect x="12" y="50" width="116" height="18" rx="4" fill="#10B981" />
+      <text x="70" y="62" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="8.5" font-weight="800" fill="#0A0A0F">
+        MUTATE POSITION!
+      </text>
+    </g>
+  </g>
+
+  <!-- BOTTOM HALF: APPEND-ONLY SQLITE JOURNAL (Y: 220 to 365) -->
+  <g transform="translate(40, 220)">
+    <rect width="820" height="145" rx="10" fill="#0E0E18" stroke="#222236" stroke-width="1.2" />
+    <rect width="820" height="28" rx="10" fill="#141422" />
+    <text x="16" y="19" font-family="'Cascadia Code', monospace" font-size="11" font-weight="700" fill="#A5B4FC">
+      order_events.sqlite (WAL MODE, synchronous=FULL, APPEND-ONLY)
+    </text>
+    <rect x="710" y="5" width="96" height="18" rx="4" fill="rgba(124,134,255,0.2)" />
+    <text x="758" y="18" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="9" font-weight="700" fill="#A5B4FC">IMMUTABLE</text>
+
+    <!-- Table Header -->
+    <g transform="translate(16, 42)">
+      <text font-family="'Cascadia Code', monospace" font-size="9.5" font-weight="700" fill="#71717A">
+        SEQ  TIMESTAMP           CORRELATION_ID    EVENT_TYPE       SYMBOL    QTY   FILL_PRICE  PREV_HASH
+      </text>
+      <line x1="0" y1="8" x2="788" y2="8" stroke="#1F1F30" stroke-width="1" />
+    </g>
+
+    <!-- Row 1 -->
+    <g transform="translate(16, 68)">
+      <text font-family="'Cascadia Code', monospace" font-size="9" fill="#94A3B8">001  15:00:02.102 IST   cid_std30_91823   INTENT_CREATED   TCS.NS    50    LIMIT 3850  0x00000000</text>
+    </g>
+    <!-- Row 2 -->
+    <g transform="translate(16, 88)">
+      <text font-family="'Cascadia Code', monospace" font-size="9" fill="#38BDF8">002  15:00:02.115 IST   cid_std30_91823   ORDER_SUBMITTED  TCS.NS    50    LIMIT 3850  0x4a9f1c2b</text>
+    </g>
+    <!-- Row 3 -->
+    <g transform="translate(16, 108)">
+      <text font-family="'Cascadia Code', monospace" font-size="9" fill="#F59E0B">003  15:00:02.480 IST   cid_std30_91823   ORDER_PENDING    TCS.NS    50    LIMIT 3850  0x7e2d9a11</text>
+    </g>
+    <!-- Row 4 (Confirmed Fill) -->
+    <g transform="translate(16, 128)">
+      <text font-family="'Cascadia Code', monospace" font-size="9" font-weight="700" fill="#10B981">004  15:18:22.014 IST   cid_std30_91823   ORDER_TRADED     TCS.NS    50    ₹3,848.50   0x1b8c33f2</text>
+      <rect class="terminal-cursor" x="655" y="-9" width="6" height="11" fill="#10B981" />
+    </g>
+  </g>
+</svg>
