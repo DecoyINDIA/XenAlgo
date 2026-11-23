@@ -1,73 +1,142 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 40" width="100%" height="auto">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 50" width="100%" height="auto">
   <defs>
-    <linearGradient id="divLineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+    <!-- Chromatic Dispersion &amp; Glowing Gradients -->
+    <linearGradient id="dividerBeamGrad" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#7C86FF" stop-opacity="0" />
-      <stop offset="35%" stop-color="#7C86FF" stop-opacity="0.4" />
-      <stop offset="50%" stop-color="#38BDF8" stop-opacity="1" />
-      <stop offset="65%" stop-color="#7C86FF" stop-opacity="0.4" />
+      <stop offset="25%" stop-color="#7C86FF" stop-opacity="0.3" />
+      <stop offset="45%" stop-color="#38BDF8" stop-opacity="0.9" />
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="1" />
+      <stop offset="55%" stop-color="#10B981" stop-opacity="0.9" />
+      <stop offset="75%" stop-color="#7C86FF" stop-opacity="0.3" />
       <stop offset="100%" stop-color="#7C86FF" stop-opacity="0" />
     </linearGradient>
-    <linearGradient id="travelBeam" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0" />
-      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="1" />
-      <stop offset="100%" stop-color="#38BDF8" stop-opacity="0" />
+
+    <!-- Dispersion Rims: Cyan &amp; Violet Shifting Stops -->
+    <linearGradient id="dispersionCyan" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06B6D4" stop-opacity="0" />
+      <stop offset="48%" stop-color="#06B6D4" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#06B6D4" stop-opacity="0" />
     </linearGradient>
-    <radialGradient id="divCenterGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#7C86FF" stop-opacity="0.6" />
-      <stop offset="100%" stop-color="#0A0A0F" stop-opacity="0" />
+    <linearGradient id="dispersionViolet" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0" />
+      <stop offset="52%" stop-color="#8B5CF6" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Traveling Specular Glint -->
+    <linearGradient id="glintGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0" />
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="1" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </linearGradient>
+
+    <radialGradient id="centerGemAura" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#7C86FF" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#060609" stop-opacity="0" />
     </radialGradient>
+
+    <!-- Glow Filter -->
+    <filter id="waveBloom" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
   </defs>
 
   <style>
-    @keyframes pulseGem {
-      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px #7C86FF); }
-      50% { transform: scale(1.15); filter: drop-shadow(0 0 8px #38BDF8); }
-    }
-    @keyframes laserPass {
-      0% { transform: translateX(200px); opacity: 0; }
+    /* GSAP Precision Bezier Motion Keyframes */
+    @keyframes glintSweepHorizontal {
+      0% { transform: translateX(50px); opacity: 0; }
       20% { opacity: 1; }
       80% { opacity: 1; }
-      100% { transform: translateX(1000px); opacity: 0; }
+      100% { transform: translateX(1100px); opacity: 0; }
     }
-    .center-gem {
-      transform-origin: 600px 20px;
-      animation: pulseGem 3s ease-in-out infinite;
+    @keyframes gemPulseScale {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 3px #7C86FF); }
+      50% { transform: scale(1.2); filter: drop-shadow(0 0 10px #38BDF8); }
     }
-    .laser-slider {
-      animation: laserPass 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    @keyframes rippleExpand {
+      0% { r: 6px; opacity: 0.9; }
+      100% { r: 24px; opacity: 0; }
+    }
+
+    .specular-glint {
+      animation: glintSweepHorizontal 4.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+    }
+    .center-diamond {
+      transform-origin: 600px 25px;
+      animation: gemPulseScale 3s ease-in-out infinite;
+    }
+    .gem-ripple {
+      animation: rippleExpand 2.2s ease-out infinite;
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .center-gem, .laser-slider {
+      .specular-glint, .center-diamond, .gem-ripple {
         animation: none !important;
       }
     }
   </style>
 
-  <!-- Background Canvas -->
-  <rect width="1200" height="40" fill="#0A0A0F" />
+  <!-- Obsidian Background Floor -->
+  <rect width="1200" height="50" fill="#060609" />
 
-  <!-- Base Horizontal Glowing Rule -->
-  <line x1="80" y1="20" x2="1120" y2="20" stroke="url(#divLineGrad)" stroke-width="1.5" />
-  <line x1="250" y1="20" x2="950" y2="20" stroke="#7C86FF" stroke-width="0.8" opacity="0.5" />
+  <!-- Undulating Refractive Fluid Wave Layers -->
+  <!-- Layer 1: Chromatic Violet Wave (Dispersion Underlay) -->
+  <path fill="none" stroke="url(#dispersionViolet)" stroke-width="1.2" opacity="0.6">
+    <animate attributeName="d" dur="6s" repeatCount="indefinite"
+      values="
+        M 50 26 Q 300 21 600 26 T 1150 26;
+        M 50 26 Q 300 31 600 24 T 1150 26;
+        M 50 26 Q 300 21 600 26 T 1150 26" />
+  </path>
 
-  <!-- Animated Traveling Laser Beam -->
-  <line class="laser-slider" x1="0" y1="20" x2="80" y2="20" stroke="url(#travelBeam)" stroke-width="2.5" />
+  <!-- Layer 2: Chromatic Cyan Wave (Dispersion Overlay) -->
+  <path fill="none" stroke="url(#dispersionCyan)" stroke-width="1.2" opacity="0.6">
+    <animate attributeName="d" dur="6s" repeatCount="indefinite"
+      values="
+        M 50 24 Q 300 29 600 24 T 1150 24;
+        M 50 24 Q 300 19 600 26 T 1150 24;
+        M 50 24 Q 300 29 600 24 T 1150 24" />
+  </path>
 
-  <!-- Left Technical Coordinate Marker -->
-  <g transform="translate(100, 24)">
-    <text font-family="'Cascadia Code', monospace" font-size="8" fill="#4B5563">[0x7C86FF]</text>
+  <!-- Main Razor Beam (Center Optical Axis) -->
+  <line x1="60" y1="25" x2="1140" y2="25" stroke="url(#dividerBeamGrad)" stroke-width="1.5" />
+  <line x1="400" y1="25" x2="800" y2="25" stroke="#FFFFFF" stroke-width="0.8" opacity="0.7" filter="url(#waveBloom)" />
+
+  <!-- Shimmering Traveling Edge Glint -->
+  <g class="specular-glint">
+    <line x1="0" y1="25" x2="90" y2="25" stroke="url(#glintGlow)" stroke-width="3" filter="url(#waveBloom)" />
+    <circle cx="45" cy="25" r="3" fill="#FFFFFF" />
   </g>
 
-  <!-- Right Technical Coordinate Marker -->
-  <g transform="translate(1020, 24)">
-    <text font-family="'Cascadia Code', monospace" font-size="8" fill="#4B5563">// XENALGO</text>
+  <!-- LEFT: TECHNICAL COORDINATES &amp; MARKER -->
+  <g transform="translate(60, 29)">
+    <text font-family="'JetBrains Mono', monospace" font-size="8" font-weight="700" fill="#475569">
+      [0x7C86FF // DECOYINDIA // SUBHAM JENA]
+    </text>
   </g>
 
-  <!-- Center Hexagonal Cybernetic Node -->
-  <circle cx="600" cy="20" r="16" fill="url(#divCenterGlow)" />
-  <g class="center-gem" transform="translate(600, 20)">
-    <polygon points="0,-9 9,0 0,9 -9,0" fill="#141424" stroke="#7C86FF" stroke-width="1.2" />
-    <polygon points="0,-4 4,0 0,4 -4,0" fill="#38BDF8" />
+  <!-- CENTER: SCULPTED LIQUID GLASS DIAMOND &amp; CHROMATIC BEACON -->
+  <g transform="translate(600, 25)">
+    <!-- Expanding Radial Ripple -->
+    <circle class="gem-ripple" cx="0" cy="0" r="8" fill="none" stroke="#38BDF8" stroke-width="1" />
+
+    <!-- Center Diamond Crystal Node -->
+    <g class="center-diamond">
+      <circle cx="0" cy="0" r="16" fill="url(#centerGemAura)" />
+      <polygon points="0,-9 9,0 0,9 -9,0" fill="#0C0C18" stroke="#7C86FF" stroke-width="1.5" />
+      <polygon points="0,-5 5,0 0,5 -5,0" fill="#38BDF8" />
+      <polygon points="0,-2 2,0 0,2 -2,0" fill="#FFFFFF" />
+    </g>
+  </g>
+
+  <!-- RIGHT: TECHNICAL COORDINATES &amp; MARKER -->
+  <g transform="translate(1000, 29)">
+    <text font-family="'JetBrains Mono', monospace" font-size="8" font-weight="700" fill="#475569">
+      [SI-1..SI-12 // 2.0 OPS]
+    </text>
   </g>
 </svg>

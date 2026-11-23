@@ -1,249 +1,276 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 480" width="100%" height="auto">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 520" width="100%" height="auto">
   <defs>
-    <radialGradient id="piaGlow" cx="50%" cy="50%" r="60%">
-      <stop offset="0%" stop-color="#7C86FF" stop-opacity="0.16" />
-      <stop offset="100%" stop-color="#0A0A0F" stop-opacity="0" />
+    <!-- Background Aurora Meshes -->
+    <radialGradient id="piaAurora1" cx="20%" cy="30%" r="50%">
+      <stop offset="0%" stop-color="#7C86FF" stop-opacity="0.22" />
+      <stop offset="60%" stop-color="#060609" stop-opacity="0" />
     </radialGradient>
-    <linearGradient id="scanBeamGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+    <radialGradient id="piaAurora2" cx="80%" cy="70%" r="50%">
+      <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.18" />
+      <stop offset="65%" stop-color="#060609" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="piaEmeraldAura" cx="50%" cy="50%" r="40%">
+      <stop offset="0%" stop-color="#10B981" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#060609" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Liquid Glass Linear Gradients -->
+    <linearGradient id="cardGlassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.07" />
+      <stop offset="40%" stop-color="#FFFFFF" stop-opacity="0.02" />
+      <stop offset="100%" stop-color="#7C86FF" stop-opacity="0.04" />
+    </linearGradient>
+    <linearGradient id="cardBorderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.35" />
+      <stop offset="40%" stop-color="#7C86FF" stop-opacity="0.2" />
+      <stop offset="80%" stop-color="#38BDF8" stop-opacity="0.1" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.05" />
+    </linearGradient>
+
+    <!-- Scanner Laser Beam Gradient -->
+    <linearGradient id="scannerBeamGrad" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#7C86FF" stop-opacity="0" />
-      <stop offset="50%" stop-color="#38BDF8" stop-opacity="0.9" />
+      <stop offset="50%" stop-color="#38BDF8" stop-opacity="0.95" />
       <stop offset="100%" stop-color="#7C86FF" stop-opacity="0" />
     </linearGradient>
-    <pattern id="piaGrid" width="30" height="30" patternUnits="userSpaceOnUse">
-      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1" />
+    <linearGradient id="timelineRailGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7C86FF" stop-opacity="0.3" />
+      <stop offset="50%" stop-color="#38BDF8" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#10B981" stop-opacity="0.4" />
+    </linearGradient>
+    <linearGradient id="specularGlint" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0" />
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Micro Grid -->
+    <pattern id="piaGrid" width="28" height="28" patternUnits="userSpaceOnUse">
+      <path d="M 28 0 L 0 0 0 28" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="0.75" />
     </pattern>
+
+    <!-- Glow Filter -->
+    <filter id="nodeGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
   </defs>
 
   <style>
-    @keyframes sweepTimeline {
-      0% { transform: translateX(30px); opacity: 0; }
-      10% { opacity: 1; }
-      90% { opacity: 1; }
-      100% { transform: translateX(920px); opacity: 0; }
+    /* Lenis-Style Kinetic Timeline Motion */
+    @keyframes lenisScanSweep {
+      0% { transform: translateX(50px); opacity: 0; }
+      8% { opacity: 1; }
+      92% { opacity: 1; }
+      100% { transform: translateX(870px); opacity: 0; }
     }
-    @keyframes nodePulse {
-      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px #7C86FF); }
-      50% { transform: scale(1.15); filter: drop-shadow(0 0 8px #38BDF8); }
+    @keyframes nodeBeaconIgnite {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.25); opacity: 1; filter: drop-shadow(0 0 8px #38BDF8); }
     }
-    @keyframes flowTrack {
-      0% { stroke-dashoffset: 40; }
+    @keyframes trackPulseFlow {
+      0% { stroke-dashoffset: 80; }
       100% { stroke-dashoffset: 0; }
     }
-    @keyframes activeGatePulse {
-      0%, 100% { opacity: 0.8; }
-      50% { opacity: 0.3; }
+    @keyframes glintSlide {
+      0% { transform: translateX(-900px) skewX(-20deg); }
+      100% { transform: translateX(1100px) skewX(-20deg); }
     }
 
-    .scanner-head {
-      animation: sweepTimeline 8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    .timeline-scanner {
+      animation: lenisScanSweep 8.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
     }
-    .flow-line {
-      stroke-dasharray: 6 6;
-      animation: flowTrack 2s linear infinite;
+    .node-pulse-1 { animation: nodeBeaconIgnite 3s ease-in-out infinite; }
+    .node-pulse-2 { animation: nodeBeaconIgnite 3s ease-in-out 0.6s infinite; }
+    .node-pulse-3 { animation: nodeBeaconIgnite 3s ease-in-out 1.2s infinite; }
+    .node-pulse-4 { animation: nodeBeaconIgnite 3s ease-in-out 1.8s infinite; }
+    .node-pulse-5 { animation: nodeBeaconIgnite 3s ease-in-out 2.4s infinite; }
+    .rail-flow {
+      stroke-dasharray: 8 6;
+      animation: trackPulseFlow 2.4s linear infinite;
     }
-    .active-dot {
-      animation: nodePulse 2.5s ease-in-out infinite;
-    }
-    .gate-glow {
-      animation: activeGatePulse 2s ease-in-out infinite;
+    .glint-effect {
+      animation: glintSlide 7s cubic-bezier(0.16, 1, 0.3, 1) infinite;
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .scanner-head, .flow-line, .active-dot, .gate-glow {
+      .timeline-scanner, .node-pulse-1, .node-pulse-2, .node-pulse-3,
+      .node-pulse-4, .node-pulse-5, .rail-flow, .glint-effect {
         animation: none !important;
       }
     }
   </style>
 
-  <!-- Background Base -->
-  <rect width="1000" height="480" rx="16" fill="#0A0A0F" stroke="#222234" stroke-width="1.5" />
-  <rect width="1000" height="480" fill="url(#piaGrid)" rx="16" />
-  <rect width="1000" height="480" fill="url(#piaGlow)" rx="16" />
+  <!-- Obsidian Canvas Floor -->
+  <rect width="1000" height="520" fill="#060609" rx="20" />
+  <rect width="1000" height="520" fill="url(#piaGrid)" rx="20" />
 
-  <!-- HEADER TITLE & METADATA -->
-  <g transform="translate(48, 40)">
-    <text font-family="'Segoe UI', 'Inter', -apple-system, sans-serif" font-weight="700" font-size="20" fill="#FFFFFF" letter-spacing="0.5">
+  <!-- Aurora Mesh Atmospheres -->
+  <circle cx="200" cy="180" r="220" fill="url(#piaAurora1)" />
+  <circle cx="820" cy="340" r="240" fill="url(#piaAurora2)" />
+  <circle cx="500" cy="260" r="200" fill="url(#piaEmeraldAura)" />
+
+  <!-- Main Translucent Liquid Glass Card Container -->
+  <g>
+    <rect x="30" y="25" width="940" height="470" rx="18" fill="#090913" fill-opacity="0.82" stroke="none" />
+    <rect x="30" y="25" width="940" height="470" rx="18" fill="url(#cardGlassGrad)" stroke="url(#cardBorderGrad)" stroke-width="1" />
+    <!-- 0.5px Specular Glass Rim -->
+    <path d="M 50 26 L 950 26 A 18 18 0 0 1 969 45" fill="none" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="0.75" />
+  </g>
+
+  <!-- Card Header &amp; Metadata Telemetry -->
+  <g transform="translate(60, 60)">
+    <!-- Title and Subtitle -->
+    <text font-family="'Inter', -apple-system, sans-serif" font-size="20" font-weight="800" fill="#FFFFFF" letter-spacing="-0.5px">
       DAILY AUTONOMOUS TRADING SESSION TIMELINE
     </text>
-    <text y="24" font-family="'Segoe UI', 'Inter', -apple-system, sans-serif" font-weight="400" font-size="13" fill="#94A3B8">
-      Deterministic execution sequence from pre-market token handshake to post-market journal reconciliation.
+    <text y="22" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="500" fill="#94A3B8">
+      DECOYINDIA // ZERO-HUMAN DETERMINISTIC EXECUTION CYCLE [08:15 IST – 15:45 IST]
     </text>
 
-    <!-- Legend Badges on Right -->
-    <g transform="translate(680, 4)">
+    <!-- Right Side Badges -->
+    <g transform="translate(600, -8)">
+      <rect x="0" y="0" width="130" height="24" rx="4" fill="rgba(16,185,129,0.08)" stroke="rgba(16,185,129,0.25)" stroke-width="0.75" />
+      <circle cx="12" cy="12" r="3.5" fill="#10B981" />
+      <text x="22" y="15" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="700" fill="#10B981">DRIFT = 0.00</text>
+
+      <rect x="140" y="0" width="140" height="24" rx="4" fill="rgba(56,189,248,0.08)" stroke="rgba(56,189,248,0.25)" stroke-width="0.75" />
+      <text x="14" y="15" transform="translate(140,0)" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="700" fill="#38BDF8">SEBI 2.0 OPS OK</text>
+    </g>
+  </g>
+
+  <!-- Horizontal Divider Line -->
+  <line x1="60" y1="105" x2="940" y2="105" stroke="rgba(255,255,255,0.08)" stroke-width="0.75" />
+
+  <!-- TIMELINE RAIL &amp; GLOWING ENERGY NODES -->
+  <g transform="translate(60, 240)">
+    <!-- Base Rail Track -->
+    <line x1="20" y1="0" x2="860" y2="0" stroke="rgba(255,255,255,0.12)" stroke-width="3" />
+    <line class="rail-flow" x1="20" y1="0" x2="860" y2="0" stroke="url(#timelineRailGrad)" stroke-width="2.5" />
+
+    <!-- LENIS SMOOTH SCANNER SWEEP BEAM -->
+    <g class="timeline-scanner">
+      <line x1="0" y1="-120" x2="0" y2="200" stroke="url(#scannerBeamGrad)" stroke-width="2.5" filter="url(#nodeGlow)" />
+      <circle cx="0" cy="0" r="8" fill="#38BDF8" fill-opacity="0.3" />
+      <circle cx="0" cy="0" r="4" fill="#FFFFFF" />
+      <polygon points="0,-125 -6,-135 6,-135" fill="#38BDF8" />
+    </g>
+
+    <!-- NODE 1: 08:15 IST Pre-Market Token Handshake -->
+    <g transform="translate(40, 0)">
+      <circle class="node-pulse-1" cx="0" cy="0" r="10" fill="#131326" stroke="#7C86FF" stroke-width="2" />
+      <circle cx="0" cy="0" r="4" fill="#7C86FF" />
+
+      <!-- Upper Glass Card -->
+      <g transform="translate(-65, -115)">
+        <rect width="130" height="90" rx="8" fill="#10101C" fill-opacity="0.85" stroke="rgba(124,134,255,0.25)" stroke-width="0.75" />
+        <rect x="0" y="0" width="130" height="20" rx="8" fill="rgba(124,134,255,0.12)" />
+        <text x="10" y="14" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="700" fill="#A5B4FC">08:15 IST</text>
+        <text x="10" y="38" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">Token Refresh</text>
+        <text x="10" y="54" font-family="'Inter', sans-serif" font-size="9.5" font-weight="400" fill="#94A3B8">Fyers OAuth TOTP</text>
+        <text x="10" y="72" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="600" fill="#10B981">SI-11: Token Guard</text>
+      </g>
+    </g>
+
+    <!-- NODE 2: 08:30 IST Historical Data Sync -->
+    <g transform="translate(195, 0)">
+      <circle class="node-pulse-2" cx="0" cy="0" r="10" fill="#131326" stroke="#38BDF8" stroke-width="2" />
+      <circle cx="0" cy="0" r="4" fill="#38BDF8" />
+
+      <!-- Lower Glass Card -->
+      <g transform="translate(-65, 30)">
+        <rect width="130" height="90" rx="8" fill="#10101C" fill-opacity="0.85" stroke="rgba(56,189,248,0.25)" stroke-width="0.75" />
+        <rect x="0" y="0" width="130" height="20" rx="8" fill="rgba(56,189,248,0.12)" />
+        <text x="10" y="14" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="700" fill="#38BDF8">08:30 IST</text>
+        <text x="10" y="38" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">DuckDB Ingest</text>
+        <text x="10" y="54" font-family="'Inter', sans-serif" font-size="9.5" font-weight="400" fill="#94A3B8">NIFTY 500 Daily Bars</text>
+        <text x="10" y="72" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="600" fill="#64748B">Single-Writer Lock</text>
+      </g>
+    </g>
+
+    <!-- NODE 3: 09:00 IST Startup Gate &amp; Audit -->
+    <g transform="translate(350, 0)">
+      <circle class="node-pulse-3" cx="0" cy="0" r="10" fill="#131326" stroke="#10B981" stroke-width="2" />
       <circle cx="0" cy="0" r="4" fill="#10B981" />
-      <text x="10" y="3" font-family="'Cascadia Code', monospace" font-size="10.5" fill="#10B981">SAFE PASS</text>
 
-      <circle cx="100" cy="0" r="4" fill="#38BDF8" />
-      <text x="110" y="3" font-family="'Cascadia Code', monospace" font-size="10.5" fill="#38BDF8">EXECUTION</text>
+      <!-- Upper Glass Card -->
+      <g transform="translate(-65, -115)">
+        <rect width="130" height="90" rx="8" fill="#10101C" fill-opacity="0.85" stroke="rgba(16,185,129,0.25)" stroke-width="0.75" />
+        <rect x="0" y="0" width="130" height="20" rx="8" fill="rgba(16,185,129,0.12)" />
+        <text x="10" y="14" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="700" fill="#10B981">09:00 IST</text>
+        <text x="10" y="38" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">Startup Gate</text>
+        <text x="10" y="54" font-family="'Inter', sans-serif" font-size="9.5" font-weight="400" fill="#94A3B8">SQLite WAL Audit</text>
+        <text x="10" y="72" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="600" fill="#10B981">SI-12: Zero Drift</text>
+      </g>
+    </g>
 
-      <circle cx="210" cy="0" r="4" fill="#7C86FF" />
-      <text x="220" y="3" font-family="'Cascadia Code', monospace" font-size="10.5" fill="#A5B4FC">AUDIT</text>
+    <!-- NODE 4: 15:00 IST Signals &amp; 12 Invariants Veto -->
+    <g transform="translate(505, 0)">
+      <circle class="node-pulse-4" cx="0" cy="0" r="10" fill="#131326" stroke="#8B5CF6" stroke-width="2" />
+      <circle cx="0" cy="0" r="4" fill="#8B5CF6" />
+
+      <!-- Lower Glass Card -->
+      <g transform="translate(-65, 30)">
+        <rect width="130" height="90" rx="8" fill="#10101C" fill-opacity="0.85" stroke="rgba(139,92,246,0.25)" stroke-width="0.75" />
+        <rect x="0" y="0" width="130" height="20" rx="8" fill="rgba(139,92,246,0.12)" />
+        <text x="10" y="14" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="700" fill="#C4B5FD">15:00 IST</text>
+        <text x="10" y="38" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">3 Alphas &amp; Veto</text>
+        <text x="10" y="54" font-family="'Inter', sans-serif" font-size="9.5" font-weight="400" fill="#94A3B8">std30 / 027 / 062</text>
+        <text x="10" y="72" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="600" fill="#EF4444">SI-1: Pure Veto</text>
+      </g>
+    </g>
+
+    <!-- NODE 5: 15:05 IST Governor Throttled Placement -->
+    <g transform="translate(660, 0)">
+      <circle class="node-pulse-5" cx="0" cy="0" r="10" fill="#131326" stroke="#38BDF8" stroke-width="2" />
+      <circle cx="0" cy="0" r="4" fill="#38BDF8" />
+
+      <!-- Upper Glass Card -->
+      <g transform="translate(-65, -115)">
+        <rect width="130" height="90" rx="8" fill="#10101C" fill-opacity="0.85" stroke="rgba(56,189,248,0.25)" stroke-width="0.75" />
+        <rect x="0" y="0" width="130" height="20" rx="8" fill="rgba(56,189,248,0.12)" />
+        <text x="10" y="14" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="700" fill="#38BDF8">15:05 IST</text>
+        <text x="10" y="38" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">Governor Cap</text>
+        <text x="10" y="54" font-family="'Inter', sans-serif" font-size="9.5" font-weight="400" fill="#94A3B8">2.0 OPS Token Bucket</text>
+        <text x="10" y="72" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="600" fill="#38BDF8">SI-3: SEBI Guard</text>
+      </g>
+    </g>
+
+    <!-- NODE 6: 15:45 IST EOD Reconcile &amp; Journal Seal -->
+    <g transform="translate(815, 0)">
+      <circle class="node-pulse-1" cx="0" cy="0" r="10" fill="#131326" stroke="#10B981" stroke-width="2" />
+      <circle cx="0" cy="0" r="4" fill="#10B981" />
+
+      <!-- Lower Glass Card -->
+      <g transform="translate(-65, 30)">
+        <rect width="130" height="90" rx="8" fill="#10101C" fill-opacity="0.85" stroke="rgba(16,185,129,0.25)" stroke-width="0.75" />
+        <rect x="0" y="0" width="130" height="20" rx="8" fill="rgba(16,185,129,0.12)" />
+        <text x="10" y="14" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="700" fill="#10B981">15:45 IST</text>
+        <text x="10" y="38" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">EOD Reconcile</text>
+        <text x="10" y="54" font-family="'Inter', sans-serif" font-size="9.5" font-weight="400" fill="#94A3B8">Append-Only Seal</text>
+        <text x="10" y="72" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="600" fill="#10B981">Daily Journal Sealed</text>
+      </g>
     </g>
   </g>
 
-  <!-- HORIZONTAL TIMELINE RAIL (Y = 160) -->
-  <g transform="translate(50, 160)">
-    <!-- Base track -->
-    <line x1="20" y1="0" x2="880" y2="0" stroke="#1F1F30" stroke-width="6" stroke-linecap="round" />
-    <line class="flow-line" x1="20" y1="0" x2="880" y2="0" stroke="rgba(124,134,255,0.5)" stroke-width="2" />
-
-    <!-- Moving Scanner Head -->
-    <g class="scanner-head" style="transform-origin: 0px 0px;">
-      <line x1="0" y1="-25" x2="0" y2="25" stroke="url(#scanBeamGrad)" stroke-width="4" />
-      <circle cx="0" cy="0" r="8" fill="#38BDF8" />
-      <circle cx="0" cy="0" r="16" fill="none" stroke="#38BDF8" stroke-width="1.5" opacity="0.4" />
-    </g>
-  </g>
-
-  <!-- 7 OPERATIONAL NODES -->
-  <!-- Node 1: 08:15 Token Refresh -->
-  <g transform="translate(65, 120)">
-    <!-- Time Tag -->
-    <rect x="-35" y="-36" width="70" height="22" rx="4" fill="#12121E" stroke="#38BDF8" stroke-width="0.8" />
-    <text x="0" y="-21" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="11" font-weight="700" fill="#38BDF8">08:15</text>
-    <!-- Connector Dot -->
-    <circle cx="0" cy="40" r="8" fill="#161626" stroke="#38BDF8" stroke-width="2.5" />
-    <circle cx="0" cy="40" r="3" fill="#38BDF8" />
-    <!-- Content Card Below -->
-    <g transform="translate(-55, 68)">
-      <rect width="115" height="180" rx="8" fill="#0E0E18" stroke="#222236" stroke-width="1" />
-      <text x="10" y="24" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11.5" fill="#FFFFFF">1. Auth Sync</text>
-      <text x="10" y="42" font-family="'Cascadia Code', monospace" font-size="9" fill="#71717A">MODULE: Token</text>
-      <line x1="10" y1="52" x2="105" y2="52" stroke="#1F1F30" stroke-width="1" />
-      <text x="10" y="70" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">• 24h Fyers Token</text>
-      <text x="10" y="88" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">• SHA-256 HMAC</text>
-      <text x="10" y="106" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">• TOTP Auto-auth</text>
-      <rect x="10" y="145" width="95" height="22" rx="4" fill="rgba(16,185,129,0.12)" stroke="#10B981" stroke-width="0.8" />
-      <text x="57" y="160" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="9" font-weight="700" fill="#10B981">TOKEN_OK</text>
-    </g>
-  </g>
-
-  <!-- Node 2: 08:30 Data Ingest -->
-  <g transform="translate(195, 120)">
-    <rect x="-35" y="-36" width="70" height="22" rx="4" fill="#12121E" stroke="#7C86FF" stroke-width="0.8" />
-    <text x="0" y="-21" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="11" font-weight="700" fill="#A5B4FC">08:30</text>
-    <circle cx="0" cy="40" r="8" fill="#161626" stroke="#7C86FF" stroke-width="2.5" />
-    <circle cx="0" cy="40" r="3" fill="#7C86FF" />
-    <g transform="translate(-55, 68)">
-      <rect width="115" height="180" rx="8" fill="#0E0E18" stroke="#222236" stroke-width="1" />
-      <text x="10" y="24" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11.5" fill="#FFFFFF">2. Data Sync</text>
-      <text x="10" y="42" font-family="'Cascadia Code', monospace" font-size="9" fill="#71717A">MODULE: Data</text>
-      <line x1="10" y1="52" x2="105" y2="52" stroke="#1F1F30" stroke-width="1" />
-      <text x="10" y="70" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">• Bhavcopy Pull</text>
-      <text x="10" y="88" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">• DuckDB Sync</text>
-      <text x="10" y="106" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">• NIFTY 500 EOD</text>
-      <rect x="10" y="145" width="95" height="22" rx="4" fill="rgba(124,134,255,0.12)" stroke="#7C86FF" stroke-width="0.8" />
-      <text x="57" y="160" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="9" font-weight="700" fill="#A5B4FC">DUCKDB_SYNC</text>
-    </g>
-  </g>
-
-  <!-- Node 3: 09:00 Pre-Flight Reconcile -->
-  <g transform="translate(325, 120)">
-    <rect x="-35" y="-36" width="70" height="22" rx="4" fill="#12121E" stroke="#10B981" stroke-width="0.8" />
-    <text x="0" y="-21" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="11" font-weight="700" fill="#10B981">09:00</text>
-    <circle cx="0" cy="40" r="8" fill="#161626" stroke="#10B981" stroke-width="2.5" />
-    <circle cx="0" cy="40" r="3" fill="#10B981" />
-    <g transform="translate(-55, 68)">
-      <rect width="115" height="180" rx="8" fill="#0E0E18" stroke="#222236" stroke-width="1" />
-      <text x="10" y="24" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11.5" fill="#FFFFFF">3. Reconcile</text>
-      <text x="10" y="42" font-family="'Cascadia Code', monospace" font-size="9" fill="#71717A">MODULE: Recon</text>
-      <line x1="10" y1="52" x2="105" y2="52" stroke="#1F1F30" stroke-width="1" />
-      <text x="10" y="70" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">• Journal vs Broker</text>
-      <text x="10" y="88" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">• Zero Mismatch</text>
-      <text x="10" y="106" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">• Kill Switches Clr</text>
-      <rect x="10" y="145" width="95" height="22" rx="4" fill="rgba(16,185,129,0.12)" stroke="#10B981" stroke-width="0.8" />
-      <text x="57" y="160" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="9" font-weight="700" fill="#10B981">STARTUP_GATE</text>
-    </g>
-  </g>
-
-  <!-- Node 4: 15:00 Signal & Veto -->
-  <g transform="translate(460, 120)">
-    <rect x="-35" y="-36" width="70" height="22" rx="4" fill="#12121E" stroke="#7C86FF" stroke-width="0.8" />
-    <text x="0" y="-21" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="11" font-weight="700" fill="#A5B4FC">15:00</text>
-    <circle class="active-dot" cx="0" cy="40" r="9" fill="#161626" stroke="#7C86FF" stroke-width="3" />
-    <circle cx="0" cy="40" r="4" fill="#7C86FF" />
-    <g transform="translate(-60, 68)">
-      <rect width="125" height="180" rx="8" fill="#121222" stroke="#7C86FF" stroke-width="1.2" />
-      <text x="10" y="24" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11.5" fill="#FFFFFF">4. Alpha + Veto</text>
-      <text x="10" y="42" font-family="'Cascadia Code', monospace" font-size="9" fill="#38BDF8">MODULE: RiskEngine</text>
-      <line x1="10" y1="52" x2="115" y2="52" stroke="#25253E" stroke-width="1" />
-      <text x="10" y="70" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">• 3 Alpha Sleeves</text>
-      <text x="10" y="88" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">• Pure Veto Check</text>
-      <text x="10" y="106" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">• 12 Invariants OK</text>
-      <rect x="10" y="145" width="105" height="22" rx="4" fill="rgba(124,134,255,0.2)" stroke="#7C86FF" stroke-width="0.8" />
-      <text x="62" y="160" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="9" font-weight="700" fill="#A5B4FC">VETO_CLEARED</text>
-    </g>
-  </g>
-
-  <!-- Node 5: 15:05 Limit Order Placement -->
-  <g transform="translate(600, 120)">
-    <rect x="-35" y="-36" width="70" height="22" rx="4" fill="#12121E" stroke="#38BDF8" stroke-width="0.8" />
-    <text x="0" y="-21" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="11" font-weight="700" fill="#38BDF8">15:05</text>
-    <circle cx="0" cy="40" r="8" fill="#161626" stroke="#38BDF8" stroke-width="2.5" />
-    <circle cx="0" cy="40" r="3" fill="#38BDF8" />
-    <g transform="translate(-55, 68)">
-      <rect width="115" height="180" rx="8" fill="#0E0E18" stroke="#222236" stroke-width="1" />
-      <text x="10" y="24" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11.5" fill="#FFFFFF">5. Order Route</text>
-      <text x="10" y="42" font-family="'Cascadia Code', monospace" font-size="9" fill="#71717A">MODULE: Governor</text>
-      <line x1="10" y1="52" x2="105" y2="52" stroke="#1F1F30" stroke-width="1" />
-      <text x="10" y="70" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">• 2 OPS Rate Limit</text>
-      <text x="10" y="88" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">• correlationId Gen</text>
-      <text x="10" y="106" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">• Limit CNC Orders</text>
-      <rect x="10" y="145" width="95" height="22" rx="4" fill="rgba(56,189,248,0.12)" stroke="#38BDF8" stroke-width="0.8" />
-      <text x="57" y="160" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="9" font-weight="700" fill="#38BDF8">ROUTED_2OPS</text>
-    </g>
-  </g>
-
-  <!-- Node 6: 15:20 Confirmed Fills -->
-  <g transform="translate(740, 120)">
-    <rect x="-35" y="-36" width="70" height="22" rx="4" fill="#12121E" stroke="#10B981" stroke-width="0.8" />
-    <text x="0" y="-21" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="11" font-weight="700" fill="#10B981">15:20</text>
-    <circle cx="0" cy="40" r="8" fill="#161626" stroke="#10B981" stroke-width="2.5" />
-    <circle cx="0" cy="40" r="3" fill="#10B981" />
-    <g transform="translate(-55, 68)">
-      <rect width="115" height="180" rx="8" fill="#0E0E18" stroke="#222236" stroke-width="1" />
-      <text x="10" y="24" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11.5" fill="#FFFFFF">6. Confirmed Fills</text>
-      <text x="10" y="42" font-family="'Cascadia Code', monospace" font-size="9" fill="#71717A">MODULE: ExecEngine</text>
-      <line x1="10" y1="52" x2="105" y2="52" stroke="#1F1F30" stroke-width="1" />
-      <text x="10" y="70" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">• Fyers WS Fills</text>
-      <text x="10" y="88" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">• Mutate on Fill</text>
-      <text x="10" y="106" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">• Zero Ghost Fills</text>
-      <rect x="10" y="145" width="95" height="22" rx="4" fill="rgba(16,185,129,0.12)" stroke="#10B981" stroke-width="0.8" />
-      <text x="57" y="160" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="9" font-weight="700" fill="#10B981">TRADED_FILL</text>
-    </g>
-  </g>
-
-  <!-- Node 7: 15:45 EOD Journal Sync -->
-  <g transform="translate(875, 120)">
-    <rect x="-35" y="-36" width="70" height="22" rx="4" fill="#12121E" stroke="#7C86FF" stroke-width="0.8" />
-    <text x="0" y="-21" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="11" font-weight="700" fill="#A5B4FC">15:45</text>
-    <circle cx="0" cy="40" r="8" fill="#161626" stroke="#7C86FF" stroke-width="2.5" />
-    <circle cx="0" cy="40" r="3" fill="#7C86FF" />
-    <g transform="translate(-55, 68)">
-      <rect width="115" height="180" rx="8" fill="#0E0E18" stroke="#222236" stroke-width="1" />
-      <text x="10" y="24" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11.5" fill="#FFFFFF">7. EOD Close</text>
-      <text x="10" y="42" font-family="'Cascadia Code', monospace" font-size="9" fill="#71717A">MODULE: Journal</text>
-      <line x1="10" y1="52" x2="105" y2="52" stroke="#1F1F30" stroke-width="1" />
-      <text x="10" y="70" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">• WAL Checkpoint</text>
-      <text x="10" y="88" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">• State Snapshot</text>
-      <text x="10" y="106" font-family="'Segoe UI', sans-serif" font-size="10" fill="#94A3B8">• Session Locked</text>
-      <rect x="10" y="145" width="95" height="22" rx="4" fill="rgba(124,134,255,0.12)" stroke="#7C86FF" stroke-width="0.8" />
-      <text x="57" y="160" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="9" font-weight="700" fill="#A5B4FC">SESSION_LOCK</text>
-    </g>
-  </g>
-
-  <!-- BOTTOM STATUS BANNER -->
-  <g transform="translate(48, 410)">
-    <rect width="904" height="42" rx="8" fill="#0C0C14" stroke="#1E1E2E" stroke-width="1" />
-    <circle cx="24" cy="21" r="5" fill="#10B981" />
-    <text x="40" y="25" font-family="'Segoe UI', sans-serif" font-weight="600" font-size="12" fill="#E2E8F0">
-      Zero Operator Action Required During Live Trading Session.
+  <!-- Footer Telemetry &amp; Author Stamp -->
+  <g transform="translate(60, 460)">
+    <text font-family="'JetBrains Mono', monospace" font-size="10" font-weight="600" fill="#475569">
+      ENGINEERED BY <tspan fill="#E2E8F0" font-weight="700">SUBHAM JENA</tspan> // DECOYINDIA // SCHEDULED CRON VIA SYSTEMD SERVICE
     </text>
-    <text x="415" y="25" font-family="'Segoe UI', sans-serif" font-size="12" fill="#71717A">
-      Automated supervision via Tailscale SSE Console with instant manual emergency override.
+    <text x="680" y="0" font-family="'JetBrains Mono', monospace" font-size="9.5" font-weight="600" fill="#64748B">
+      STATE: <tspan fill="#10B981">DETERMINISTIC_PASS</tspan>
     </text>
-    <rect x="790" y="10" width="100" height="22" rx="4" fill="#161626" stroke="rgba(124,134,255,0.3)" stroke-width="1" />
-    <text x="840" y="24" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="10" fill="#38BDF8">AUTONOMOUS</text>
+  </g>
+
+  <!-- Corner Coordinates -->
+  <g stroke="rgba(255,255,255,0.2)" stroke-width="0.75">
+    <path d="M 35 32 L 45 32 M 35 32 L 35 42" />
+    <path d="M 965 32 L 955 32 M 965 32 L 965 42" />
+    <path d="M 35 488 L 45 488 M 35 488 L 35 478" />
+    <path d="M 965 488 L 955 488 M 965 488 L 965 478" />
   </g>
 </svg>

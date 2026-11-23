@@ -1,189 +1,285 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" width="100%" height="auto">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 950 460" width="100%" height="auto">
   <defs>
-    <radialGradient id="wfGlow" cx="50%" cy="50%" r="55%">
-      <stop offset="0%" stop-color="#7C86FF" stop-opacity="0.14" />
-      <stop offset="100%" stop-color="#0A0A0F" stop-opacity="0" />
+    <!-- Background Aurora &amp; Spotlights -->
+    <radialGradient id="wfSpot1" cx="20%" cy="30%" r="50%">
+      <stop offset="0%" stop-color="#7C86FF" stop-opacity="0.20" />
+      <stop offset="60%" stop-color="#060609" stop-opacity="0" />
     </radialGradient>
-    <pattern id="wfGrid" width="25" height="25" patternUnits="userSpaceOnUse">
-      <path d="M 25 0 L 0 0 0 25" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1" />
+    <radialGradient id="wfSpot2" cx="80%" cy="70%" r="50%">
+      <stop offset="0%" stop-color="#10B981" stop-opacity="0.18" />
+      <stop offset="60%" stop-color="#060609" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Liquid Glass Gradients -->
+    <linearGradient id="phaseGlassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.08" />
+      <stop offset="40%" stop-color="#FFFFFF" stop-opacity="0.02" />
+      <stop offset="100%" stop-color="#7C86FF" stop-opacity="0.04" />
+    </linearGradient>
+    <linearGradient id="phaseBorderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.35" />
+      <stop offset="40%" stop-color="#7C86FF" font-opacity="0.22" />
+      <stop offset="80%" stop-color="#38BDF8" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.05" />
+    </linearGradient>
+
+    <!-- Circuit Trace Gradient -->
+    <linearGradient id="circuitTraceGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7C86FF" />
+      <stop offset="35%" stop-color="#38BDF8" />
+      <stop offset="70%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#A5B4FC" />
+    </linearGradient>
+
+    <!-- Micro Grid -->
+    <pattern id="wfGrid" width="24" height="24" patternUnits="userSpaceOnUse">
+      <path d="M 24 0 L 0 0 0 24" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="0.75" />
     </pattern>
+
+    <!-- Glow Filter -->
+    <filter id="circuitGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
   </defs>
 
   <style>
-    @keyframes pulseStep {
-      0% { stroke-dashoffset: 40; }
+    /* GSAP Clockwork Motion Keyframes */
+    @keyframes circuitPulseFlow {
+      0% { stroke-dashoffset: 100; }
       100% { stroke-dashoffset: 0; }
     }
-    @keyframes phaseGlow {
-      0%, 100% { opacity: 0.8; }
-      50% { opacity: 0.3; }
+    @keyframes clockHandRotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
-    .flow-line {
-      stroke-dasharray: 6 6;
-      animation: pulseStep 2s linear infinite;
+    @keyframes beaconBlinkSlow {
+      0%, 100% { opacity: 1; filter: drop-shadow(0 0 4px #10B981); }
+      50% { opacity: 0.35; filter: none; }
     }
-    .phase-badge {
-      animation: phaseGlow 2.5s ease-in-out infinite;
+    @keyframes emergencyBranchPulse {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; filter: drop-shadow(0 0 6px #EF4444); }
     }
 
+    .trace-flow {
+      stroke-dasharray: 8 6;
+      animation: circuitPulseFlow 2.5s linear infinite;
+    }
+    .clock-hand-fast {
+      transform-origin: 15px 15px;
+      animation: clockHandRotate 8s linear infinite;
+    }
+    .clock-hand-slow {
+      transform-origin: 15px 15px;
+      animation: clockHandRotate 24s linear infinite;
+    }
+    .status-dot-blink { animation: beaconBlinkSlow 2s ease-in-out infinite; }
+    .abort-branch { animation: emergencyBranchPulse 2s ease-in-out infinite; }
+
     @media (prefers-reduced-motion: reduce) {
-      .flow-line, .phase-badge {
+      .trace-flow, .clock-hand-fast, .clock-hand-slow,
+      .status-dot-blink, .abort-branch {
         animation: none !important;
       }
     }
   </style>
 
-  <!-- Base Canvas -->
-  <rect width="900" height="420" rx="16" fill="#0A0A0F" stroke="#222234" stroke-width="1.5" />
-  <rect width="900" height="420" fill="url(#wfGrid)" rx="16" />
-  <rect width="900" height="420" fill="url(#wfGlow)" rx="16" />
+  <!-- Obsidian Canvas Floor -->
+  <rect width="950" height="460" fill="#060609" rx="20" />
+  <rect width="950" height="460" fill="url(#wfGrid)" rx="20" />
 
-  <!-- HEADER -->
-  <g transform="translate(40, 36)">
-    <text font-family="'Segoe UI', 'Inter', -apple-system, sans-serif" font-weight="700" font-size="18" fill="#FFFFFF">
-      AUTONOMOUS DAILY SESSION WORKFLOW
+  <!-- Aurora Mesh Spotlights -->
+  <circle cx="200" cy="200" r="180" fill="url(#wfSpot1)" />
+  <circle cx="780" cy="260" r="180" fill="url(#wfSpot2)" />
+
+  <!-- HEADER TITLE &amp; METADATA -->
+  <g transform="translate(45, 36)">
+    <text font-family="'Inter', -apple-system, sans-serif" font-size="19" font-weight="800" fill="#FFFFFF" letter-spacing="-0.5px">
+      AUTONOMOUS DAILY SESSION WORKFLOW &amp; GATES
     </text>
-    <text y="22" font-family="'Segoe UI', 'Inter', -apple-system, sans-serif" font-weight="400" font-size="12" fill="#94A3B8">
-      Four discrete execution phases governed by deterministic startup and shutdown gates.
+    <text y="22" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="500" fill="#94A3B8">
+      DECOYINDIA // FOUR DISCRETE EXECUTION PHASES WITH FAIL-CLOSED SAFETY BRANCHES
+    </text>
+
+    <!-- Top Right Status Badges -->
+    <g transform="translate(630, -6)">
+      <rect x="0" y="0" width="135" height="24" rx="4" fill="rgba(16,185,129,0.08)" stroke="rgba(16,185,129,0.25)" stroke-width="0.75" />
+      <circle class="status-dot-blink" cx="12" cy="12" r="3.5" fill="#10B981" />
+      <text x="22" y="15" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="700" fill="#10B981">FAIL-CLOSED [ARMED]</text>
+
+      <rect x="145" y="0" width="130" height="24" rx="4" fill="rgba(56,189,248,0.08)" stroke="rgba(56,189,248,0.25)" stroke-width="0.75" />
+      <text x="14" y="15" transform="translate(145,0)" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="700" fill="#38BDF8">SYSTEMD SERVICE</text>
+    </g>
+  </g>
+
+  <!-- Hairline Divider -->
+  <line x1="45" y1="76" x2="905" y2="76" stroke="rgba(255,255,255,0.08)" stroke-width="0.75" />
+
+  <!-- MAIN CIRCUIT LOOP CONDUIT (Connecting Phase Columns) -->
+  <g transform="translate(45, 120)">
+    <line x1="100" y1="0" x2="760" y2="0" stroke="rgba(255,255,255,0.12)" stroke-width="3" />
+    <line class="trace-flow" x1="100" y1="0" x2="760" y2="0" stroke="url(#circuitTraceGrad)" stroke-width="2.5" />
+  </g>
+
+  <!-- FOUR DISCRETE PHASE GLASS CARDS (GRID LAYOUT) -->
+  <g transform="translate(45, 88)">
+
+    <!-- PHASE 1: PRE-MARKET REFRESH (08:15 IST – 08:45 IST) -->
+    <g transform="translate(0, 0)">
+      <rect width="205" height="275" rx="12" fill="#0C0C18" fill-opacity="0.9" stroke="url(#phaseBorderGrad)" stroke-width="1" />
+      <rect width="205" height="28" rx="12" fill="rgba(124,134,255,0.12)" />
+      <path d="M 12 1 L 193 1" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="0.75" />
+
+      <!-- Glowing Mini Clock -->
+      <g transform="translate(14, 6)">
+        <circle cx="8" cy="8" r="7" fill="none" stroke="#7C86FF" stroke-width="1" />
+        <line class="clock-hand-fast" x1="8" y1="8" x2="8" y2="3" stroke="#38BDF8" stroke-width="1" />
+        <line class="clock-hand-slow" x1="8" y1="8" x2="12" y2="8" stroke="#FFFFFF" stroke-width="1" />
+      </g>
+      <text x="36" y="19" font-family="'JetBrains Mono', monospace" font-size="9.5" font-weight="700" fill="#A5B4FC">08:15 IST // PHASE 1</text>
+
+      <g transform="translate(14, 42)">
+        <text font-family="'Inter', sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">Pre-Market Wake</text>
+        <text y="16" font-family="'Inter', sans-serif" font-size="9.5" font-weight="400" fill="#94A3B8">• Fyers v3 OAuth TOTP</text>
+        <text y="32" font-family="'Inter', sans-serif" font-size="9.5" font-weight="400" fill="#94A3B8">• Ephemeral token in RAM</text>
+        <text y="48" font-family="'Inter', sans-serif" font-size="9.5" font-weight="400" fill="#94A3B8">• DuckDB bar sync</text>
+        <text y="64" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="600" fill="#10B981">SI-11: Token Guard</text>
+
+        <!-- Fail-Closed Branch -->
+        <g class="abort-branch" transform="translate(0, 92)">
+          <rect width="177" height="40" rx="5" fill="rgba(239,68,68,0.08)" stroke="rgba(239,68,68,0.3)" stroke-width="0.75" />
+          <text x="8" y="16" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="700" fill="#EF4444">FAIL-CLOSED CHECK:</text>
+          <text x="8" y="30" font-family="'Inter', sans-serif" font-size="8" font-weight="500" fill="#94A3B8">Token invalid → Emergency Abort</text>
+        </g>
+
+        <rect y="148" width="177" height="24" rx="4" fill="rgba(16,185,129,0.08)" stroke="rgba(16,185,129,0.3)" stroke-width="0.75" />
+        <circle cx="10" cy="160" r="3" fill="#10B981" />
+        <text x="20" y="164" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="700" fill="#10B981">GATE 1: AUTH VERIFIED</text>
+      </g>
+    </g>
+
+    <!-- PHASE 2: STARTUP AUDIT &amp; RECONCILE (09:00 IST – 09:15 IST) -->
+    <g transform="translate(218, 0)">
+      <rect width="205" height="275" rx="12" fill="#0C0C18" fill-opacity="0.9" stroke="url(#phaseBorderGrad)" stroke-width="1" />
+      <rect width="205" height="28" rx="12" fill="rgba(56,189,248,0.12)" />
+      <path d="M 12 1 L 193 1" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="0.75" />
+
+      <!-- Glowing Mini Clock -->
+      <g transform="translate(14, 6)">
+        <circle cx="8" cy="8" r="7" fill="none" stroke="#38BDF8" stroke-width="1" />
+        <line class="clock-hand-fast" x1="8" y1="8" x2="8" y2="3" stroke="#10B981" stroke-width="1" />
+        <line class="clock-hand-slow" x1="8" y1="8" x2="3" y2="8" stroke="#FFFFFF" stroke-width="1" />
+      </g>
+      <text x="36" y="19" font-family="'JetBrains Mono', monospace" font-size="9.5" font-weight="700" fill="#38BDF8">09:00 IST // PHASE 2</text>
+
+      <g transform="translate(14, 42)">
+        <text font-family="'Inter', sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">Startup Reconcile</text>
+        <text y="16" font-family="'Inter', sans-serif" font-size="9.5" font-weight="400" fill="#94A3B8">• SQLite WAL audit replay</text>
+        <text y="32" font-family="'Inter', sans-serif" font-size="9.5" font-weight="400" fill="#94A3B8">• Broker pos vs DB check</text>
+        <text y="48" font-family="'Inter', sans-serif" font-size="9.5" font-weight="400" fill="#94A3B8">• Max Daily Loss reset</text>
+        <text y="64" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="600" fill="#10B981">SI-12: Zero Drift Guard</text>
+
+        <!-- Fail-Closed Branch -->
+        <g class="abort-branch" transform="translate(0, 92)">
+          <rect width="177" height="40" rx="5" fill="rgba(239,68,68,0.08)" stroke="rgba(239,68,68,0.3)" stroke-width="0.75" />
+          <text x="8" y="16" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="700" fill="#EF4444">FAIL-CLOSED CHECK:</text>
+          <text x="8" y="30" font-family="'Inter', sans-serif" font-size="8" font-weight="500" fill="#94A3B8">Drift &gt; 0 → Session Locked</text>
+        </g>
+
+        <rect y="148" width="177" height="24" rx="4" fill="rgba(16,185,129,0.08)" stroke="rgba(16,185,129,0.3)" stroke-width="0.75" />
+        <circle cx="10" cy="160" r="3" fill="#10B981" />
+        <text x="20" y="164" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="700" fill="#10B981">GATE 2: RECONCILE OK</text>
+      </g>
+    </g>
+
+    <!-- PHASE 3: ALPHAS &amp; EXECUTION (15:00 IST – 15:20 IST) -->
+    <g transform="translate(436, 0)">
+      <rect width="205" height="275" rx="12" fill="#0C0C18" fill-opacity="0.9" stroke="url(#phaseBorderGrad)" stroke-width="1" />
+      <rect width="205" height="28" rx="12" fill="rgba(139,92,246,0.12)" />
+      <path d="M 12 1 L 193 1" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="0.75" />
+
+      <!-- Glowing Mini Clock -->
+      <g transform="translate(14, 6)">
+        <circle cx="8" cy="8" r="7" fill="none" stroke="#8B5CF6" stroke-width="1" />
+        <line class="clock-hand-fast" x1="8" y1="8" x2="8" y2="3" stroke="#A5B4FC" stroke-width="1" />
+        <line class="clock-hand-slow" x1="8" y1="8" x2="13" y2="8" stroke="#FFFFFF" stroke-width="1" />
+      </g>
+      <text x="36" y="19" font-family="'JetBrains Mono', monospace" font-size="9.5" font-weight="700" fill="#C4B5FD">15:00 IST // PHASE 3</text>
+
+      <g transform="translate(14, 42)">
+        <text font-family="'Inter', sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">Signals &amp; Execution</text>
+        <text y="16" font-family="'Inter', sans-serif" font-size="9.5" font-weight="400" fill="#94A3B8">• std30 / 027 / 062 run</text>
+        <text y="32" font-family="'Inter', sans-serif" font-size="9.5" font-weight="400" fill="#94A3B8">• RiskEngine check(12)</text>
+        <text y="48" font-family="'Inter', sans-serif" font-size="9.5" font-weight="400" fill="#94A3B8">• Governor 2.0 OPS pace</text>
+        <text y="64" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="600" fill="#10B981">SI-1: Pure Functional Veto</text>
+
+        <!-- Fail-Closed Branch -->
+        <g class="abort-branch" transform="translate(0, 92)">
+          <rect width="177" height="40" rx="5" fill="rgba(239,68,68,0.08)" stroke="rgba(239,68,68,0.3)" stroke-width="0.75" />
+          <text x="8" y="16" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="700" fill="#EF4444">FAIL-CLOSED CHECK:</text>
+          <text x="8" y="30" font-family="'Inter', sans-serif" font-size="8" font-weight="500" fill="#94A3B8">Risk breach → Veto Drop</text>
+        </g>
+
+        <rect y="148" width="177" height="24" rx="4" fill="rgba(16,185,129,0.08)" stroke="rgba(16,185,129,0.3)" stroke-width="0.75" />
+        <circle cx="10" cy="160" r="3" fill="#10B981" />
+        <text x="20" y="164" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="700" fill="#10B981">GATE 3: EXECUTION LIVE</text>
+      </g>
+    </g>
+
+    <!-- PHASE 4: EOD AUDIT &amp; JOURNAL SEAL (15:45 IST – 16:00 IST) -->
+    <g transform="translate(654, 0)">
+      <rect width="205" height="275" rx="12" fill="#0C0C18" fill-opacity="0.9" stroke="url(#phaseBorderGrad)" stroke-width="1" />
+      <rect width="205" height="28" rx="12" fill="rgba(16,185,129,0.12)" />
+      <path d="M 12 1 L 193 1" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="0.75" />
+
+      <!-- Glowing Mini Clock -->
+      <g transform="translate(14, 6)">
+        <circle cx="8" cy="8" r="7" fill="none" stroke="#10B981" stroke-width="1" />
+        <line class="clock-hand-fast" x1="8" y1="8" x2="8" y2="3" stroke="#38BDF8" stroke-width="1" />
+        <line class="clock-hand-slow" x1="8" y1="8" x2="11" y2="12" stroke="#FFFFFF" stroke-width="1" />
+      </g>
+      <text x="36" y="19" font-family="'JetBrains Mono', monospace" font-size="9.5" font-weight="700" fill="#10B981">15:45 IST // PHASE 4</text>
+
+      <g transform="translate(14, 42)">
+        <text font-family="'Inter', sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">EOD Journal Seal</text>
+        <text y="16" font-family="'Inter', sans-serif" font-size="9.5" font-weight="400" fill="#94A3B8">• Confirmed fills final sync</text>
+        <text y="32" font-family="'Inter', sans-serif" font-size="9.5" font-weight="400" fill="#94A3B8">• Append-only WAL sealed</text>
+        <text y="48" font-family="'Inter', sans-serif" font-size="9.5" font-weight="400" fill="#94A3B8">• Telegram daily summary</text>
+        <text y="64" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="600" fill="#10B981">SI-2: Zero Phantom Fills</text>
+
+        <!-- Fail-Closed Branch -->
+        <g class="abort-branch" transform="translate(0, 92)">
+          <rect width="177" height="40" rx="5" fill="rgba(239,68,68,0.08)" stroke="rgba(239,68,68,0.3)" stroke-width="0.75" />
+          <text x="8" y="16" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="700" fill="#EF4444">FAIL-CLOSED CHECK:</text>
+          <text x="8" y="30" font-family="'Inter', sans-serif" font-size="8" font-weight="500" fill="#94A3B8">Fill mismatch → Escalation</text>
+        </g>
+
+        <rect y="148" width="177" height="24" rx="4" fill="rgba(16,185,129,0.08)" stroke="rgba(16,185,129,0.3)" stroke-width="0.75" />
+        <circle cx="10" cy="160" r="3" fill="#10B981" />
+        <text x="20" y="164" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="700" fill="#10B981">GATE 4: SESSION SEALED</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- Footer Telemetry &amp; Author Stamp -->
+  <g transform="translate(45, 415)">
+    <text font-family="'JetBrains Mono', monospace" font-size="10" font-weight="600" fill="#475569">
+      ENGINEERED BY <tspan fill="#E2E8F0" font-weight="700">SUBHAM JENA</tspan> // DECOYINDIA // DETERMINISTIC CRON AUTOMATION
+    </text>
+    <text x="700" y="0" font-family="'JetBrains Mono', monospace" font-size="9.5" font-weight="600" fill="#64748B">
+      FAIL-CLOSED SAFETY: <tspan fill="#10B981">ZERO RECOVERY LEAKS</tspan>
     </text>
   </g>
 
-  <!-- HORIZONTAL CONNECTOR TRACE -->
-  <g transform="translate(40, 160)">
-    <line x1="100" y1="0" x2="720" y2="0" stroke="#1F1F32" stroke-width="3" />
-    <line class="flow-line" x1="100" y1="0" x2="720" y2="0" stroke="#7C86FF" stroke-width="2" />
-  </g>
-
-  <!-- 4 PHASES COLUMNS -->
-  <!-- PHASE 1: PRE-MARKET -->
-  <g transform="translate(40, 85)">
-    <rect width="195" height="280" rx="10" fill="#10101C" stroke="#26263C" stroke-width="1.2" />
-    <rect width="195" height="30" rx="10" fill="#161628" />
-    <text x="12" y="20" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11" fill="#38BDF8">PHASE 1: PRE-MARKET</text>
-    <text x="145" y="20" font-family="'Cascadia Code', monospace" font-size="9.5" fill="#71717A">08:00-09:15</text>
-
-    <!-- Phase 1 Steps -->
-    <g transform="translate(12, 42)">
-      <rect width="171" height="48" rx="6" fill="#141424" stroke="#222238" stroke-width="1" />
-      <text x="10" y="18" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF">1. Auth Handshake</text>
-      <text x="10" y="34" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">24h OAuth + SHA-256 HMAC</text>
-    </g>
-
-    <g transform="translate(12, 98)">
-      <rect width="171" height="48" rx="6" fill="#141424" stroke="#222238" stroke-width="1" />
-      <text x="10" y="18" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF">2. Data Ingest</text>
-      <text x="10" y="34" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">Bhavcopy sync to DuckDB</text>
-    </g>
-
-    <g transform="translate(12, 154)">
-      <rect width="171" height="48" rx="6" fill="#141424" stroke="#222238" stroke-width="1" />
-      <text x="10" y="18" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF">3. Startup Gate</text>
-      <text x="10" y="34" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">Reconcile Journal &amp; Broker</text>
-    </g>
-
-    <g transform="translate(12, 218)">
-      <rect width="171" height="26" rx="5" fill="#0E1A16" stroke="#10B981" stroke-width="0.8" />
-      <text x="85" y="17" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="9.5" font-weight="700" fill="#10B981">GATE 1 CLEARED</text>
-    </g>
-  </g>
-
-  <!-- PHASE 2: MARKET OBSERVATION -->
-  <g transform="translate(248, 85)">
-    <rect width="195" height="280" rx="10" fill="#10101C" stroke="#26263C" stroke-width="1.2" />
-    <rect width="195" height="30" rx="10" fill="#161628" />
-    <text x="12" y="20" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11" fill="#7C86FF">PHASE 2: MARKET</text>
-    <text x="145" y="20" font-family="'Cascadia Code', monospace" font-size="9.5" fill="#71717A">09:15-15:00</text>
-
-    <g transform="translate(12, 42)">
-      <rect width="171" height="48" rx="6" fill="#141424" stroke="#222238" stroke-width="1" />
-      <text x="10" y="18" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF">1. Passive Stream</text>
-      <text x="10" y="34" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">WebSocket L2 Price Ticks</text>
-    </g>
-
-    <g transform="translate(12, 98)">
-      <rect width="171" height="48" rx="6" fill="#141424" stroke="#222238" stroke-width="1" />
-      <text x="10" y="18" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF">2. Collar Tracking</text>
-      <text x="10" y="34" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">Monitor +/-3% Band Threshold</text>
-    </g>
-
-    <g transform="translate(12, 154)">
-      <rect width="171" height="48" rx="6" fill="#141424" stroke="#222238" stroke-width="1" />
-      <text x="10" y="18" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF">3. Zero Intra Orders</text>
-      <text x="10" y="34" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">Swing horizon (No day-trades)</text>
-    </g>
-
-    <g transform="translate(12, 218)">
-      <rect width="171" height="26" rx="5" fill="#151528" stroke="#7C86FF" stroke-width="0.8" />
-      <text x="85" y="17" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="9.5" font-weight="700" fill="#A5B4FC">PASSIVE MONITOR</text>
-    </g>
-  </g>
-
-  <!-- PHASE 3: EXECUTION -->
-  <g transform="translate(456, 85)">
-    <rect width="195" height="280" rx="10" fill="#131322" stroke="#7C86FF" stroke-width="1.4" />
-    <rect width="195" height="30" rx="10" fill="#1B1C34" />
-    <text x="12" y="20" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11" fill="#FFFFFF">PHASE 3: EXECUTION</text>
-    <text x="145" y="20" font-family="'Cascadia Code', monospace" font-size="9.5" fill="#38BDF8">15:00-15:25</text>
-
-    <g transform="translate(12, 42)">
-      <rect width="171" height="48" rx="6" fill="#18182E" stroke="#2B2B4A" stroke-width="1" />
-      <text x="10" y="18" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF">1. Alpha Signals</text>
-      <text x="10" y="34" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">3 Sleeves (std30, a027, a062)</text>
-    </g>
-
-    <g transform="translate(12, 98)">
-      <rect width="171" height="48" rx="6" fill="#18182E" stroke="#2B2B4A" stroke-width="1" />
-      <text x="10" y="18" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF">2. Pure Veto Check</text>
-      <text x="10" y="34" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">12 Safety Invariants verified</text>
-    </g>
-
-    <g transform="translate(12, 154)">
-      <rect width="171" height="48" rx="6" fill="#18182E" stroke="#2B2B4A" stroke-width="1" />
-      <text x="10" y="18" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF">3. 2-OPS Governor</text>
-      <text x="10" y="34" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">Limit CNC orders dispatched</text>
-    </g>
-
-    <g transform="translate(12, 218)">
-      <rect width="171" height="26" rx="5" fill="#102528" stroke="#38BDF8" stroke-width="0.8" />
-      <text x="85" y="17" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="9.5" font-weight="700" fill="#38BDF8">ROUTED &amp; ACTIVE</text>
-    </g>
-  </g>
-
-  <!-- PHASE 4: EOD CLOSE & SYNC -->
-  <g transform="translate(664, 85)">
-    <rect width="195" height="280" rx="10" fill="#10101C" stroke="#26263C" stroke-width="1.2" />
-    <rect width="195" height="30" rx="10" fill="#161628" />
-    <text x="12" y="20" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11" fill="#10B981">PHASE 4: EOD CLOSE</text>
-    <text x="145" y="20" font-family="'Cascadia Code', monospace" font-size="9.5" fill="#71717A">15:25-16:00</text>
-
-    <g transform="translate(12, 42)">
-      <rect width="171" height="48" rx="6" fill="#141424" stroke="#222238" stroke-width="1" />
-      <text x="10" y="18" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF">1. Confirmed Fills</text>
-      <text x="10" y="34" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">Append fills to SQLite WAL</text>
-    </g>
-
-    <g transform="translate(12, 98)">
-      <rect width="171" height="48" rx="6" fill="#141424" stroke="#222238" stroke-width="1" />
-      <text x="10" y="18" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF">2. Position Mutation</text>
-      <text x="10" y="34" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">State derived by event replay</text>
-    </g>
-
-    <g transform="translate(12, 154)">
-      <rect width="171" height="48" rx="6" fill="#141424" stroke="#222238" stroke-width="1" />
-      <text x="10" y="18" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#FFFFFF">3. Session Lock</text>
-      <text x="10" y="34" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">Recon report, session closed</text>
-    </g>
-
-    <g transform="translate(12, 218)">
-      <rect width="171" height="26" rx="5" fill="#0E1A16" stroke="#10B981" stroke-width="0.8" />
-      <text x="85" y="17" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="9.5" font-weight="700" fill="#10B981">SESSION LOCKED</text>
-    </g>
-  </g>
-
-  <!-- BOTTOM STATUS -->
-  <g transform="translate(40, 380)">
-    <text font-family="'Cascadia Code', monospace" font-size="10.5" fill="#71717A">
-      CRON SCHEDULE // APSCHEDULER ASYNCIO // TIMEZONE: ASIA/KOLKATA (IST) // AUTOMATED REPLAY RECOVERY
-    </text>
+  <!-- Corner Coordinates -->
+  <g stroke="rgba(255,255,255,0.2)" stroke-width="0.75">
+    <path d="M 35 28 L 45 28 M 35 28 L 35 38" />
+    <path d="M 915 28 L 905 28 M 915 28 L 915 38" />
+    <path d="M 35 432 L 45 432 M 35 432 L 35 422" />
+    <path d="M 915 432 L 905 432 M 915 432 L 915 422" />
   </g>
 </svg>

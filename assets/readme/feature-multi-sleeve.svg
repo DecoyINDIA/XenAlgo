@@ -1,174 +1,331 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400" width="100%" height="auto">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 950 440" width="100%" height="auto">
   <defs>
-    <radialGradient id="sleeveGlow" cx="50%" cy="50%" r="55%">
-      <stop offset="0%" stop-color="#7C86FF" stop-opacity="0.15" />
-      <stop offset="100%" stop-color="#0A0A0F" stop-opacity="0" />
+    <!-- Background Aurora &amp; Spotlights -->
+    <radialGradient id="sleeveSpot1" cx="15%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#7C86FF" stop-opacity="0.22" />
+      <stop offset="60%" stop-color="#060609" stop-opacity="0" />
     </radialGradient>
-    <pattern id="sleeveGrid" width="25" height="25" patternUnits="userSpaceOnUse">
-      <path d="M 25 0 L 0 0 0 25" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1" />
-    </pattern>
-    <linearGradient id="pipeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+    <radialGradient id="sleeveSpot2" cx="85%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.20" />
+      <stop offset="60%" stop-color="#060609" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Liquid Glassmorphism Gradients -->
+    <linearGradient id="glassSleeveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.08" />
+      <stop offset="40%" stop-color="#FFFFFF" stop-opacity="0.02" />
+      <stop offset="100%" stop-color="#7C86FF" stop-opacity="0.05" />
+    </linearGradient>
+    <linearGradient id="glassSleeveBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.35" />
+      <stop offset="40%" stop-color="#7C86FF" stop-opacity="0.25" />
+      <stop offset="80%" stop-color="#38BDF8" stop-opacity="0.1" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.05" />
+    </linearGradient>
+    <linearGradient id="conduitFlowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#7C86FF" />
       <stop offset="50%" stop-color="#38BDF8" />
       <stop offset="100%" stop-color="#10B981" />
     </linearGradient>
+
+    <!-- Micro Grid -->
+    <pattern id="multiGrid" width="24" height="24" patternUnits="userSpaceOnUse">
+      <path d="M 24 0 L 0 0 0 24" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="0.75" />
+    </pattern>
+
+    <!-- Glow Filter -->
+    <filter id="nettingGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <clipPath id="sleeveWaveClip1">
+      <rect x="0" y="0" width="180" height="230" rx="12" />
+    </clipPath>
+    <clipPath id="sleeveWaveClip2">
+      <rect x="0" y="0" width="180" height="230" rx="12" />
+    </clipPath>
+    <clipPath id="sleeveWaveClip3">
+      <rect x="0" y="0" width="180" height="230" rx="12" />
+    </clipPath>
   </defs>
 
   <style>
-    @keyframes pulsePacket {
-      0% { stroke-dashoffset: 60; }
+    /* GSAP Precision Bezier Motion Keyframes */
+    @keyframes pulseDashPackets {
+      0% { stroke-dashoffset: 120; }
       100% { stroke-dashoffset: 0; }
     }
-    @keyframes badgeGlow {
-      0%, 100% { opacity: 0.8; }
-      50% { opacity: 0.3; }
+    @keyframes floatingCardSubtle {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-4px); }
     }
-    .flow-packet {
-      stroke-dasharray: 8 12;
-      animation: pulsePacket 1.8s linear infinite;
+    @keyframes beaconBlink {
+      0%, 100% { opacity: 1; filter: drop-shadow(0 0 4px #10B981); }
+      50% { opacity: 0.4; filter: none; }
     }
-    .packet-slow {
-      stroke-dasharray: 6 10;
-      animation: pulsePacket 2.6s linear infinite;
+    @keyframes nettingPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); filter: drop-shadow(0 0 8px #10B981); }
+    }
+
+    .conduit-flow {
+      stroke-dasharray: 8 6;
+      animation: pulseDashPackets 2.2s linear infinite;
+    }
+    .conduit-flow-fast {
+      stroke-dasharray: 6 5;
+      animation: pulseDashPackets 1.6s linear infinite;
+    }
+    .card-float-1 { animation: floatingCardSubtle 5s ease-in-out infinite; }
+    .card-float-2 { animation: floatingCardSubtle 6s ease-in-out 1s infinite; }
+    .card-float-3 { animation: floatingCardSubtle 5.5s ease-in-out 2s infinite; }
+    .status-beacon { animation: beaconBlink 2s ease-in-out infinite; }
+    .net-box {
+      transform-origin: 825px 225px;
+      animation: nettingPulse 3s ease-in-out infinite;
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .flow-packet, .packet-slow {
+      .conduit-flow, .conduit-flow-fast, .card-float-1, .card-float-2,
+      .card-float-3, .status-beacon, .net-box {
         animation: none !important;
       }
     }
   </style>
 
-  <!-- Background Base -->
-  <rect width="900" height="400" rx="16" fill="#0A0A0F" stroke="#222234" stroke-width="1.5" />
-  <rect width="900" height="400" fill="url(#sleeveGrid)" rx="16" />
-  <rect width="900" height="400" fill="url(#sleeveGlow)" rx="16" />
+  <!-- Obsidian Canvas Floor -->
+  <rect width="950" height="440" fill="#060609" rx="20" />
+  <rect width="950" height="440" fill="url(#multiGrid)" rx="20" />
 
-  <!-- HEADER -->
-  <g transform="translate(40, 36)">
-    <text font-family="'Segoe UI', 'Inter', -apple-system, sans-serif" font-weight="700" font-size="18" fill="#FFFFFF">
-      MULTI-ALPHA CAPITAL SLEEVES ARCHITECTURE
+  <!-- Aurora Mesh Spotlights -->
+  <circle cx="150" cy="220" r="180" fill="url(#sleeveSpot1)" />
+  <circle cx="820" cy="220" r="180" fill="url(#sleeveSpot2)" />
+
+  <!-- HEADER TITLE &amp; METADATA -->
+  <g transform="translate(45, 36)">
+    <text font-family="'Inter', -apple-system, sans-serif" font-size="19" font-weight="800" fill="#FFFFFF" letter-spacing="-0.5px">
+      MULTI-ALPHA CAPITAL SLEEVES &amp; NETTING ENGINE
     </text>
-    <text y="22" font-family="'Segoe UI', 'Inter', -apple-system, sans-serif" font-weight="400" font-size="12" fill="#94A3B8">
-      Three uncorrelated strategies run in strict isolation with 1/3 capital parity and netted broker execution.
+    <text y="22" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="500" fill="#94A3B8">
+      DECOYINDIA // THREE INDEPENDENT 1/3 CAPITAL SLEEVES WITH ZERO PHANTOM DRIFT
     </text>
-  </g>
 
-  <!-- LEFT: TOTAL CAPITAL POOL (X: 40, Y: 110) -->
-  <g transform="translate(40, 110)">
-    <rect width="160" height="230" rx="10" fill="#10101C" stroke="#2A2A42" stroke-width="1.5" />
-    <rect width="160" height="32" rx="10" fill="#18182A" />
-    <rect width="160" height="1" y="32" fill="rgba(255,255,255,0.08)" />
-
-    <text x="16" y="21" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="12" fill="#A5B4FC">CAPITAL POOL</text>
-    <circle cx="144" cy="16" r="4" fill="#10B981" />
-
-    <text x="16" y="65" font-family="'Cascadia Code', monospace" font-size="11" fill="#71717A">TOTAL NAV</text>
-    <text x="16" y="88" font-family="'Cascadia Code', monospace" font-size="20" font-weight="700" fill="#FFFFFF">₹10,00,000</text>
-
-    <!-- Parity Splitter Node -->
-    <rect x="16" y="110" width="128" height="30" rx="6" fill="#151524" stroke="rgba(124,134,255,0.3)" stroke-width="1" />
-    <text x="80" y="129" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="11" fill="#38BDF8">EQUAL_1/3_PARITY</text>
-
-    <text x="16" y="165" font-family="'Segoe UI', sans-serif" font-size="10.5" fill="#94A3B8">• Strict Ring-Fencing</text>
-    <text x="16" y="185" font-family="'Segoe UI', sans-serif" font-size="10.5" fill="#94A3B8">• Independent Cash</text>
-    <text x="16" y="205" font-family="'Segoe UI', sans-serif" font-size="10.5" fill="#94A3B8">• Isolated Stop Loss</text>
-  </g>
-
-  <!-- CONNECTING CONDUITS FROM POOL TO SLEEVES -->
-  <g>
-    <!-- Path to Sleeve 1 -->
-    <path d="M 200 160 L 260 160 L 260 135 L 290 135" fill="none" stroke="#252538" stroke-width="2" />
-    <path class="flow-packet" d="M 200 160 L 260 160 L 260 135 L 290 135" fill="none" stroke="#7C86FF" stroke-width="2" />
-
-    <!-- Path to Sleeve 2 -->
-    <path d="M 200 225 L 290 225" fill="none" stroke="#252538" stroke-width="2" />
-    <path class="flow-packet" d="M 200 225 L 290 225" fill="none" stroke="#38BDF8" stroke-width="2" />
-
-    <!-- Path to Sleeve 3 -->
-    <path d="M 200 290 L 260 290 L 260 315 L 290 315" fill="none" stroke="#252538" stroke-width="2" />
-    <path class="flow-packet" d="M 200 290 L 260 290 L 260 315 L 290 315" fill="none" stroke="#10B981" stroke-width="2" />
-  </g>
-
-  <!-- CENTER: 3 PARALLEL ALPHA SLEEVES -->
-  <!-- Sleeve 1: std30 -->
-  <g transform="translate(290, 95)">
-    <rect width="260" height="78" rx="8" fill="#11111E" stroke="#7C86FF" stroke-width="1.2" />
-    <rect x="0" y="0" width="4" height="78" rx="2" fill="#7C86FF" />
-    <text x="16" y="24" font-family="'Cascadia Code', monospace" font-size="13" font-weight="700" fill="#FFFFFF">SLEEVE 1: std30</text>
-    <rect x="180" y="10" width="68" height="18" rx="4" fill="rgba(124,134,255,0.2)" />
-    <text x="214" y="23" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="10" font-weight="700" fill="#A5B4FC">33.3% CAP</text>
-    <text x="16" y="46" font-family="'Segoe UI', sans-serif" font-size="10.5" fill="#94A3B8">Alpha: 30-Day Volatility Breakout &amp; Trend</text>
-    <text x="16" y="64" font-family="'Cascadia Code', monospace" font-size="9.5" fill="#71717A">UNIVERSE: NIFTY 500 | MAX_HOLD: 20 DAYS</text>
-  </g>
-
-  <!-- Sleeve 2: alpha_027 -->
-  <g transform="translate(290, 185)">
-    <rect width="260" height="78" rx="8" fill="#11111E" stroke="#38BDF8" stroke-width="1.2" />
-    <rect x="0" y="0" width="4" height="78" rx="2" fill="#38BDF8" />
-    <text x="16" y="24" font-family="'Cascadia Code', monospace" font-size="13" font-weight="700" fill="#FFFFFF">SLEEVE 2: alpha_027</text>
-    <rect x="180" y="10" width="68" height="18" rx="4" fill="rgba(56,189,248,0.2)" />
-    <text x="214" y="23" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="10" font-weight="700" fill="#38BDF8">33.3% CAP</text>
-    <text x="16" y="46" font-family="'Segoe UI', sans-serif" font-size="10.5" fill="#94A3B8">Alpha: RSI Extreme + Bollinger Mean Reversion</text>
-    <text x="16" y="64" font-family="'Cascadia Code', monospace" font-size="9.5" fill="#71717A">UNIVERSE: NIFTY 500 | COUNTER-TREND</text>
-  </g>
-
-  <!-- Sleeve 3: alpha_062 -->
-  <g transform="translate(290, 275)">
-    <rect width="260" height="78" rx="8" fill="#11111E" stroke="#10B981" stroke-width="1.2" />
-    <rect x="0" y="0" width="4" height="78" rx="2" fill="#10B981" />
-    <text x="16" y="24" font-family="'Cascadia Code', monospace" font-size="13" font-weight="700" fill="#FFFFFF">SLEEVE 3: alpha_062</text>
-    <rect x="180" y="10" width="68" height="18" rx="4" fill="rgba(16,185,129,0.2)" />
-    <text x="214" y="23" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="10" font-weight="700" fill="#10B981">33.3% CAP</text>
-    <text x="16" y="46" font-family="'Segoe UI', sans-serif" font-size="10.5" fill="#94A3B8">Alpha: Volume Flow Filtered Price Momentum</text>
-    <text x="16" y="64" font-family="'Cascadia Code', monospace" font-size="9.5" fill="#71717A">UNIVERSE: NIFTY 500 | MOMENTUM</text>
-  </g>
-
-  <!-- CONNECTING CONDUITS FROM SLEEVES TO NETTING ENGINE -->
-  <g>
-    <!-- From Sleeve 1 -->
-    <path d="M 550 135 L 590 135 L 590 205 L 630 205" fill="none" stroke="#252538" stroke-width="2" />
-    <path class="flow-packet" d="M 550 135 L 590 135 L 590 205 L 630 205" fill="none" stroke="#7C86FF" stroke-width="2" />
-
-    <!-- From Sleeve 2 -->
-    <path d="M 550 225 L 630 225" fill="none" stroke="#252538" stroke-width="2" />
-    <path class="flow-packet" d="M 550 225 L 630 225" fill="none" stroke="#38BDF8" stroke-width="2" />
-
-    <!-- From Sleeve 3 -->
-    <path d="M 550 315 L 590 315 L 590 245 L 630 245" fill="none" stroke="#252538" stroke-width="2" />
-    <path class="flow-packet" d="M 550 315 L 590 315 L 590 245 L 630 245" fill="none" stroke="#10B981" stroke-width="2" />
-  </g>
-
-  <!-- RIGHT: CROSS-SLEEVE NETTING & BROKER ROUTER -->
-  <g transform="translate(630, 110)">
-    <rect width="230" height="230" rx="10" fill="#10101C" stroke="#2A2A42" stroke-width="1.5" />
-    <rect width="230" height="32" rx="10" fill="#18182A" />
-    <rect width="230" height="1" y="32" fill="rgba(255,255,255,0.08)" />
-
-    <text x="16" y="21" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="12" fill="#E2E8F0">CROSS-SLEEVE NETTING</text>
-    <rect x="175" y="7" width="44" height="18" rx="4" fill="rgba(56,189,248,0.2)" />
-    <text x="197" y="20" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="9" font-weight="700" fill="#38BDF8">ACTIVE</text>
-
-    <!-- Netting explanation -->
-    <g transform="translate(16, 50)">
-      <rect width="198" height="52" rx="6" fill="#151524" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
-      <text x="10" y="20" font-family="'Cascadia Code', monospace" font-size="9.5" fill="#A5B4FC">std30 BUY 100 INFY</text>
-      <text x="10" y="38" font-family="'Cascadia Code', monospace" font-size="9.5" fill="#F87171">a027 SELL 40 INFY</text>
-      <line x1="120" y1="10" x2="120" y2="42" stroke="#28283E" stroke-width="1" />
-      <text x="130" y="30" font-family="'Cascadia Code', monospace" font-size="11" font-weight="700" fill="#10B981">NET: +60</text>
-    </g>
-
-    <text x="16" y="125" font-family="'Segoe UI', sans-serif" font-size="10.5" fill="#94A3B8">• Wash Trade Prevention</text>
-    <text x="16" y="145" font-family="'Segoe UI', sans-serif" font-size="10.5" fill="#94A3B8">• Transaction Cost Alpha</text>
-    <text x="16" y="165" font-family="'Segoe UI', sans-serif" font-size="10.5" fill="#94A3B8">• Atomic Dispatches</text>
-
-    <!-- Out Conduit to Fyers Gateway -->
-    <g transform="translate(16, 185)">
-      <rect width="198" height="30" rx="6" fill="#0C1A14" stroke="#10B981" stroke-width="1" />
-      <circle cx="14" cy="15" r="4" fill="#10B981" />
-      <text x="26" y="19" font-family="'Cascadia Code', monospace" font-size="10" font-weight="700" fill="#10B981">
-        → TO RISK VETO LAYER
+    <!-- Top Right Status Pill -->
+    <g transform="translate(640, -6)">
+      <rect x="0" y="0" width="220" height="24" rx="4" fill="rgba(16,185,129,0.08)" stroke="rgba(16,185,129,0.25)" stroke-width="0.75" />
+      <circle class="status-beacon" cx="12" cy="12" r="3.5" fill="#10B981" />
+      <text x="22" y="15" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="700" fill="#10B981">
+        RING-FENCED: 1/3 PARITY [OK]
       </text>
     </g>
+  </g>
+
+  <!-- Hairline Divider -->
+  <line x1="45" y1="78" x2="905" y2="78" stroke="rgba(255,255,255,0.08)" stroke-width="0.75" />
+
+  <!-- LEFT: CAPITAL POOL (₹10,00,000 TOTAL NAV) -->
+  <g transform="translate(45, 110)">
+    <rect width="165" height="230" rx="12" fill="#0B0B14" fill-opacity="0.9" stroke="url(#glassSleeveBorder)" stroke-width="1" />
+    <rect width="165" height="30" rx="12" fill="rgba(124,134,255,0.12)" />
+    <!-- 0.5px Top Rim -->
+    <path d="M 12 1 L 153 1" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="0.75" />
+
+    <text x="14" y="20" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#A5B4FC">CAPITAL POOL</text>
+    <circle cx="150" cy="15" r="3.5" fill="#10B981" />
+
+    <text x="14" y="60" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="600" fill="#64748B">PORTFOLIO NAV</text>
+    <text x="14" y="86" font-family="'JetBrains Mono', monospace" font-size="20" font-weight="800" fill="#FFFFFF">₹10,00,000</text>
+
+    <!-- Parity Splitter Badge -->
+    <rect x="14" y="108" width="137" height="26" rx="5" fill="rgba(56,189,248,0.08)" stroke="rgba(56,189,248,0.25)" stroke-width="0.75" />
+    <text x="82" y="125" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="9.5" font-weight="700" fill="#38BDF8">
+      1/3 EQUAL ALLOCATION
+    </text>
+
+    <!-- Capital Isolation Rules -->
+    <text x="14" y="160" font-family="'Inter', sans-serif" font-size="10" font-weight="500" fill="#94A3B8">• Strict Ring-Fencing</text>
+    <text x="14" y="180" font-family="'Inter', sans-serif" font-size="10" font-weight="500" fill="#94A3B8">• Independent Cash</text>
+    <text x="14" y="200" font-family="'Inter', sans-serif" font-size="10" font-weight="500" fill="#94A3B8">• Isolated Stop-Loss</text>
+    <text x="14" y="220" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="600" fill="#10B981">SI-9: Zero Margin Breach</text>
+  </g>
+
+  <!-- CONDUITS: SPLITTING FROM POOL TO 3 SLEEVES -->
+  <g>
+    <!-- Pool (210, 225) to Sleeve 1 (270, 160) -->
+    <path d="M 210 225 C 235 225, 245 160, 270 160" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" />
+    <path class="conduit-flow" d="M 210 225 C 235 225, 245 160, 270 160" fill="none" stroke="#7C86FF" stroke-width="1.5" />
+
+    <!-- Pool (210, 225) to Sleeve 2 (270, 225) -->
+    <line x1="210" y1="225" x2="270" y2="225" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" />
+    <line class="conduit-flow" x1="210" y1="225" x2="270" y2="225" stroke="#38BDF8" stroke-width="1.5" />
+
+    <!-- Pool (210, 225) to Sleeve 3 (270, 290) -->
+    <path d="M 210 225 C 235 225, 245 290, 270 290" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" />
+    <path class="conduit-flow" d="M 210 225 C 235 225, 245 290, 270 290" fill="none" stroke="#10B981" stroke-width="1.5" />
+  </g>
+
+  <!-- MIDDLE: THREE INDEPENDENT FLOATING FROSTED GLASS SLEEVES -->
+  <g transform="translate(270, 110)">
+    <!-- SLEEVE 1: std30 (Mean Reversion) -->
+    <g class="card-float-1" transform="translate(0, 0)">
+      <rect width="140" height="230" rx="10" fill="#0E0E1B" fill-opacity="0.85" stroke="url(#glassSleeveBorder)" stroke-width="1" />
+      <rect width="140" height="26" rx="10" fill="rgba(124,134,255,0.12)" />
+      <text x="12" y="17" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="700" fill="#A5B4FC">SLEEVE: std30</text>
+      <circle cx="125" cy="13" r="3" fill="#7C86FF" />
+
+      <text x="12" y="46" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">Mean Reversion</text>
+      <text x="12" y="60" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="500" fill="#64748B">Lookback N=30</text>
+
+      <!-- Morphing Living Fluid Wave Fill -->
+      <g clip-path="url(#sleeveWaveClip1)">
+        <path fill="rgba(124,134,255,0.15)">
+          <animate attributeName="d" dur="4s" repeatCount="indefinite"
+            values="
+              M 0 160 Q 35 150 70 160 T 140 160 L 140 230 L 0 230 Z;
+              M 0 160 Q 35 170 70 155 T 140 160 L 140 230 L 0 230 Z;
+              M 0 160 Q 35 150 70 160 T 140 160 L 140 230 L 0 230 Z" />
+        </path>
+      </g>
+
+      <text x="12" y="92" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="600" fill="#64748B">ALLOCATION</text>
+      <text x="12" y="112" font-family="'JetBrains Mono', monospace" font-size="14" font-weight="800" fill="#FFFFFF">₹3,33,333</text>
+
+      <text x="12" y="135" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="600" fill="#10B981">SIGNAL: BUY</text>
+      <text x="12" y="148" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="500" fill="#94A3B8">RELIANCE +280</text>
+
+      <line x1="12" y1="165" x2="128" y2="165" stroke="rgba(255,255,255,0.08)" stroke-width="0.75" />
+      <text x="12" y="185" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="600" fill="#7C86FF">CAGR: 24.2%</text>
+      <text x="12" y="200" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="600" fill="#64748B">SHARPE: 1.84</text>
+      <text x="12" y="215" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="600" fill="#10B981">MAX DD: -8.4%</text>
+    </g>
+
+    <!-- SLEEVE 2: alpha_027 (Vol-Rank Momentum) -->
+    <g class="card-float-2" transform="translate(155, 0)">
+      <rect width="140" height="230" rx="10" fill="#0E0E1B" fill-opacity="0.85" stroke="url(#glassSleeveBorder)" stroke-width="1" />
+      <rect width="140" height="26" rx="10" fill="rgba(56,189,248,0.12)" />
+      <text x="12" y="17" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="700" fill="#38BDF8">alpha_027</text>
+      <circle cx="125" cy="13" r="3" fill="#38BDF8" />
+
+      <text x="12" y="46" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">Vol-Rank Mom</text>
+      <text x="12" y="60" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="500" fill="#64748B">Rank Quantile</text>
+
+      <!-- Morphing Living Fluid Wave Fill -->
+      <g clip-path="url(#sleeveWaveClip2)">
+        <path fill="rgba(56,189,248,0.15)">
+          <animate attributeName="d" dur="4.5s" repeatCount="indefinite"
+            values="
+              M 0 160 Q 35 168 70 156 T 140 160 L 140 230 L 0 230 Z;
+              M 0 160 Q 35 152 70 165 T 140 160 L 140 230 L 0 230 Z;
+              M 0 160 Q 35 168 70 156 T 140 160 L 140 230 L 0 230 Z" />
+        </path>
+      </g>
+
+      <text x="12" y="92" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="600" fill="#64748B">ALLOCATION</text>
+      <text x="12" y="112" font-family="'JetBrains Mono', monospace" font-size="14" font-weight="800" fill="#FFFFFF">₹3,33,333</text>
+
+      <text x="12" y="135" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="600" fill="#38BDF8">SIGNAL: BUY</text>
+      <text x="12" y="148" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="500" fill="#94A3B8">TCS +85</text>
+
+      <line x1="12" y1="165" x2="128" y2="165" stroke="rgba(255,255,255,0.08)" stroke-width="0.75" />
+      <text x="12" y="185" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="600" fill="#38BDF8">CAGR: 28.6%</text>
+      <text x="12" y="200" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="600" fill="#64748B">SHARPE: 2.12</text>
+      <text x="12" y="215" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="600" fill="#10B981">MAX DD: -7.1%</text>
+    </g>
+
+    <!-- SLEEVE 3: alpha_062 (Multi-Day Breakout) -->
+    <g class="card-float-3" transform="translate(310, 0)">
+      <rect width="140" height="230" rx="10" fill="#0E0E1B" fill-opacity="0.85" stroke="url(#glassSleeveBorder)" stroke-width="1" />
+      <rect width="140" height="26" rx="10" fill="rgba(16,185,129,0.12)" />
+      <text x="12" y="17" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="700" fill="#10B981">alpha_062</text>
+      <circle cx="125" cy="13" r="3" fill="#10B981" />
+
+      <text x="12" y="46" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">Breakout Trend</text>
+      <text x="12" y="60" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="500" fill="#64748B">20-Day Highs</text>
+
+      <!-- Morphing Living Fluid Wave Fill -->
+      <g clip-path="url(#sleeveWaveClip3)">
+        <path fill="rgba(16,185,129,0.15)">
+          <animate attributeName="d" dur="5s" repeatCount="indefinite"
+            values="
+              M 0 160 Q 35 152 70 162 T 140 160 L 140 230 L 0 230 Z;
+              M 0 160 Q 35 166 70 154 T 140 160 L 140 230 L 0 230 Z;
+              M 0 160 Q 35 152 70 162 T 140 160 L 140 230 L 0 230 Z" />
+        </path>
+      </g>
+
+      <text x="12" y="92" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="600" fill="#64748B">ALLOCATION</text>
+      <text x="12" y="112" font-family="'JetBrains Mono', monospace" font-size="14" font-weight="800" fill="#FFFFFF">₹3,33,334</text>
+
+      <text x="12" y="135" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="600" fill="#F59E0B">SIGNAL: HOLD</text>
+      <text x="12" y="148" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="500" fill="#94A3B8">INFY IN POSITION</text>
+
+      <line x1="12" y1="165" x2="128" y2="165" stroke="rgba(255,255,255,0.08)" stroke-width="0.75" />
+      <text x="12" y="185" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="600" fill="#10B981">CAGR: 21.8%</text>
+      <text x="12" y="200" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="600" fill="#64748B">SHARPE: 1.76</text>
+      <text x="12" y="215" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="600" fill="#10B981">MAX DD: -9.2%</text>
+    </g>
+  </g>
+
+  <!-- CONDUITS: CONVERGENCE FROM 3 SLEEVES TO NETTING ENGINE -->
+  <g>
+    <!-- Sleeve 1 (410, 225) to Netting Box (740, 225) -->
+    <path d="M 410 160 C 500 160, 680 215, 740 215" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" />
+    <path class="conduit-flow-fast" d="M 410 160 C 500 160, 680 215, 740 215" fill="none" stroke="#7C86FF" stroke-width="1.5" />
+
+    <!-- Sleeve 2 (565, 225) to Netting Box (740, 225) -->
+    <line x1="565" y1="225" x2="740" y2="225" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" />
+    <line class="conduit-flow-fast" x1="565" y1="225" x2="740" y2="225" stroke="#38BDF8" stroke-width="1.5" />
+
+    <!-- Sleeve 3 (720, 225) to Netting Box (740, 225) -->
+    <path d="M 720 290 C 725 290, 730 235, 740 235" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" />
+    <path class="conduit-flow-fast" d="M 720 290 C 725 290, 730 235, 740 235" fill="none" stroke="#10B981" stroke-width="1.5" />
+  </g>
+
+  <!-- RIGHT: NETTING &amp; EXECUTION ROUTING ENGINE (FYERS v3 STREAM) -->
+  <g class="net-box" transform="translate(740, 110)">
+    <rect width="165" height="230" rx="12" fill="#0C0C18" fill-opacity="0.9" stroke="rgba(16,185,129,0.3)" stroke-width="1.2" filter="url(#nettingGlow)" />
+    <rect width="165" height="30" rx="12" fill="rgba(16,185,129,0.12)" />
+    <!-- 0.5px Top Highlight -->
+    <path d="M 12 1 L 153 1" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="0.75" />
+
+    <text x="14" y="20" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#10B981">NETTING ENGINE</text>
+    <circle cx="150" cy="15" r="3.5" fill="#10B981" />
+
+    <text x="14" y="55" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="600" fill="#64748B">ORDER NETTING:</text>
+    <text x="14" y="74" font-family="'JetBrains Mono', monospace" font-size="10.5" font-weight="700" fill="#38BDF8">BUY 280 + SELL 0</text>
+    <text x="14" y="90" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="800" fill="#10B981">= NET +280</text>
+
+    <line x1="14" y1="104" x2="151" y2="104" stroke="rgba(255,255,255,0.08)" stroke-width="0.75" />
+
+    <text x="14" y="124" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="600" fill="#64748B">FYERS v3 STREAM:</text>
+    <rect x="14" y="132" width="137" height="36" rx="5" fill="rgba(255,255,255,0.04)" stroke="rgba(124,134,255,0.2)" stroke-width="0.75" />
+    <text x="20" y="147" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="700" fill="#E2E8F0">2026-11-24:std30:</text>
+    <text x="20" y="160" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="700" fill="#38BDF8">RELIANCE:BUY:001</text>
+
+    <text x="14" y="190" font-family="'Inter', sans-serif" font-size="9.5" font-weight="500" fill="#94A3B8">• Single Broker Order</text>
+    <text x="14" y="206" font-family="'Inter', sans-serif" font-size="9.5" font-weight="500" fill="#94A3B8">• Sub-Penny Slippage</text>
+    <text x="14" y="222" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="700" fill="#10B981">CONFIRMED FILLS</text>
+  </g>
+
+  <!-- Footer Telemetry &amp; Author Stamp -->
+  <g transform="translate(45, 400)">
+    <text font-family="'JetBrains Mono', monospace" font-size="10" font-weight="600" fill="#475569">
+      ENGINEERED BY <tspan fill="#E2E8F0" font-weight="700">SUBHAM JENA</tspan> // DECOYINDIA // EQUAL 1/3 ALLOCATION ENGINE
+    </text>
+    <text x="660" y="0" font-family="'JetBrains Mono', monospace" font-size="9.5" font-weight="600" fill="#64748B">
+      CROSS-SLEEVE DRIFT: <tspan fill="#10B981">0.00%</tspan>
+    </text>
+  </g>
+
+  <!-- Corner Coordinates -->
+  <g stroke="rgba(255,255,255,0.2)" stroke-width="0.75">
+    <path d="M 35 28 L 45 28 M 35 28 L 35 38" />
+    <path d="M 915 28 L 905 28 M 915 28 L 915 38" />
+    <path d="M 35 412 L 45 412 M 35 412 L 35 402" />
+    <path d="M 915 412 L 905 412 M 915 412 L 915 402" />
   </g>
 </svg>

@@ -1,225 +1,351 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560" width="100%" height="auto">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1050 600" width="100%" height="auto">
   <defs>
-    <radialGradient id="archGlow" cx="50%" cy="50%" r="60%">
-      <stop offset="0%" stop-color="#7C86FF" stop-opacity="0.14" />
-      <stop offset="100%" stop-color="#0A0A0F" stop-opacity="0" />
+    <!-- Background Aurora &amp; Atmospheric Spotlights -->
+    <radialGradient id="archSpotCenter" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#7C86FF" stop-opacity="0.18" />
+      <stop offset="50%" stop-color="#38BDF8" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#060609" stop-opacity="0" />
     </radialGradient>
-    <pattern id="archGrid" width="30" height="30" patternUnits="userSpaceOnUse">
-      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1" />
+    <radialGradient id="archSpotFyers" cx="90%" cy="50%" r="45%">
+      <stop offset="0%" stop-color="#10B981" stop-opacity="0.16" />
+      <stop offset="70%" stop-color="#060609" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="archSpotDuck" cx="10%" cy="50%" r="45%">
+      <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.16" />
+      <stop offset="70%" stop-color="#060609" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Liquid Glass Gradients -->
+    <linearGradient id="archCardGlass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.08" />
+      <stop offset="40%" stop-color="#FFFFFF" stop-opacity="0.02" />
+      <stop offset="100%" stop-color="#7C86FF" stop-opacity="0.04" />
+    </linearGradient>
+    <linearGradient id="archCardBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.35" />
+      <stop offset="40%" stop-color="#7C86FF" stop-opacity="0.22" />
+      <stop offset="80%" stop-color="#38BDF8" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.05" />
+    </linearGradient>
+
+    <!-- Bus Conduits -->
+    <linearGradient id="busCyanIndigo" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06B6D4" />
+      <stop offset="50%" stop-color="#7C86FF" />
+      <stop offset="100%" stop-color="#38BDF8" />
+    </linearGradient>
+    <linearGradient id="busGreenCyan" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="50%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+
+    <!-- Micro Grid -->
+    <pattern id="archGrid" width="28" height="28" patternUnits="userSpaceOnUse">
+      <path d="M 28 0 L 0 0 0 28" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="0.75" />
     </pattern>
+
+    <!-- Glow Filter -->
+    <filter id="busGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
   </defs>
 
   <style>
-    @keyframes conduitFlow {
-      0% { stroke-dashoffset: 40; }
+    /* GSAP Precision Bezier Motion Keyframes */
+    @keyframes busFlowHorizontal {
+      0% { stroke-dashoffset: 100; }
       100% { stroke-dashoffset: 0; }
     }
-    @keyframes pulseNode {
-      0%, 100% { opacity: 0.8; }
-      50% { opacity: 0.3; }
+    @keyframes busFlowReverse {
+      0% { stroke-dashoffset: -100; }
+      100% { stroke-dashoffset: 0; }
+    }
+    @keyframes coreMonolithPulse {
+      0%, 100% { filter: drop-shadow(0 0 4px #7C86FF); }
+      50% { filter: drop-shadow(0 0 16px #38BDF8); }
+    }
+    @keyframes beaconBlinkFast {
+      0%, 100% { opacity: 1; filter: drop-shadow(0 0 4px #10B981); }
+      50% { opacity: 0.35; filter: none; }
+    }
+    @keyframes packetHop {
+      0% { transform: scale(1); opacity: 0.4; }
+      50% { transform: scale(1.3); opacity: 1; }
+      100% { transform: scale(1); opacity: 0.4; }
     }
 
-    .conduit-dash {
-      stroke-dasharray: 6 8;
-      animation: conduitFlow 2s linear infinite;
+    .bus-stream {
+      stroke-dasharray: 8 6;
+      animation: busFlowHorizontal 2.2s linear infinite;
     }
-    .node-pulse {
-      animation: pulseNode 2.5s ease-in-out infinite;
+    .bus-stream-rev {
+      stroke-dasharray: 8 6;
+      animation: busFlowReverse 2.2s linear infinite;
     }
+    .core-glow { animation: coreMonolithPulse 3s ease-in-out infinite; }
+    .status-dot { animation: beaconBlinkFast 1.8s ease-in-out infinite; }
+    .packet-node { animation: packetHop 2s ease-in-out infinite; }
 
     @media (prefers-reduced-motion: reduce) {
-      .conduit-dash, .node-pulse {
+      .bus-stream, .bus-stream-rev, .core-glow, .status-dot, .packet-node {
         animation: none !important;
       }
     }
   </style>
 
-  <!-- Base Canvas -->
-  <rect width="1000" height="560" rx="16" fill="#0A0A0F" stroke="#222234" stroke-width="1.5" />
-  <rect width="1000" height="560" fill="url(#archGrid)" rx="16" />
-  <rect width="1000" height="560" fill="url(#archGlow)" rx="16" />
+  <!-- Obsidian Canvas Floor -->
+  <rect width="1050" height="600" fill="#060609" rx="22" />
+  <rect width="1050" height="600" fill="url(#archGrid)" rx="22" />
 
-  <!-- HEADER -->
-  <g transform="translate(44, 38)">
-    <text font-family="'Segoe UI', 'Inter', -apple-system, sans-serif" font-weight="700" font-size="20" fill="#FFFFFF">
+  <!-- Aurora Mesh Spotlights -->
+  <circle cx="525" cy="300" r="280" fill="url(#archSpotCenter)" />
+  <circle cx="150" cy="300" r="200" fill="url(#archSpotDuck)" />
+  <circle cx="900" cy="300" r="200" fill="url(#archSpotFyers)" />
+
+  <!-- HEADER TITLE &amp; METADATA -->
+  <g transform="translate(48, 40)">
+    <text font-family="'Inter', -apple-system, sans-serif" font-size="21" font-weight="800" fill="#FFFFFF" letter-spacing="-0.5px">
       XENALGO COMPLETE SYSTEM ARCHITECTURE
     </text>
-    <text y="22" font-family="'Segoe UI', 'Inter', -apple-system, sans-serif" font-weight="400" font-size="12.5" fill="#94A3B8">
-      Single-process Asyncio monolith on Mumbai VPS with Tailscale encrypted private mesh supervision.
+    <text y="24" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="500" fill="#94A3B8">
+      DECOYINDIA // SINGLE-PROCESS ASYNCIO MONOLITH ON MUMBAI VPS WITH TAILSCALE PRIVATE MESH
     </text>
-  </g>
 
-  <!-- TOP LAYER: OPERATOR SUPERVISION & CONSOLE (Y: 80 to 140) -->
-  <g transform="translate(44, 80)">
-    <rect width="912" height="65" rx="8" fill="#10101C" stroke="#282840" stroke-width="1.2" />
-    <rect width="912" height="22" rx="8" fill="#161628" />
-    <text x="14" y="15" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="10.5" fill="#A5B4FC">
-      SUPERVISION &amp; OVERRIDE PLANE (TAILSCALE ENCRYPTED MESH)
-    </text>
-    <rect x="790" y="3" width="105" height="16" rx="4" fill="rgba(16,185,129,0.2)" />
-    <text x="842" y="14" text-anchor="middle" font-family="'Cascadia Code', monospace" font-size="8.5" font-weight="700" fill="#10B981">TAILSCALE ONLY</text>
+    <!-- Top Right Status Badges -->
+    <g transform="translate(680, -8)">
+      <rect x="0" y="0" width="135" height="24" rx="4" fill="rgba(16,185,129,0.08)" stroke="rgba(16,185,129,0.25)" stroke-width="0.75" />
+      <circle class="status-dot" cx="12" cy="12" r="3.5" fill="#10B981" />
+      <text x="22" y="15" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="700" fill="#10B981">SINGLE PROCESS</text>
 
-    <!-- Sub-boxes in Supervision -->
-    <g transform="translate(14, 28)">
-      <rect width="210" height="28" rx="5" fill="#141424" stroke="#2C2C46" stroke-width="1" />
-      <text x="10" y="18" font-family="'Cascadia Code', monospace" font-size="10" fill="#FFFFFF">FastAPI + HTMX Dashboard</text>
-    </g>
-    <g transform="translate(238, 28)">
-      <rect width="210" height="28" rx="5" fill="#141424" stroke="#2C2C46" stroke-width="1" />
-      <text x="10" y="18" font-family="'Cascadia Code', monospace" font-size="10" fill="#38BDF8">SSE Live Telemetry &amp; Logs</text>
-    </g>
-    <g transform="translate(462, 28)">
-      <rect width="210" height="28" rx="5" fill="#141424" stroke="#2C2C46" stroke-width="1" />
-      <text x="10" y="18" font-family="'Cascadia Code', monospace" font-size="10" fill="#A5B4FC">Telegram Bot (Alerts &amp; Ack)</text>
-    </g>
-    <g transform="translate(686, 28)">
-      <rect width="212" height="28" rx="5" fill="#201016" stroke="#EF4444" stroke-width="1" />
-      <text x="10" y="18" font-family="'Cascadia Code', monospace" font-size="10" font-weight="700" fill="#FCA5A5">Triple Kill Switch (Nuke)</text>
+      <rect x="145" y="0" width="130" height="24" rx="4" fill="rgba(56,189,248,0.08)" stroke="rgba(56,189,248,0.25)" stroke-width="0.75" />
+      <text x="14" y="15" transform="translate(145,0)" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="700" fill="#38BDF8">STATIC IP PINNED</text>
     </g>
   </g>
 
-  <!-- CONNECTOR PIPES FROM SUPERVISION TO CORE (Y: 145 to 175) -->
+  <!-- Hairline Divider -->
+  <line x1="48" y1="82" x2="1002" y2="82" stroke="rgba(255,255,255,0.08)" stroke-width="0.75" />
+
+  <!-- TOP LAYER: TAILSCALE OPERATOR SUPERVISION &amp; CONSOLE (Y: 100) -->
+  <g transform="translate(48, 100)">
+    <rect width="954" height="66" rx="10" fill="#0C0C18" fill-opacity="0.9" stroke="url(#archCardBorder)" stroke-width="1" />
+    <rect width="954" height="24" rx="10" fill="rgba(124,134,255,0.1)" />
+    <!-- 0.5px Specular Edge -->
+    <path d="M 12 1 L 942 1" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="0.75" />
+
+    <text x="16" y="16" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#A5B4FC">
+      SUPERVISION &amp; OVERRIDE PLANE // TAILSCALE PRIVATE MESH (WIREGUARD ENCRYPTED)
+    </text>
+    <rect x="830" y="4" width="110" height="16" rx="3" fill="rgba(16,185,129,0.15)" />
+    <text x="885" y="15" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="700" fill="#10B981">ZERO PUBLIC PORTS</text>
+
+    <!-- Console Specs -->
+    <g transform="translate(16, 44)">
+      <text font-family="'JetBrains Mono', monospace" font-size="9.5" font-weight="600" fill="#E2E8F0">
+        WEB CONSOLE: <tspan fill="#38BDF8">https://zenalgo.mesh:8443</tspan>
+      </text>
+      <text x="320" y="0" font-family="'JetBrains Mono', monospace" font-size="9.5" font-weight="600" fill="#E2E8F0">
+        HARDWARE KILL SWITCH: <tspan fill="#10B981">DISARMED [RUNNING]</tspan>
+      </text>
+      <text x="630" y="0" font-family="'JetBrains Mono', monospace" font-size="9.5" font-weight="600" fill="#64748B">
+        TELEGRAM NOTIFIER: <tspan fill="#A5B4FC">ASYNC DISPATCH</tspan>
+      </text>
+    </g>
+  </g>
+
+  <!-- CONNECTING VERTICAL CONDUIT FROM CONSOLE TO MONOLITH -->
+  <line x1="525" y1="166" x2="525" y2="195" stroke="rgba(255,255,255,0.15)" stroke-width="2" />
+  <line class="bus-stream" x1="525" y1="166" x2="525" y2="195" stroke="#7C86FF" stroke-width="2" />
+
+  <!-- MIDDLE CORE: THREE-COLUMN ARCHITECTURE -->
+
+  <!-- LEFT: DUCKDB ANALYTICAL ENGINE (READ-ONLY IN PROD) -->
+  <g transform="translate(48, 195)">
+    <rect width="210" height="270" rx="14" fill="#0C0C18" fill-opacity="0.9" stroke="url(#archCardBorder)" stroke-width="1" />
+    <rect width="210" height="28" rx="14" fill="rgba(6,182,212,0.12)" />
+    <path d="M 12 1 L 198 1" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="0.75" />
+
+    <text x="14" y="19" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#06B6D4">DUCKDB ENGINE</text>
+    <circle cx="194" cy="14" r="3.5" fill="#06B6D4" />
+
+    <g transform="translate(14, 45)">
+      <rect width="182" height="24" rx="4" fill="rgba(6,182,212,0.08)" stroke="rgba(6,182,212,0.3)" stroke-width="0.75" />
+      <text x="10" y="16" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="700" fill="#38BDF8">READ-ONLY IN PROD</text>
+
+      <text y="42" font-family="'Inter', sans-serif" font-size="10" font-weight="600" fill="#FFFFFF">Analytical Parquet Store</text>
+      <text y="58" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="500" fill="#94A3B8">• NIFTY 500 Daily Bars</text>
+      <text y="74" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="500" fill="#94A3B8">• 5-Min Volume Volatility</text>
+      <text y="90" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="500" fill="#94A3B8">• Pre-Computed Signals</text>
+
+      <line x1="0" y1="106" x2="182" y2="106" stroke="rgba(255,255,255,0.08)" stroke-width="0.75" />
+
+      <text y="126" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="700" fill="#A5B4FC">NIGHTLY INGESTION:</text>
+      <text y="142" font-family="'Inter', sans-serif" font-size="9" font-weight="400" fill="#94A3B8">• Single Writer Task</text>
+      <text y="156" font-family="'Inter', sans-serif" font-size="9" font-weight="400" fill="#94A3B8">• Post-16:00 IST</text>
+      <text y="170" font-family="'Inter', sans-serif" font-size="9" font-weight="400" fill="#94A3B8">• Zero Lock Contention</text>
+
+      <rect y="184" width="182" height="20" rx="3" fill="rgba(255,255,255,0.03)" />
+      <text x="8" y="198" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="600" fill="#64748B">PRAGMA memory_limit='2GB'</text>
+    </g>
+  </g>
+
+  <!-- CENTER: ASYNCIO MONOLITH CORE (SINGLE-PROCESS PYTHON 3.14) -->
+  <g class="core-glow" transform="translate(300, 195)">
+    <rect width="450" height="270" rx="14" fill="#0E0E1F" fill-opacity="0.95" stroke="rgba(124,134,255,0.4)" stroke-width="1.5" />
+    <rect width="450" height="30" rx="14" fill="rgba(124,134,255,0.18)" />
+    <path d="M 12 1 L 438 1" stroke="#FFFFFF" stroke-opacity="0.45" stroke-width="0.75" />
+
+    <text x="18" y="20" font-family="'Inter', sans-serif" font-size="12" font-weight="800" fill="#FFFFFF">
+      ASYNCIO MONOLITH // PYTHON 3.14 (MUMBAI VPS)
+    </text>
+    <circle class="status-dot" cx="430" cy="15" r="4" fill="#10B981" />
+
+    <!-- Monolith Internal Modules Bento Layout -->
+    <g transform="translate(16, 44)">
+      <!-- Module 1: Risk Engine (Pure Veto Layer) -->
+      <g transform="translate(0, 0)">
+        <rect width="200" height="96" rx="8" fill="rgba(255,255,255,0.03)" stroke="rgba(16,185,129,0.3)" stroke-width="0.75" />
+        <text x="12" y="18" font-family="'JetBrains Mono', monospace" font-size="9.5" font-weight="700" fill="#10B981">
+          RISK ENGINE // PURE VETO
+        </text>
+        <text x="12" y="34" font-family="'Inter', sans-serif" font-size="9" font-weight="500" fill="#94A3B8">• Pure functional check()</text>
+        <text x="12" y="48" font-family="'Inter', sans-serif" font-size="9" font-weight="500" fill="#94A3B8">• SI-1..SI-12 Veto Gates</text>
+        <text x="12" y="62" font-family="'Inter', sans-serif" font-size="9" font-weight="500" fill="#94A3B8">• Zero bypass pathway</text>
+        <text x="12" y="80" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="700" fill="#10B981">100% SPEC COVERAGE</text>
+      </g>
+
+      <!-- Module 2: Order Governor (Token Bucket) -->
+      <g transform="translate(216, 0)">
+        <rect width="200" height="96" rx="8" fill="rgba(255,255,255,0.03)" stroke="rgba(56,189,248,0.3)" stroke-width="0.75" />
+        <text x="12" y="18" font-family="'JetBrains Mono', monospace" font-size="9.5" font-weight="700" fill="#38BDF8">
+          ORDER GOVERNOR // RATE
+        </text>
+        <text x="12" y="34" font-family="'Inter', sans-serif" font-size="9" font-weight="500" fill="#94A3B8">• 2.0 OPS Token Bucket</text>
+        <text x="12" y="48" font-family="'Inter', sans-serif" font-size="9" font-weight="500" fill="#94A3B8">• 5x below SEBI 10 OPS</text>
+        <text x="12" y="62" font-family="'Inter', sans-serif" font-size="9" font-weight="500" fill="#94A3B8">• Async burst smoothing</text>
+        <text x="12" y="80" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="700" fill="#38BDF8">EXEMPT FROM REGISTRATION</text>
+      </g>
+
+      <!-- Module 3: Multi-Alpha Sleeve Manager -->
+      <g transform="translate(0, 108)">
+        <rect width="200" height="96" rx="8" fill="rgba(255,255,255,0.03)" stroke="rgba(124,134,255,0.3)" stroke-width="0.75" />
+        <text x="12" y="18" font-family="'JetBrains Mono', monospace" font-size="9.5" font-weight="700" fill="#A5B4FC">
+          MULTI-ALPHA SLEEVES
+        </text>
+        <text x="12" y="34" font-family="'Inter', sans-serif" font-size="9" font-weight="500" fill="#94A3B8">• std30 / alpha_027 / 062</text>
+        <text x="12" y="48" font-family="'Inter', sans-serif" font-size="9" font-weight="500" fill="#94A3B8">• Equal 1/3 parity</text>
+        <text x="12" y="62" font-family="'Inter', sans-serif" font-size="9" font-weight="500" fill="#94A3B8">• Ring-fenced accounting</text>
+        <text x="12" y="80" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="700" fill="#A5B4FC">NETTING ENGINE ROUTER</text>
+      </g>
+
+      <!-- Module 4: Order FSM &amp; Reconciler -->
+      <g transform="translate(216, 108)">
+        <rect width="200" height="96" rx="8" fill="rgba(255,255,255,0.03)" stroke="rgba(245,158,11,0.3)" stroke-width="0.75" />
+        <text x="12" y="18" font-family="'JetBrains Mono', monospace" font-size="9.5" font-weight="700" fill="#F59E0B">
+          ORDER FSM &amp; RECONCILER
+        </text>
+        <text x="12" y="34" font-family="'Inter', sans-serif" font-size="9" font-weight="500" fill="#94A3B8">• Confirmed fills only</text>
+        <text x="12" y="48" font-family="'Inter', sans-serif" font-size="9" font-weight="500" fill="#94A3B8">• Deterministic correlationId</text>
+        <text x="12" y="62" font-family="'Inter', sans-serif" font-size="9" font-weight="500" fill="#94A3B8">• Daily EOD sync pass</text>
+        <text x="12" y="80" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="700" fill="#10B981">ZERO DRIFT COMMITTED</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- RIGHT: FYERS BROKER GATEWAY (API v3 &amp; WEBSOCKET) -->
+  <g transform="translate(790, 195)">
+    <rect width="212" height="270" rx="14" fill="#0C0C18" fill-opacity="0.9" stroke="url(#archCardBorder)" stroke-width="1" />
+    <rect width="212" height="28" rx="14" fill="rgba(16,185,129,0.12)" />
+    <path d="M 12 1 L 200 1" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="0.75" />
+
+    <text x="14" y="19" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#10B981">FYERS GATEWAY v3</text>
+    <circle cx="196" cy="14" r="3.5" fill="#10B981" />
+
+    <g transform="translate(14, 45)">
+      <rect width="184" height="24" rx="4" fill="rgba(16,185,129,0.08)" stroke="rgba(16,185,129,0.3)" stroke-width="0.75" />
+      <text x="10" y="16" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="700" fill="#10B981">STATIC IP PINNED [SI-6]</text>
+
+      <text y="42" font-family="'Inter', sans-serif" font-size="10" font-weight="600" fill="#FFFFFF">Direct Exchange Bridge</text>
+      <text y="58" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="500" fill="#94A3B8">• REST v3 Order API</text>
+      <text y="74" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="500" fill="#94A3B8">• WebSocket Live Fills</text>
+      <text y="90" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="500" fill="#94A3B8">• Pre-Market TOTP Refresh</text>
+
+      <line x1="0" y1="106" x2="184" y2="106" stroke="rgba(255,255,255,0.08)" stroke-width="0.75" />
+
+      <text y="126" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="700" fill="#38BDF8">EXCHANGE ROUTING:</text>
+      <text y="142" font-family="'Inter', sans-serif" font-size="9" font-weight="400" fill="#94A3B8">• NSE Cash Equities</text>
+      <text y="156" font-family="'Inter', sans-serif" font-size="9" font-weight="400" fill="#94A3B8">• CNC Limit Orders</text>
+      <text y="170" font-family="'Inter', sans-serif" font-size="9" font-weight="400" fill="#94A3B8">• Strict Price Collars</text>
+
+      <rect y="184" width="184" height="20" rx="3" fill="rgba(255,255,255,0.03)" />
+      <text x="8" y="198" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="600" fill="#10B981">STATUS: CONNECTED (0.8ms)</text>
+    </g>
+  </g>
+
+  <!-- ANIMATED DATA BUSES CONNECTING ENGINES -->
   <g>
-    <path class="conduit-dash" d="M 150 145 L 150 175" stroke="#7C86FF" stroke-width="2" />
-    <path class="conduit-dash" d="M 370 145 L 370 175" stroke="#38BDF8" stroke-width="2" />
-    <path class="conduit-dash" d="M 800 145 L 800 175" stroke="#EF4444" stroke-width="2" />
+    <!-- DuckDB to Monolith Bus -->
+    <line x1="258" y1="330" x2="300" y2="330" stroke="rgba(255,255,255,0.12)" stroke-width="3" />
+    <line class="bus-stream" x1="258" y1="330" x2="300" y2="330" stroke="#06B6D4" stroke-width="2.5" />
+
+    <!-- Monolith to Fyers Bus (Orders Outbound) -->
+    <line x1="750" y1="310" x2="790" y2="310" stroke="rgba(255,255,255,0.12)" stroke-width="3" />
+    <line class="bus-stream" x1="750" y1="310" x2="790" y2="310" stroke="#10B981" stroke-width="2.5" />
+
+    <!-- Fyers to Monolith Bus (Fills Inbound) -->
+    <line x1="790" y1="350" x2="750" y2="350" stroke="rgba(255,255,255,0.12)" stroke-width="3" />
+    <line class="bus-stream-rev" x1="790" y1="350" x2="750" y2="350" stroke="#38BDF8" stroke-width="2.5" />
   </g>
 
-  <!-- MIDDLE LAYER: CORE ASYNCIO MONOLITH (Y: 175 to 370) -->
-  <g transform="translate(44, 175)">
-    <rect width="912" height="195" rx="10" fill="#0D0E18" stroke="#7C86FF" stroke-width="1.5" />
-    <rect width="912" height="26" rx="10" fill="#17182E" />
-    <text x="16" y="18" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="12" fill="#FFFFFF">
-      CORE EXECUTION MONOLITH (SINGLE PYTHON 3.14 ASYNCIO PROCESS)
+  <!-- BOTTOM LAYER: SQLITE WAL WRITE-AHEAD JOURNAL (Y: 485) -->
+  <g transform="translate(48, 485)">
+    <rect width="954" height="66" rx="10" fill="#0C0C18" fill-opacity="0.9" stroke="url(#archCardBorder)" stroke-width="1" />
+    <rect width="954" height="24" rx="10" fill="rgba(245,158,11,0.1)" />
+    <path d="M 12 1 L 942 1" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="0.75" />
+
+    <text x="16" y="16" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#F59E0B">
+      PERSISTENCE PLANE // SQLITE WRITE-AHEAD LOG (WAL) APPEND-ONLY ORDER JOURNAL
     </text>
-    <text x="730" y="18" font-family="'Cascadia Code', monospace" font-size="10" fill="#A5B4FC">
-      MUMBAI VPS // HOSTED INSTANCE
-    </text>
+    <rect x="830" y="4" width="110" height="16" rx="3" fill="rgba(245,158,11,0.15)" />
+    <text x="885" y="15" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="700" fill="#F59E0B">ZERO DELETE/UPDATE</text>
 
-    <!-- Module 1: Scheduler & Lifecycle -->
-    <g transform="translate(16, 38)">
-      <rect width="165" height="142" rx="8" fill="#121322" stroke="#262740" stroke-width="1" />
-      <text x="12" y="22" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11" fill="#FFFFFF">SCHEDULER &amp; LIFE</text>
-      <text x="12" y="38" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#38BDF8">APScheduler + Cron</text>
-      <line x1="12" y1="46" x2="153" y2="46" stroke="#1F2034" stroke-width="1" />
-      <text x="12" y="64" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• 08:15 Token Check</text>
-      <text x="12" y="80" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• 09:00 Pre-Market</text>
-      <text x="12" y="96" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• 15:00 Signal Run</text>
-      <text x="12" y="112" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• 15:45 EOD Close</text>
-      <text x="12" y="130" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#10B981">STATE: ONLINE</text>
-    </g>
-
-    <!-- Module 2: Multi-Alpha Engine -->
-    <g transform="translate(195, 38)">
-      <rect width="165" height="142" rx="8" fill="#121322" stroke="#262740" stroke-width="1" />
-      <text x="12" y="22" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11" fill="#FFFFFF">ALPHA SLEEVES</text>
-      <text x="12" y="38" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#7C86FF">Vectorized Pandas</text>
-      <line x1="12" y1="46" x2="153" y2="46" stroke="#1F2034" stroke-width="1" />
-      <text x="12" y="64" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• Sleeve 1: std30</text>
-      <text x="12" y="80" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• Sleeve 2: a027</text>
-      <text x="12" y="96" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• Sleeve 3: a062</text>
-      <text x="12" y="112" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• Cross-Netting</text>
-      <text x="12" y="130" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#7C86FF">ALLOC: 1/3 EACH</text>
-    </g>
-
-    <!-- Module 3: Pure Risk Veto -->
-    <g transform="translate(374, 38)">
-      <rect width="165" height="142" rx="8" fill="#141122" stroke="#7C86FF" stroke-width="1.2" />
-      <text x="12" y="22" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11" fill="#FFFFFF">RISK ENGINE</text>
-      <text x="12" y="38" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#EF4444">Pure Veto Guard</text>
-      <line x1="12" y1="46" x2="153" y2="46" stroke="#241E34" stroke-width="1" />
-      <text x="12" y="64" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• 12 Pure Invariants</text>
-      <text x="12" y="80" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• Fat-Finger &lt; 5%</text>
-      <text x="12" y="96" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• Price Collar 3%</text>
-      <text x="12" y="112" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• Liquidity ADV 1%</text>
-      <text x="12" y="130" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#10B981">ZERO BYPASS</text>
-    </g>
-
-    <!-- Module 4: 2-OPS Governor -->
-    <g transform="translate(553, 38)">
-      <rect width="165" height="142" rx="8" fill="#101524" stroke="#38BDF8" stroke-width="1.2" />
-      <text x="12" y="22" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11" fill="#FFFFFF">RATE GOVERNOR</text>
-      <text x="12" y="38" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#38BDF8">SEBI Token Bucket</text>
-      <line x1="12" y1="46" x2="153" y2="46" stroke="#1D253A" stroke-width="1" />
-      <text x="12" y="64" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• Hard Cap: 2.0 OPS</text>
-      <text x="12" y="80" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• SEBI Floor: 10 OPS</text>
-      <text x="12" y="96" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• 5x Safety Margin</text>
-      <text x="12" y="112" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• Burst Cap: 2</text>
-      <text x="12" y="130" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#38BDF8">SEBI COMPLIANT</text>
-    </g>
-
-    <!-- Module 5: Execution Engine & Reconciler -->
-    <g transform="translate(732, 38)">
-      <rect width="165" height="142" rx="8" fill="#10181A" stroke="#10B981" stroke-width="1.2" />
-      <text x="12" y="22" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11" fill="#FFFFFF">EXECUTION &amp; RECON</text>
-      <text x="12" y="38" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#10B981">Confirmed Fills</text>
-      <line x1="12" y1="46" x2="153" y2="46" stroke="#182A24" stroke-width="1" />
-      <text x="12" y="64" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• Idempotent CID</text>
-      <text x="12" y="80" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• WS Fill Catch</text>
-      <text x="12" y="96" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• Mutate on Fill</text>
-      <text x="12" y="112" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">• Broker Audit</text>
-      <text x="12" y="130" font-family="'Cascadia Code', monospace" font-size="8.5" fill="#10B981">ZERO DRIFT</text>
+    <!-- Persistence Details -->
+    <g transform="translate(16, 44)">
+      <text font-family="'JetBrains Mono', monospace" font-size="9.5" font-weight="600" fill="#E2E8F0">
+        STORAGE: <tspan fill="#CBD5E1">/var/data/xenalgo/journal.db</tspan>
+      </text>
+      <text x="320" y="0" font-family="'JetBrains Mono', monospace" font-size="9.5" font-weight="600" fill="#E2E8F0">
+        RECOVERY: <tspan fill="#10B981">IDEMPOTENT REPLAY VERIFIED</tspan>
+      </text>
+      <text x="630" y="0" font-family="'JetBrains Mono', monospace" font-size="9.5" font-weight="600" fill="#64748B">
+        TRANSACTIONS: <tspan fill="#38BDF8">PRAGMA synchronous = FULL</tspan>
+      </text>
     </g>
   </g>
 
-  <!-- CONNECTOR PIPES FROM CORE TO LOWER TIERS (Y: 370 to 410) -->
-  <g>
-    <path class="conduit-dash" d="M 270 370 L 270 410" stroke="#7C86FF" stroke-width="2" />
-    <path class="conduit-dash" d="M 750 370 L 750 410" stroke="#10B981" stroke-width="2" />
+  <!-- CONNECTING VERTICAL CONDUIT FROM MONOLITH TO WAL -->
+  <line x1="525" y1="465" x2="525" y2="485" stroke="rgba(255,255,255,0.15)" stroke-width="2" />
+  <line class="bus-stream" x1="525" y1="465" x2="525" y2="485" stroke="#F59E0B" stroke-width="2" />
+
+  <!-- Footer Telemetry &amp; Author Stamp -->
+  <g transform="translate(48, 575)">
+    <text font-family="'JetBrains Mono', monospace" font-size="10" font-weight="600" fill="#475569">
+      ENGINEERED BY <tspan fill="#E2E8F0" font-weight="700">SUBHAM JENA</tspan> // DECOYINDIA // ASYNCIO MONOLITH (ZERO EXTERNAL REDIS/CELERY DEPENDENCY)
+    </text>
+    <text x="730" y="0" font-family="'JetBrains Mono', monospace" font-size="9.5" font-weight="600" fill="#64748B">
+      DEPLOYMENT: <tspan fill="#10B981">ORACLE / MUMBAI VPS</tspan>
+    </text>
   </g>
 
-  <!-- BOTTOM LAYER: STORAGE (LEFT) & EXTERNAL BROKER (RIGHT) -->
-  <!-- Left Box: Storage Layer (DuckDB & SQLite) -->
-  <g transform="translate(44, 410)">
-    <rect width="440" height="120" rx="10" fill="#10101C" stroke="#25253A" stroke-width="1.2" />
-    <rect width="440" height="24" rx="10" fill="#161628" />
-    <text x="14" y="16" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11" fill="#A5B4FC">
-      PERSISTENCE &amp; STORAGE PLANE
-    </text>
-
-    <!-- DuckDB -->
-    <g transform="translate(14, 34)">
-      <rect width="198" height="74" rx="6" fill="#131322" stroke="#2C2C44" stroke-width="1" />
-      <text x="10" y="20" font-family="'Cascadia Code', monospace" font-size="11" font-weight="700" fill="#38BDF8">DuckDB EOD</text>
-      <text x="10" y="38" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">Read-Only in Live Loop</text>
-      <text x="10" y="52" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">NIFTY 500 Historical Data</text>
-      <text x="10" y="66" font-family="'Cascadia Code', monospace" font-size="8" fill="#71717A">Vectorized Parquet Ingest</text>
-    </g>
-
-    <!-- SQLite WAL -->
-    <g transform="translate(228, 34)">
-      <rect width="198" height="74" rx="6" fill="#131322" stroke="#2C2C44" stroke-width="1" />
-      <text x="10" y="20" font-family="'Cascadia Code', monospace" font-size="11" font-weight="700" fill="#10B981">SQLite (WAL)</text>
-      <text x="10" y="38" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">Append-Only Event Sourcing</text>
-      <text x="10" y="52" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">synchronous=FULL Journal</text>
-      <text x="10" y="66" font-family="'Cascadia Code', monospace" font-size="8" fill="#10B981">Deterministic State Replay</text>
-    </g>
-  </g>
-
-  <!-- Right Box: External Broker & Exchange Gateway -->
-  <g transform="translate(516, 410)">
-    <rect width="440" height="120" rx="10" fill="#10101C" stroke="#25253A" stroke-width="1.2" />
-    <rect width="440" height="24" rx="10" fill="#161628" />
-    <text x="14" y="16" font-family="'Segoe UI', sans-serif" font-weight="700" font-size="11" fill="#38BDF8">
-      BROKER &amp; EXCHANGE INTERFACE (FYERS API V3)
-    </text>
-
-    <!-- Fyers REST API -->
-    <g transform="translate(14, 34)">
-      <rect width="198" height="74" rx="6" fill="#131322" stroke="#2C2C44" stroke-width="1" />
-      <text x="10" y="20" font-family="'Cascadia Code', monospace" font-size="11" font-weight="700" fill="#38BDF8">REST v3 Orders</text>
-      <text x="10" y="38" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">Static IP Locked Gate</text>
-      <text x="10" y="52" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">Limit CNC Orders Only</text>
-      <text x="10" y="66" font-family="'Cascadia Code', monospace" font-size="8" fill="#71717A">24h Token + SHA256 HMAC</text>
-    </g>
-
-    <!-- Fyers WebSocket & NSE -->
-    <g transform="translate(228, 34)">
-      <rect width="198" height="74" rx="6" fill="#131322" stroke="#2C2C44" stroke-width="1" />
-      <text x="10" y="20" font-family="'Cascadia Code', monospace" font-size="11" font-weight="700" fill="#10B981">WebSocket Feed</text>
-      <text x="10" y="38" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">Real-time Order &amp; Trade WS</text>
-      <text x="10" y="52" font-family="'Segoe UI', sans-serif" font-size="9" fill="#94A3B8">NSE Equities Matching</text>
-      <text x="10" y="66" font-family="'Cascadia Code', monospace" font-size="8" fill="#10B981">Heartbeat Monitored</text>
-    </g>
+  <!-- Corner Coordinates -->
+  <g stroke="rgba(255,255,255,0.2)" stroke-width="0.75">
+    <path d="M 38 32 L 48 32 M 38 32 L 38 42" />
+    <path d="M 1012 32 L 1002 32 M 1012 32 L 1012 42" />
+    <path d="M 38 568 L 48 568 M 38 568 L 38 558" />
+    <path d="M 1012 568 L 1002 568 M 1012 568 L 1012 558" />
   </g>
 </svg>
